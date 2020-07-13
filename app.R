@@ -16,9 +16,9 @@ yti = cbind(stage,entries,years,locs,reps,error)
 
 
 
-ui <- fluidPage(title = "Cycle Scenario Comparison",
+ui <- fluidPage(title = "Cycle Scenarios",
                 
-                titlePanel("Cycle Scenario Comparison"),            
+                titlePanel("Cycle Scenarios"),            
                 
                 sidebarLayout(
                     
@@ -44,7 +44,6 @@ ui <- fluidPage(title = "Cycle Scenario Comparison",
                         bsTooltip("varGxY", "Genotype-by-year interaction variance.",
                                   "right", "hover", NULL),
                         
-                        tags$h4("Early Generations"),
                         numericInput("negen", "Early Generations",
                                      min = 0, max = 100, value = 4, step = 1), 
                         # Add tooltip with instructions/info
@@ -64,7 +63,7 @@ ui <- fluidPage(title = "Cycle Scenario Comparison",
                             class = "numeric"
                         ),
     
-                        tags$h4("Varieties"),
+                  
                         numericInput("varieties", "Varieties",
                                      min = 1, max = 10, value = 1, step = 1), 
                         # Add tooltip with instructions/info
@@ -134,10 +133,14 @@ server <- function(input, output, clientData, session) {
         error = c(1,1)
         varieties = 1
         
-        example = runScenario(varG,varGxL,varGxY,entries,years,locs,reps,error,varieties)
-        boxplot(t(example),
-                xlab="Stage",
-                ylab="Mean Genetic Value")
+        if (input$button)
+        {
+          example = runScenario(varG,varGxL,varGxY,entries,years,locs,reps,error,varieties)
+          boxplot(t(example),
+                  xlab="Stage",
+                  ylab="Mean Genetic Value")
+        }
+
         
     })    
     
