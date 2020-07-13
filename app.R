@@ -133,15 +133,21 @@ server <- function(input, output, clientData, session) {
         error = c(1,1)
         varieties = 1
         
-        if (input$button)
+        if(input$button)
         {
           example = runScenario(varG,varGxL,varGxY,entries,years,locs,reps,error,varieties)
           boxplot(t(example),
                   xlab="Stage",
                   ylab="Mean Genetic Value")
         }
-
         
+        #TV      observeEvent(input$button, {
+        #TV           example = runScenario(varG,varGxL,varGxY,entries,years,locs,reps,error,varieties)
+        #TV           boxplot(t(example),
+        #TV                 xlab="Stage",
+        #TV                 ylab="Mean Genetic Value")
+        #TV      })
+
     })    
     
     # Second Tab    
