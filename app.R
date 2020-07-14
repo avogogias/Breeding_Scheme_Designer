@@ -104,8 +104,8 @@ server <- function(input, output, clientData, session) {
                       filter = "none",
                       escape = FALSE,
                       autoHideNavigation = TRUE,
-                      selection = "single",
-                      editable = list(target = "all", disable = list(columns = 0)),
+                      selection = "none",
+                      editable = list(target = "cell", disable = list(columns = 0)),
     ))
   })
   
@@ -122,8 +122,8 @@ server <- function(input, output, clientData, session) {
                   filter = "none",
                   escape = FALSE,
                   autoHideNavigation = TRUE,
-                  selection = "single",
-                  editable = list(target = "all", disable = list(columns = 0)),
+                  selection = "none",
+                  editable = list(target = "cell", disable = list(columns = 0)),
     ))
   })
   
@@ -134,9 +134,9 @@ server <- function(input, output, clientData, session) {
     # First Tab 
     output$scatPlot1 <- renderPlot({
         
-        varG = input$varG
-        varGxL = input$varGxL
-        varGxY = input$varGxY
+        varG = isolate(input$varG)
+        varGxL = isolate(input$varGxL)
+        varGxY = isolate(input$varGxY)
         
         entries = c(100,10)
         years = c(1,1)
