@@ -86,28 +86,50 @@ ui <- fluidPage(title = "Cycle Scenarios",
 # Define server logic required to draw charts
 server <- function(input, output, clientData, session) {
   
+  # Using reactiveVal to add a server side variable observable and mutable at the same time
+  ytiDT <- reactiveVal(yti)
+  yti <- reactiveVal(yti)
+
+  
   # Observe Button Clicks for adding or removing rows (stages) from the DT
   observeEvent(input$add_btn, {
-    yti = rbind(yti, c(length(yti[,1])+1,2,1,1,1,1))
+    # yti = rbind(yti, c(length(yti[,1])+1,2,1,1,1,1))
+    yti(rbind(yti(), c(length(yti()[,1])+1,2,1,1,1,1)))
+    
+    # Manipulate DT settings
+    ytiDT(datatable(yti(), 
+                      class = "cell-border, compact, hover", 
+                      rownames = TRUE,
+                      colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error'),
+                      filter = "none",
+                      escape = FALSE,
+                      autoHideNavigation = TRUE,
+                      selection = "single",
+                      editable = list(target = "all", disable = list(columns = 0)),
+    ))
   })
   
   observeEvent(input$delete_btn, {
-    yti = yti[1:length(yti[,1])-1,]
+    # yti = yti[1:length(yti[,1])-1,]
+    if (length(yti()[,1])>2) # TV for >1 it crushes!
+        yti(yti()[1:length(yti()[,1])-1,])
+    
+    # Manipulate DT settings
+    ytiDT(datatable(yti(), 
+                  class = "cell-border, compact, hover", 
+                  rownames = TRUE,
+                  colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error'),
+                  filter = "none",
+                  escape = FALSE,
+                  autoHideNavigation = TRUE,
+                  selection = "single",
+                  editable = list(target = "all", disable = list(columns = 0)),
+    ))
   })
   
-  # Manipulate DT settings
-  ytiDT = datatable(yti, 
-                    class = "cell-border, compact, hover", 
-                    rownames = TRUE,
-                    colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error'),
-                    filter = "none",
-                    escape = FALSE,
-                    autoHideNavigation = TRUE,
-                    selection = "single",
-                    editable = list(target = "all", disable = list(columns = 0)),
-                    )
+
   # Render the manipulated table in Shiny  
-  output$stages_table = DT::renderDT(ytiDT, server = FALSE)
+  output$stages_table = DT::renderDT(ytiDT(), server = FALSE)
     
     # First Tab 
     output$scatPlot1 <- renderPlot({
