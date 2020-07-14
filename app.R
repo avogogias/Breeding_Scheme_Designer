@@ -1,10 +1,10 @@
 library(shiny)
-library(shinyMatrix)
+library(DT)
 library(shinyBS)
 library(Rcpp)
 sourceCpp("Engine.cpp")
 
-# Default matrix entries
+# Default matrix values
 stage = c(1,2,3)
 entries = c(1000,100,10)
 years = c(1,1,1)
@@ -27,45 +27,37 @@ ui <- fluidPage(title = "Cycle Scenarios",
                         tags$h4("Variance"),
                         # Set Genetic Variance 
                         numericInput("varG", "Genetic:",
-                                     min = 0, max = 100, value = 1, step = 0.1), 
+                                     min = 0, max = 100, value = 1, step = 0.1, width = '80px'), 
                         # Add tooltip with instructions/info
                         bsTooltip("varG", "Genetic variance. The variance between entries in the first stage of yield trials.",
                                   "right", "hover", NULL),
                         # Set GxL(Y) Variance 
                         numericInput("varGxL", "GxL(Y):",
-                                     min = 0, max = 100, value = 1, step = 0.1), 
+                                     min = 0, max = 100, value = 1, step = 0.1, width = '80px'), 
                         # Add tooltip with instructions/info
                         bsTooltip("varGxL", "Genotype-by-location nested in year interaction variance. This value is equivalent to the sum of genotype-by-location interaction variance and genotype-by-location-by-year interaction varaince.",
                                   "right", "hover", NULL),
                         # Set GxY Variance 
                         numericInput("varGxY", "GxY:",
-                                     min = 0, max = 100, value = 1, step = 0.1), 
+                                     min = 0, max = 100, value = 1, step = 0.1, width = '80px'), 
                         # Add tooltip with instructions/info
                         bsTooltip("varGxY", "Genotype-by-year interaction variance.",
                                   "right", "hover", NULL),
                         
                         numericInput("negen", "Early Generations",
-                                     min = 0, max = 100, value = 4, step = 1), 
+                                     min = 0, max = 100, value = 4, step = 1, width = '80px'), 
                         # Add tooltip with instructions/info
                         bsTooltip("negen", "GNumber of early generation years. This phase of the breeding program is modeled without selection.",
                                   "right", "hover", NULL),
                         
                         tags$h4("Yield Trials"),
-                        matrixInput(
-                            "tableYT",
-                            value = yti,
-                            rows = list(
-                                extend = TRUE
-                            ),
-                            cols = list(
-                                names = TRUE
-                            ),
-                            class = "numeric"
-                        ),
+                        DT::DTOutput('stages_table'),
+                        actionButton("add_btn", "Add"),
+                        actionButton("delete_btn", "Delete"),
     
                   
                         numericInput("varieties", "Varieties",
-                                     min = 1, max = 10, value = 1, step = 1), 
+                                     min = 1, max = 10, value = 1, step = 1, width = '80px'), 
                         # Add tooltip with instructions/info
                         bsTooltip("varieties", "The final number of selected entries. Must be smaller than or equal to the number of entries in the last stage.",
                                   "right", "hover", NULL),
@@ -83,23 +75,7 @@ ui <- fluidPage(title = "Cycle Scenarios",
                             ), # endof tabPanel   
                             tabPanel(title = "Scenario 2",
                                     # parcoordsOutput("pcPlot")
-                            ), # endof tabPanel
-                            tabPanel(title = "Help",
-                                     tags$h2("Help"),
-                                     tags$br(),
-                                     tags$p("Comparing selection indices is important in breeding.
-                     This application aims to help breeders explore the effect
-                     of three indices in the selection of individuals."),
-                                     tags$p("These indices are:"),
-                                     tags$ol(
-                                         tags$li("Base index"),
-                                         tags$li("Heritability index"),
-                                         tags$li("Smith-Hazel index")
-                                     ),
-                                     tags$br(),
-                                     tags$p("To use the app, edit the matrices on the left sidebar
-                     and view how your changes affect the selection of the indices.")
-                            ) # endof tabPanel             
+                            ) # endof tabPanel
                         )
                     ), # endof mainPanel
                 ), # endof sidebarLayout
@@ -109,15 +85,36 @@ ui <- fluidPage(title = "Cycle Scenarios",
 
 # Define server logic required to draw charts
 server <- function(input, output, clientData, session) {
-    
-    # TV     observe({
-    # TV         c_num <- input$control_num
-    # TV         #updateNumericInput(session, "i_traits", value = c_num)
-    # TV         updateMatrixInput(session, "sampleG", value = 0.1*diag(c_num) + 0.9)
-    # TV         updateMatrixInput(session, "sampleE", value = diag(c_num))
-    # TV         updateMatrixInput(session, "sampleW", value = matrix(data = 1:c_num, nrow = 1, ncol = c_num))
-    # TV     })
-
+  
+  # Observe Button Clicks for adding or removing rows (stages) from the DT
+  observeEvent(input$add_btn, {
+# TV    t = rbind(data.frame(bins = input$bins,
+# TV                         cb = input$cb), this_table)
+# TV    this_table <<- t
+  })
+  
+  observeEvent(input$delete_btn, {
+# TV    t = this_table
+# TV    print(nrow(t))
+# TV    if (!is.null(input$shiny_table_rows_selected)) {
+# TV      t <- t[-as.numeric(input$shiny_table_rows_selected),]
+# TV    }
+# TV    this_table <<- t
+  })
+  
+  # Manipulate DT settings
+  ytiDT = datatable(yti, 
+                    class = "cell-border, compact, hover", 
+                    rownames = TRUE,
+                    colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error'),
+                    filter = "none",
+                    escape = FALSE,
+                    autoHideNavigation = TRUE,
+                    selection = "single",
+                    editable = list(target = "all", disable = list(columns = 0)),
+                    )
+  # Render the manipulated table in Shiny  
+  output$stages_table = DT::renderDT(ytiDT, server = FALSE)
     
     # First Tab 
     output$scatPlot1 <- renderPlot({
