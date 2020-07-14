@@ -88,18 +88,11 @@ server <- function(input, output, clientData, session) {
   
   # Observe Button Clicks for adding or removing rows (stages) from the DT
   observeEvent(input$add_btn, {
-# TV    t = rbind(data.frame(bins = input$bins,
-# TV                         cb = input$cb), this_table)
-# TV    this_table <<- t
+    yti = rbind(yti, c(length(yti[,1])+1,2,1,1,1,1))
   })
   
   observeEvent(input$delete_btn, {
-# TV    t = this_table
-# TV    print(nrow(t))
-# TV    if (!is.null(input$shiny_table_rows_selected)) {
-# TV      t <- t[-as.numeric(input$shiny_table_rows_selected),]
-# TV    }
-# TV    this_table <<- t
+    yti = yti[1:length(yti[,1])-1,]
   })
   
   # Manipulate DT settings
