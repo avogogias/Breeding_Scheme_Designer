@@ -68,14 +68,14 @@ ui <- fluidPage(title = "Cycle Scenarios",
                     # Show plots and charts 
                     mainPanel(
                       uiOutput('mytabs'), 
-          #              tabsetPanel(
-          #                  tabPanel(title = "Scenarios",
-          #                           plotOutput("scatPlot1")
-          #                  ), # endof tabPanel   
+                        tabsetPanel(
+                            tabPanel(title = "Scenarios",
+                                     plotOutput("scatPlot1")
+                            ) # endof tabPanel   
           #                  tabPanel(title = "Help",
                                     # parcoordsOutput("pcPlot")
           #                  ) # endof tabPanel
-          #              )
+                        ) # endof tabsetPanel
                     ), # endof mainPanel
                 ), # endof sidebarLayout
                 
