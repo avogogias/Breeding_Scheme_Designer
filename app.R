@@ -4,15 +4,7 @@ library(shinyBS)
 library(Rcpp)
 sourceCpp("Engine.cpp")
 
-# Default matrix values
-stage = c(1,2,3)
-entries = c(1000,100,10)
-years = c(1,1,1)
-locs = c(1,4,8)
-reps = c(1,2,3)
-error = c(1,1,1)
-yti = cbind(stage,entries,years,locs,reps,error)
-# yti <- matrix(data = 1:ntraits, nrow = 3, ncol = 6)
+
 
 
 
@@ -51,7 +43,13 @@ ui <- fluidPage(title = "Cycle Scenarios",
                                   "right", "hover", NULL),
                         
                         tags$h4("Yield Trials"),
-                        DT::DTOutput('stages_table'),
+                        DT::DTOutput("stages_table"),
+                        # Add tooltip with instructions/info
+                        # bsTooltip("stages_table", "Number of entries. Must be smaller than or equal to the number of entries in the previous stage.
+                        #                           Number of years. Increasing this value will increase heritability by decreasing variation due to GxY, GxL(Y) and plot error.
+                        #                           Number of locations. Increasing this value will increase heritability by decreasing variation due to GxL(Y) and plot error.
+                        #                           Number of replications. Increasing this value will increase heritability by decreasing variation due to plot error.",
+                        #                           "right", "hover", NULL),
                         actionButton("add_btn", "Add"),
                         actionButton("delete_btn", "Delete"),
     
@@ -62,21 +60,22 @@ ui <- fluidPage(title = "Cycle Scenarios",
                         bsTooltip("varieties", "The final number of selected entries. Must be smaller than or equal to the number of entries in the last stage.",
                                   "right", "hover", NULL),
                                             
-                        actionButton("button", "Run"),
+                        actionButton("run_btn", "Run"),
                         
 
                         
                     ), # endof SidebarPanel
                     # Show plots and charts 
                     mainPanel(
-                        tabsetPanel(
-                            tabPanel(title = "Scenario 1",
-                                     plotOutput("scatPlot1")
-                            ), # endof tabPanel   
-                            tabPanel(title = "Scenario 2",
+                      uiOutput('mytabs'), 
+          #              tabsetPanel(
+          #                  tabPanel(title = "Scenarios",
+          #                           plotOutput("scatPlot1")
+          #                  ), # endof tabPanel   
+          #                  tabPanel(title = "Help",
                                     # parcoordsOutput("pcPlot")
-                            ) # endof tabPanel
-                        )
+          #                  ) # endof tabPanel
+          #              )
                     ), # endof mainPanel
                 ), # endof sidebarLayout
                 
@@ -86,10 +85,30 @@ ui <- fluidPage(title = "Cycle Scenarios",
 # Define server logic required to draw charts
 server <- function(input, output, clientData, session) {
   
+  
+  # Default matrix values
+  stage = c(1,2,3)
+  entries = c(1000,100,10)
+  years = c(1,1,1)
+  locs = c(1,4,8)
+  reps = c(1,2,3)
+  error = c(1,1,1)
+  yti = cbind(stage,entries,years,locs,reps,error)
+  
+  datatable(yti, 
+            class = "cell-border, compact, hover", 
+            rownames = TRUE,
+            colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error'),
+            filter = "none",
+            escape = FALSE,
+            autoHideNavigation = TRUE,
+            selection = "none",
+            editable = list(target = "cell", disable = list(columns = 0)),
+  )
+  
   # Using reactiveVal to add a server side variable observable and mutable at the same time
   ytiDT <- reactiveVal(yti)
   yti <- reactiveVal(yti)
-
   
   # Observe Button Clicks for adding or removing rows (stages) from the DT
   observeEvent(input$add_btn, {
@@ -125,48 +144,54 @@ server <- function(input, output, clientData, session) {
                   selection = "none",
                   editable = list(target = "cell", disable = list(columns = 0)),
     ))
+    
+    # Render the manipulated table in Shiny  
+    output$stages_table = DT::renderDT(ytiDT(), server = FALSE)
+    
   })
   
 
   # Render the manipulated table in Shiny  
   output$stages_table = DT::renderDT(ytiDT(), server = FALSE)
     
-    # First Tab 
-    output$scatPlot1 <- renderPlot({
-        
-        varG = isolate(input$varG)
-        varGxL = isolate(input$varGxL)
-        varGxY = isolate(input$varGxY)
-        
-        entries = c(100,10)
-        years = c(1,1)
-        locs = c(1,2)
-        reps = c(1,2)
-        error = c(1,1)
-        varieties = 1
-        
-        if(input$button)
-        {
-          example = runScenario(varG,varGxL,varGxY,entries,years,locs,reps,error,varieties)
-          boxplot(t(example),
-                  xlab="Stage",
-                  ylab="Mean Genetic Value")
-        }
-        
-        #TV      observeEvent(input$button, {
-        #TV           example = runScenario(varG,varGxL,varGxY,entries,years,locs,reps,error,varieties)
-        #TV           boxplot(t(example),
-        #TV                 xlab="Stage",
-        #TV                 ylab="Mean Genetic Value")
-        #TV      })
-
-    })    
+  
+  observeEvent(input$run_btn, {
+    # Create a new tab
+    output$mytabs = renderUI({
+      nTabs = input$run_btn # use this value as a tabs counter
+      myTabs = lapply(paste('Scenario', 1: nTabs), tabPanel) 
+      do.call(tabsetPanel, myTabs)
+    })
     
-    # Second Tab    
-  #  output$pcPlot <- renderParcoords({
-      
+    
+#TV***    tabPanel(title = "Scenarios", plotOutput("scatPlot1"))
 
-   # })   
+    
+    
+    # Plot results in created tab
+    output$scatPlot1 <- renderPlot({
+      
+      varG = isolate(input$varG)
+      varGxL = isolate(input$varGxL)
+      varGxY = isolate(input$varGxY)
+      
+      entries = c(1000,100,10) # ytiDT()[,1]
+      years = c(1,1,1)
+      locs = c(1,4,8)
+      reps = c(1,2,3)
+      error = c(1,1,1)
+      varieties = isolate(input$varieties)
+      
+      example = runScenario(varG,varGxL,varGxY,entries,years,locs,reps,error,varieties)
+      boxplot(t(example),
+              xlab="Stage",
+              ylab="Mean Genetic Value")
+
+    })   
+  })
+  
+ 
+
     
     
 }
