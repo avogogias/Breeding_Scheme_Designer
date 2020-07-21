@@ -161,18 +161,14 @@ server <- function(input, output, clientData, session) {
     
   
   observeEvent(input$run_btn, {
+    
     # Create a new tab
     output$mytabs = renderUI({
       nTabs = input$run_btn # use this value as a tabs counter
       myTabs = lapply(paste('Scenario', 1: nTabs), tabPanel) 
       do.call(tabsetPanel, myTabs)
     })
-    
-    
-#TV***    tabPanel(title = "Scenarios", plotOutput("scatPlot1"))
-
-    
-    
+    #TV***    tabPanel(title = "Scenarios", plotOutput("scatPlot1"))
     # Plot results in created tab
     output$scatPlot1 <- renderPlot({
       
@@ -180,11 +176,11 @@ server <- function(input, output, clientData, session) {
       varGxL = isolate(input$varGxL)
       varGxY = isolate(input$varGxY)
       
-      entries = c(1000,100,10) # ytiR()[,1]
-      years = c(1,1,1)
-      locs = c(1,4,8)
-      reps = c(1,2,3)
-      error = c(1,1,1)
+      entries = isolate(yti()[,2]) # c(1000,100,10) 
+      years = isolate(yti()[,3]) # c(1,1,1)
+      locs = isolate(yti()[,4]) # c(1,4,8)
+      reps = isolate(yti()[,5]) # c(1,2,3)
+      error = isolate(yti()[,6]) # c(1,1,1)
       varieties = isolate(input$varieties)
       
       example = runScenario(varG,varGxL,varGxY,entries,years,locs,reps,error,varieties)
