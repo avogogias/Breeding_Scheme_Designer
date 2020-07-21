@@ -95,7 +95,8 @@ server <- function(input, output, clientData, session) {
   error = c(1,1,1)
   yti = cbind(stage,entries,years,locs,reps,error)
   
-  datatable(yti, 
+  # Default rendering
+  ytiDT = datatable(yti, 
             class = "cell-border, compact, hover", 
             rownames = TRUE,
             colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error'),
@@ -105,18 +106,22 @@ server <- function(input, output, clientData, session) {
             selection = "none",
             editable = list(target = "cell", disable = list(columns = 0)),
   )
+  # Render the manipulated table in Shiny  
+  output$stages_table = DT::renderDT(ytiDT, server = FALSE)
   
   # Using reactiveVal to add a server side variable observable and mutable at the same time
-  ytiDT <- reactiveVal(yti)
+  #ytiR <- reactiveVal(yti)
   yti <- reactiveVal(yti)
   
   # Observe Button Clicks for adding or removing rows (stages) from the DT
   observeEvent(input$add_btn, {
-    # yti = rbind(yti, c(length(yti[,1])+1,2,1,1,1,1))
+   #  yti = rbind(yti, c(length(yti[,1])+1,2,1,1,1,1))
+   # ytiR(rbind(yti, c(length(yti[,1])+1,2,1,1,1,1)))
+   
     yti(rbind(yti(), c(length(yti()[,1])+1,2,1,1,1,1)))
-    
+     
     # Manipulate DT settings
-    ytiDT(datatable(yti(), 
+    ytiDT = datatable(yti(), 
                       class = "cell-border, compact, hover", 
                       rownames = TRUE,
                       colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error'),
@@ -125,7 +130,9 @@ server <- function(input, output, clientData, session) {
                       autoHideNavigation = TRUE,
                       selection = "none",
                       editable = list(target = "cell", disable = list(columns = 0)),
-    ))
+    )
+    # Render the manipulated table in Shiny after row add
+    output$stages_table = DT::renderDT(ytiDT, server = FALSE)
   })
   
   observeEvent(input$delete_btn, {
@@ -134,7 +141,7 @@ server <- function(input, output, clientData, session) {
         yti(yti()[1:length(yti()[,1])-1,])
     
     # Manipulate DT settings
-    ytiDT(datatable(yti(), 
+    ytiDT = datatable(yti(), 
                   class = "cell-border, compact, hover", 
                   rownames = TRUE,
                   colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error'),
@@ -143,16 +150,14 @@ server <- function(input, output, clientData, session) {
                   autoHideNavigation = TRUE,
                   selection = "none",
                   editable = list(target = "cell", disable = list(columns = 0)),
-    ))
-    
-    # Render the manipulated table in Shiny  
-    output$stages_table = DT::renderDT(ytiDT(), server = FALSE)
-    
+    )
+    # Render the manipulated table in Shiny after row delete 
+    output$stages_table = DT::renderDT(ytiDT, server = FALSE)
   })
   
 
   # Render the manipulated table in Shiny  
-  output$stages_table = DT::renderDT(ytiDT(), server = FALSE)
+ # output$stages_table = DT::renderDT(ytiR(), server = FALSE)
     
   
   observeEvent(input$run_btn, {
@@ -175,7 +180,7 @@ server <- function(input, output, clientData, session) {
       varGxL = isolate(input$varGxL)
       varGxY = isolate(input$varGxY)
       
-      entries = c(1000,100,10) # ytiDT()[,1]
+      entries = c(1000,100,10) # ytiR()[,1]
       years = c(1,1,1)
       locs = c(1,4,8)
       reps = c(1,2,3)
