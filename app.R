@@ -17,21 +17,31 @@ ui <- fluidPage(title = "Cycle Scenarios",
                     sidebarPanel(
 
                         tags$h4("Variance"),
+                        
+                        bootstrapPage(
+                          div(style="display:inline-block",numericInput("varG", "Genetic:",
+                                                                        min = 0, max = 100, value = 1, step = 0.1, width = '80px')),
+                          div(style="display:inline-block",numericInput("varGxL", "GxL(Y):",
+                                                                        min = 0, max = 100, value = 1, step = 0.1, width = '80px')),
+                          div(style="display:inline-block",numericInput("varGxY", "GxY:",
+                                                                        min = 0, max = 100, value = 1, step = 0.1, width = '80px'))
+                        ),
+                        
                         # Set Genetic Variance 
-                        numericInput("varG", "Genetic:",
-                                     min = 0, max = 100, value = 1, step = 0.1, width = '80px'), 
+                        # TV numericInput("varG", "Genetic:",
+                        # TV              min = 0, max = 100, value = 1, step = 0.1, width = '80px'), 
                         # Add tooltip with instructions/info
                         bsTooltip("varG", "Genetic variance. The variance between entries in the first stage of yield trials.",
                                   "right", "hover", NULL),
                         # Set GxL(Y) Variance 
-                        numericInput("varGxL", "GxL(Y):",
-                                     min = 0, max = 100, value = 1, step = 0.1, width = '80px'), 
+                        # TV numericInput("varGxL", "GxL(Y):",
+                        # TV              min = 0, max = 100, value = 1, step = 0.1, width = '80px'), 
                         # Add tooltip with instructions/info
                         bsTooltip("varGxL", "Genotype-by-location nested in year interaction variance. This value is equivalent to the sum of genotype-by-location interaction variance and genotype-by-location-by-year interaction varaince.",
                                   "right", "hover", NULL),
                         # Set GxY Variance 
-                        numericInput("varGxY", "GxY:",
-                                     min = 0, max = 100, value = 1, step = 0.1, width = '80px'), 
+                        # TV numericInput("varGxY", "GxY:",
+                        # TV              min = 0, max = 100, value = 1, step = 0.1, width = '80px'), 
                         # Add tooltip with instructions/info
                         bsTooltip("varGxY", "Genotype-by-year interaction variance.",
                                   "right", "hover", NULL),
