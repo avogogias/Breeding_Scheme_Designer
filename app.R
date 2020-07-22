@@ -67,15 +67,7 @@ ui <- fluidPage(title = "Cycle Scenarios",
                     ), # endof SidebarPanel
                     # Show plots and charts 
                     mainPanel(
-                      uiOutput('mytabs'), 
-                        tabsetPanel(
-                            tabPanel(title = "Scenarios",
-                                     plotOutput("scatPlot1")
-                            ) # endof tabPanel   
-          #                  tabPanel(title = "Help",
-                                    # parcoordsOutput("pcPlot")
-          #                  ) # endof tabPanel
-                        ) # endof tabsetPanel
+                      uiOutput('mytabs')
                     ), # endof mainPanel
                 ), # endof sidebarLayout
                 
@@ -189,12 +181,27 @@ server <- function(input, output, clientData, session) {
     # Create a new tab
     output$mytabs = renderUI({
       nTabs = input$run_btn # use this value as a tabs counter
-      myTabs = lapply(paste('Scenario', 1: nTabs), tabPanel) 
-      do.call(tabsetPanel, myTabs)
+      
+      # TV myTabs = lapply(paste('Scenario', 1: nTabs), tabPanel) 
+      herTabs = lapply(1: nTabs, function(i){
+        tabPanel(paste('Scenario', sep = " ", i),
+                 plotOutput(paste('cyPlot', sep = "", i))
+                 )
+        }) 
+      
+      
+      # TV do.call(tabsetPanel, myTabs)
+      do.call(tabsetPanel, herTabs)
+      
+  #     tagList(
+  #      sliderInput("n", "N", 1, 1000, 500),
+  #      textInput("label", "Label")
+  #    )
+      
     })
     #TV***    tabPanel(title = "Scenarios", plotOutput("scatPlot1"))
     # Plot results in created tab
-    output$scatPlot1 <- renderPlot({
+    output$cyPlot1 <- renderPlot({
       
       varG = isolate(input$varG)
       varGxL = isolate(input$varGxL)
@@ -213,7 +220,7 @@ server <- function(input, output, clientData, session) {
               ylab="Mean Genetic Value")
 
     })   
-  })
+  }) # end of run button
   
  
 
