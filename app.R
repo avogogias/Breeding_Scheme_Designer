@@ -68,8 +68,8 @@ ui <- fluidPage(title = "Cycle Scenarios",
                     # Show plots and charts 
                     mainPanel(
                       uiOutput('mytabs')
-                    ), # endof mainPanel
-                ), # endof sidebarLayout
+                    ) # endof mainPanel
+                ) # endof sidebarLayout
                 
 )
 
@@ -193,16 +193,14 @@ server <- function(input, output, clientData, session) {
       # TV do.call(tabsetPanel, myTabs)
       do.call(tabsetPanel, herTabs)
       
-  #     tagList(
-  #      sliderInput("n", "N", 1, 1000, 500),
-  #      textInput("label", "Label")
-  #    )
-      
     })
-    #TV***    tabPanel(title = "Scenarios", plotOutput("scatPlot1"))
-    # Plot results in created tab
-    output$cyPlot1 <- renderPlot({
-      
+    
+    print(input$run_btn)
+    
+    # Plot results in latest created tab
+    # TV WORKS    output$cyPlot1 <- renderPlot({
+    # First save new plot in a variable before passing it to output
+    nplot <- renderPlot({
       varG = isolate(input$varG)
       varGxL = isolate(input$varGxL)
       varGxY = isolate(input$varGxY)
@@ -218,8 +216,36 @@ server <- function(input, output, clientData, session) {
       boxplot(t(example),
               xlab="Stage",
               ylab="Mean Genetic Value")
+    })   # end of renderPlot
 
-    })   
+    
+    # TV WORKS    output$cyPlot1 <- nplot
+    #
+    # TV DONT assign(paste('output$cyPlot', sep = "", input$run_btn), nplot) # should normally work but it doesn't display the plot
+    
+    if (input$run_btn == 1)
+      output$cyPlot1 <- nplot
+    else if (input$run_btn == 2)
+      output$cyPlot2 <- nplot
+    else if (input$run_btn == 3)
+      output$cyPlot3 <- nplot
+    else if (input$run_btn == 4)
+      output$cyPlot4 <- nplot
+    else if (input$run_btn == 5)
+      output$cyPlot5 <- nplot
+    else if (input$run_btn == 6)
+      output$cyPlot6 <- nplot
+    else if (input$run_btn == 7)
+      output$cyPlot7 <- nplot
+    else if (input$run_btn == 8)
+      output$cyPlot8 <- nplot
+    else if (input$run_btn == 9)
+      output$cyPlot9 <- nplot
+    else if (input$run_btn == 10)
+      output$cyPlot10 <- nplot
+    else
+      assign(paste('output$cyPlot', sep = "", input$run_btn), nplot)
+    
   }) # end of run button
   
  
