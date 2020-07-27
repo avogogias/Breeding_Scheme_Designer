@@ -1,4 +1,5 @@
 *.Rproj
+temp_app.R
 .Rproj.user
 .Rhistory
 .RData
