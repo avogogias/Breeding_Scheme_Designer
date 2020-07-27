@@ -118,14 +118,16 @@ server <- function(input, output, clientData, session) {
   
   proxy = dataTableProxy('stages_table')
   observeEvent(input$stages_table_cell_edit, {
-    print(names(yti$data))
+    # TV print(names(yti$data)) # prints NULL
     info = input$stages_table_cell_edit
     i = info$row
     j = info$col + 1 # +1 when rownames = F in DT
     v = info$value
     str(info)
     yti$data[i, j] <<- DT::coerceValue(v, yti$data[i, j])
-    replaceData(proxy, yti$data, resetPaging = FALSE)  # important
+    # TV NOTE: produces invalid JSON response on cell edit when renderDT (server = F)
+    # replaceData() calls reloadData(), which requires the server-side processing mode
+    replaceData(proxy, yti$data, resetPaging = FALSE)  # important 
   })
   
   ### Reset table
@@ -143,7 +145,7 @@ server <- function(input, output, clientData, session) {
                                      autoHideNavigation = TRUE,
                                      selection = "none",
                                      editable = list(target = "cell", disable = list(columns = 0)),
-                                     server = FALSE)
+                                     server = TRUE) # server = F doesn't work with replaceData() cell editing
   
   # Observe Button Clicks for adding or removing rows (stages) from the DT
   observeEvent(input$add_btn, {
@@ -160,7 +162,7 @@ server <- function(input, output, clientData, session) {
                                        autoHideNavigation = TRUE,
                                        selection = "none",
                                        editable = list(target = "cell", disable = list(columns = 0)),
-                                       server = FALSE)
+                                       server = TRUE) # server = F doesn't work with replaceData() cell editing
   })
   
   observeEvent(input$delete_btn, {
@@ -178,7 +180,7 @@ server <- function(input, output, clientData, session) {
                                        autoHideNavigation = TRUE,
                                        selection = "none",
                                        editable = list(target = "cell", disable = list(columns = 0)), 
-                                       server = FALSE)
+                                       server = TRUE) # server = F doesn't work with replaceData() cell editing
   })
   
   
