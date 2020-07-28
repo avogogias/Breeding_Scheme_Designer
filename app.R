@@ -4,10 +4,6 @@ library(shinyBS)
 library(Rcpp)
 sourceCpp("Engine.cpp")
 
-
-
-
-
 ui <- fluidPage(title = "Cycle Scenarios",
                 
                 titlePanel("Cycle Scenarios"),            
@@ -18,30 +14,25 @@ ui <- fluidPage(title = "Cycle Scenarios",
                     
                     tags$h4("Variance"),
                     
+                    # Make divs appear in one line
                     bootstrapPage(
+                      # Set Genetic Variance 
                       div(style="display:inline-block",numericInput("varG", "Genetic:",
                                                                     min = 0, max = 100, value = 1, step = 0.1, width = '80px')),
+                      # Set GxL(Y) Variance 
                       div(style="display:inline-block",numericInput("varGxL", "GxL(Y):",
                                                                     min = 0, max = 100, value = 1, step = 0.1, width = '80px')),
+                      # Set GxY Variance 
                       div(style="display:inline-block",numericInput("varGxY", "GxY:",
                                                                     min = 0, max = 100, value = 1, step = 0.1, width = '80px'))
                     ),
                     
-                    # Set Genetic Variance 
-                    # TV numericInput("varG", "Genetic:",
-                    # TV              min = 0, max = 100, value = 1, step = 0.1, width = '80px'), 
                     # Add tooltip with instructions/info
                     bsTooltip("varG", "Genetic variance. The variance between entries in the first stage of yield trials.",
                               "right", "hover", NULL),
-                    # Set GxL(Y) Variance 
-                    # TV numericInput("varGxL", "GxL(Y):",
-                    # TV              min = 0, max = 100, value = 1, step = 0.1, width = '80px'), 
                     # Add tooltip with instructions/info
                     bsTooltip("varGxL", "Genotype-by-location nested in year interaction variance. This value is equivalent to the sum of genotype-by-location interaction variance and genotype-by-location-by-year interaction varaince.",
                               "right", "hover", NULL),
-                    # Set GxY Variance 
-                    # TV numericInput("varGxY", "GxY:",
-                    # TV              min = 0, max = 100, value = 1, step = 0.1, width = '80px'), 
                     # Add tooltip with instructions/info
                     bsTooltip("varGxY", "Genotype-by-year interaction variance.",
                               "right", "hover", NULL),
@@ -97,45 +88,11 @@ server <- function(input, output, clientData, session) {
   error = c(1,1,1)
   yt = cbind(stage,entries,years,locs,reps,error)
   
-  # Default rendering
-  # Render the manipulated table in Shiny  
-  #TV  output$stages_table = DT::renderDT(yt, 
-  #TV                                     class = "cell-border, compact, hover", 
-  #TV                                     rownames = F, #TRUE,
-  #TV                                     colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error'),
-  #TV                                     filter = "none",
-  #TV                                     escape = FALSE,
-  #TV                                     autoHideNavigation = TRUE,
-  #TV                                     selection = "none",
-  #TV                                     editable = list(target = "cell", disable = list(columns = 0)),
-  #TV                                     server = FALSE)
   
-  
-  # Using reactiveVal to add a server side variable observable and mutable at the same time
-  #ytiR <- reactiveVal(yti)
+  # Using reactiveVales to add a server side set of variable observable and mutable at the same time
   yti <- reactiveValues(data = yt)
   
-  
-  proxy = dataTableProxy('stages_table')
-  observeEvent(input$stages_table_cell_edit, {
-    # TV print(names(yti$data)) # prints NULL
-    info = input$stages_table_cell_edit
-    i = info$row
-    j = info$col + 1 # +1 when rownames = F in DT
-    v = info$value
-    str(info)
-    yti$data[i, j] <<- DT::coerceValue(v, yti$data[i, j])
-    # TV NOTE: produces invalid JSON response on cell edit when renderDT (server = F)
-    # replaceData() calls reloadData(), which requires the server-side processing mode
-    replaceData(proxy, yti$data, resetPaging = FALSE)  # important 
-  })
-  
-  ### Reset table
-  #TV  observeEvent(reset(), {
-  #TV  yti$data <- yt # your default data
-  #TV})
-  
-  # Render the manipulated table in Shiny after row add
+  # Render DT with default data entries
   output$stages_table = DT::renderDT(yti$data, 
                                      class = "cell-border, compact, hover", 
                                      rownames = F, #TRUE,
@@ -147,64 +104,60 @@ server <- function(input, output, clientData, session) {
                                      editable = list(target = "cell", disable = list(columns = 0)),
                                      server = TRUE) # server = F doesn't work with replaceData() cell editing
   
+  # Update editable DT through a proxy DT on cell edit event
+  proxy = dataTableProxy('stages_table')
+  #
+  observeEvent(input$stages_table_cell_edit, {
+    info = input$stages_table_cell_edit
+    i = info$row
+    j = info$col + 1 # +1 required when rownames = F in DT
+    v = info$value
+    str(info)
+    # Character string needs to be coerced to same type as target value. Here as.integer()
+    yti$data[i, j] = DT::coerceValue(v, yti$data[i, j])
+    # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
+    replaceData(proxy, yti$data, resetPaging = FALSE)  # important 
+  })
+  
+  ### Reset table
+  #TV  observeEvent(reset(), {
+  #TV  yti$data <- yt # your default data
+  #TV})
+  
+
+  
   # Observe Button Clicks for adding or removing rows (stages) from the DT
   observeEvent(input$add_btn, {
     
     yti$data = rbind(yti$data, c(length(yti$data[,1])+1,2,1,1,1,1))
     
-    # Render the manipulated table in Shiny after row add
-    output$stages_table = DT::renderDT(yti$data, 
-                                       class = "cell-border, compact, hover", 
-                                       rownames = F, #TRUE,
-                                       colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error'),
-                                       filter = "none",
-                                       escape = FALSE,
-                                       autoHideNavigation = TRUE,
-                                       selection = "none",
-                                       editable = list(target = "cell", disable = list(columns = 0)),
-                                       server = TRUE) # server = F doesn't work with replaceData() cell editing
+    # replaceData(proxy, yti$data, resetPaging = FALSE)  # important 
+    
   })
   
   observeEvent(input$delete_btn, {
-    # yti = yti[1:length(yti[,1])-1,]
+    
     if (length(yti$data[,1])>2) # TV for >1 it crushes!
       yti$data = yti$data[1:length(yti$data[,1])-1,]
     
-    # Render the manipulated table in Shiny after row delete 
-    output$stages_table = DT::renderDT(yti$data, 
-                                       class = "cell-border, compact, hover", 
-                                       rownames = F, #TRUE,
-                                       colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error'),
-                                       filter = "none",
-                                       escape = FALSE,
-                                       autoHideNavigation = TRUE,
-                                       selection = "none",
-                                       editable = list(target = "cell", disable = list(columns = 0)), 
-                                       server = TRUE) # server = F doesn't work with replaceData() cell editing
+    # replaceData(proxy, yti$data, resetPaging = FALSE)  # important 
+    
   })
   
-  
-  # Render the manipulated table in Shiny  
-  # output$stages_table = DT::renderDT(ytiR(), server = FALSE)
-  
-  
+  # Execute runScenario() for the current settings
   observeEvent(input$run_btn, {
     
-    # Create a new tab
+    # Create a new tab in the UI every time Run is pressed
     output$mytabs = renderUI({
-      nTabs = input$run_btn # use this value as a tabs counter
-      
+      nTabs = input$run_btn # use this value also as the tabs counter
       # TV myTabs = lapply(paste('Scenario', 1: nTabs), tabPanel) 
       herTabs = lapply(1: nTabs, function(i){
         tabPanel(paste('Scenario', sep = " ", i),
                  plotOutput(paste('cyPlot', sep = "", i))
         )
       }) 
-      
-      
       # TV do.call(tabsetPanel, myTabs)
       do.call(tabsetPanel, herTabs)
-      
     })
     
     print(input$run_btn)
@@ -231,10 +184,6 @@ server <- function(input, output, clientData, session) {
     })   # end of renderPlot
     
     
-    # TV WORKS    output$cyPlot1 <- nplot
-    #
-    # TV DONT assign(paste('output$cyPlot', sep = "", input$run_btn), nplot) # should normally work but it doesn't display the plot
-    
     if (input$run_btn == 1)
       output$cyPlot1 <- nplot
     else if (input$run_btn == 2)
@@ -255,16 +204,31 @@ server <- function(input, output, clientData, session) {
       output$cyPlot9 <- nplot
     else if (input$run_btn == 10)
       output$cyPlot10 <- nplot
+    else if (input$run_btn == 11)
+      output$cyPlot11 <- nplot
+    else if (input$run_btn == 12)
+      output$cyPlot12 <- nplot
+    else if (input$run_btn == 13)
+      output$cyPlot13 <- nplot
+    else if (input$run_btn == 14)
+      output$cyPlot14 <- nplot
+    else if (input$run_btn == 15)
+      output$cyPlot15 <- nplot
+    else if (input$run_btn == 16)
+      output$cyPlot16 <- nplot
+    else if (input$run_btn == 17)
+      output$cyPlot17 <- nplot
+    else if (input$run_btn == 18)
+      output$cyPlot18 <- nplot
+    else if (input$run_btn == 19)
+      output$cyPlot19 <- nplot
     else
-      assign(paste('output$cyPlot', sep = "", input$run_btn), nplot)
+      assign(paste('output$cyPlot', sep = "", input$run_btn), nplot) # DOESNOT WORK
     
   }) # end of run button
   
   
-  
-  
-  
-}
+} # endof server
 
 # Run the application 
 shinyApp(ui = ui, server = server)
