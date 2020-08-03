@@ -2,15 +2,21 @@ library(shiny)
 library(DT)
 library(shinyBS)
 library(Rcpp)
+library(RcppArmadillo)
+
 sourceCpp("Engine.cpp")
 
 ui <- fluidPage(title = "Cycle Scenarios",
+                
+               # theme = "bootstrap.css",
                 
                 titlePanel("Cycle Scenarios"),            
                 
                 sidebarLayout(
                   
                   sidebarPanel(
+                    
+                    width = 4,
                     
                     tags$h4("Variance"),
                     
@@ -44,7 +50,10 @@ ui <- fluidPage(title = "Cycle Scenarios",
                               "right", "hover", NULL),
                     
                     tags$h4("Yield Trials"),
-                    DT::DTOutput("stages_table"),
+                    div( # CUSTOMISE div style for DT
+                      DT::DTOutput("stages_table"),
+                      style = "font-size: 85%; width: 100%"
+                      ),
                     # Add tooltip with instructions/info
                     # bsTooltip("stages_table", "Number of entries. Must be smaller than or equal to the number of entries in the previous stage.
                     #                           Number of years. Increasing this value will increase heritability by decreasing variation due to GxY, GxL(Y) and plot error.
@@ -94,6 +103,12 @@ server <- function(input, output, clientData, session) {
   
   # Render DT with default data entries
   output$stages_table = DT::renderDT(yti$data, 
+                                     options = list(
+                                       searching = F, # no search box
+                                       paginate = F,  # no num of pages
+                                       lengthChange = F, # no show entries
+                                       scrollX = T # horizontal slider
+                                     ),
                                      class = "cell-border, compact, hover", 
                                      rownames = F, #TRUE,
                                      colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error'),
@@ -224,6 +239,8 @@ server <- function(input, output, clientData, session) {
       output$cyPlot19 <- nplot
     else
       assign(paste('output$cyPlot', sep = "", input$run_btn), nplot) # DOESNOT WORK
+    
+    print(input$mytabs)
     
   }) # end of run button
   
