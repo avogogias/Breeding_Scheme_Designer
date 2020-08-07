@@ -18,6 +18,8 @@ ui <- fluidPage(title = "Cycle Scenarios",
                     
                     width = 4,
                     
+                    tags$h3("Create a new scenario"),
+                    
                     tags$h4("Variance"),
                     
                     # Make divs appear in one line
@@ -162,85 +164,107 @@ server <- function(input, output, clientData, session) {
   # Execute runScenario() for the current settings
   observeEvent(input$run_btn, {
     
+    varG = isolate(input$varG)
+    varGxL = isolate(input$varGxL)
+    varGxY = isolate(input$varGxY)
+    
+    entries = isolate(yti$data[,2]) # c(1000,100,10) 
+    years = isolate(yti$data[,3]) # c(1,1,1)
+    locs = isolate(yti$data[,4]) # c(1,4,8)
+    reps = isolate(yti$data[,5]) # c(1,2,3)
+    error = isolate(yti$data[,6]) # c(1,1,1)
+    varieties = isolate(input$varieties)
+    
+    # store settings for summary plot TODO
+    summary_settings = data.frame(entries, years, locs, reps, error)
+    
     # Create a new tab in the UI every time Run is pressed
     output$mytabs = renderUI({
       nTabs = input$run_btn # use this value also as the tabs counter
       # TV myTabs = lapply(paste('Scenario', 1: nTabs), tabPanel) 
-      herTabs = lapply(1: nTabs, function(i){
+      myTabs = lapply(1: nTabs, function(i){
         tabPanel(paste('Scenario', sep = " ", i),
-                 plotOutput(paste('cyPlot', sep = "", i))
+                 plotOutput(paste('cyPlot', sep = "", i)),
+                 # add a summary of settings used for this scenario. Could be a DT
+                 DT::DTOutput(paste('stages_summary', sep = "", i)),
+                 # maybe add an update scenario button
+                 actionButton(paste("update_btn", sep = "", i), "Update")
         )
       }) 
       # TV do.call(tabsetPanel, myTabs)
-      do.call(tabsetPanel, herTabs)
+      do.call(tabsetPanel, myTabs)
     })
     
-    print(input$run_btn)
+    print(paste("Run", input$run_btn))
     
     # Plot results in latest created tab
     # TV WORKS    output$cyPlot1 <- renderPlot({
     # First save new plot in a variable before passing it to output
     nplot <- renderPlot({
-      varG = isolate(input$varG)
-      varGxL = isolate(input$varGxL)
-      varGxY = isolate(input$varGxY)
-      
-      entries = isolate(yti$data[,2]) # c(1000,100,10) 
-      years = isolate(yti$data[,3]) # c(1,1,1)
-      locs = isolate(yti$data[,4]) # c(1,4,8)
-      reps = isolate(yti$data[,5]) # c(1,2,3)
-      error = isolate(yti$data[,6]) # c(1,1,1)
-      varieties = isolate(input$varieties)
-      
-      example = runScenario(varG,varGxL,varGxY,entries,years,locs,reps,error,varieties)
-      boxplot(t(example),
+
+      result = runScenario(varG,varGxL,varGxY,entries,years,locs,reps,error,varieties)
+      boxplot(t(result),
               xlab="Stage",
               ylab="Mean Genetic Value")
     })   # end of renderPlot
     
     
     if (input$run_btn == 1)
+    {
       output$cyPlot1 <- nplot
+      output$stages_summary1 = DT::renderDT(summary_settings)
+    }
     else if (input$run_btn == 2)
+    {
       output$cyPlot2 <- nplot
+      output$stages_summary2 = DT::renderDT(summary_settings)
+    }
     else if (input$run_btn == 3)
+    {
       output$cyPlot3 <- nplot
+      output$stages_summary3 = DT::renderDT(summary_settings)
+    }
     else if (input$run_btn == 4)
+    {
       output$cyPlot4 <- nplot
+      output$stages_summary4 = DT::renderDT(summary_settings)
+    }
     else if (input$run_btn == 5)
+    {
       output$cyPlot5 <- nplot
+      output$stages_summary5 = DT::renderDT(summary_settings)
+    }
     else if (input$run_btn == 6)
+    {
       output$cyPlot6 <- nplot
+      output$stages_summary6 = DT::renderDT(summary_settings)
+    }
     else if (input$run_btn == 7)
+    {
       output$cyPlot7 <- nplot
+      output$stages_summary7 = DT::renderDT(summary_settings)
+    }
     else if (input$run_btn == 8)
+    {
       output$cyPlot8 <- nplot
+      output$stages_summary8 = DT::renderDT(summary_settings)
+    }
     else if (input$run_btn == 9)
+    {
       output$cyPlot9 <- nplot
+      output$stages_summary9 = DT::renderDT(summary_settings)
+    }
     else if (input$run_btn == 10)
+    {
       output$cyPlot10 <- nplot
-    else if (input$run_btn == 11)
-      output$cyPlot11 <- nplot
-    else if (input$run_btn == 12)
-      output$cyPlot12 <- nplot
-    else if (input$run_btn == 13)
-      output$cyPlot13 <- nplot
-    else if (input$run_btn == 14)
-      output$cyPlot14 <- nplot
-    else if (input$run_btn == 15)
-      output$cyPlot15 <- nplot
-    else if (input$run_btn == 16)
-      output$cyPlot16 <- nplot
-    else if (input$run_btn == 17)
-      output$cyPlot17 <- nplot
-    else if (input$run_btn == 18)
-      output$cyPlot18 <- nplot
-    else if (input$run_btn == 19)
-      output$cyPlot19 <- nplot
+      output$stages_summary10 = DT::renderDT(summary_settings)
+    }
     else
       assign(paste('output$cyPlot', sep = "", input$run_btn), nplot) # DOESNOT WORK
     
-    print(input$mytabs)
+    # TODO create a summary for each scenario / stage to place under boxplot
+    # output$stages_summary1 = DT::renderDT(summary_settings)
+
     
   }) # end of run button
   
