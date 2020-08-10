@@ -72,7 +72,14 @@ ui <- fluidPage(title = "Cycle Scenarios",
                     bsTooltip("varieties", "The final number of selected entries. Must be smaller than or equal to the number of entries in the last stage.",
                               "right", "hover", NULL),
                     
-                    actionButton("run_btn", "Run"),
+                    # Economic cost summary output for scenario
+                     textOutput("tYears", inline = T),
+                    textOutput("tLocs", inline = T),
+                    textOutput("tPlots", inline = T),
+                    
+                    tags$br(),
+                    
+                    actionButton("run_btn", "Run")
                     
                     
                     
@@ -102,6 +109,11 @@ server <- function(input, output, clientData, session) {
   
   # Using reactiveVales to add a server side set of variable observable and mutable at the same time
   yti <- reactiveValues(data = yt)
+  
+  # Render static table with total years, locs and plots
+  output$tYears = renderText({ sum(yti$data[,3]) })  # years
+  output$tLocs = renderText({ sum(yti$data[,4]) })  # locs
+  output$tPlots = renderText({ yti$data[1,2] })  # plots
   
   # Render DT with default data entries
   output$stages_table = DT::renderDT(yti$data, 
@@ -176,7 +188,7 @@ server <- function(input, output, clientData, session) {
     varieties = isolate(input$varieties)
     
     # store settings for summary plot TODO
-    summary_settings = data.frame(entries, years, locs, reps, error)
+    sumset_table = data.frame(entries, years, locs, reps, error)
     
     # Create a new tab in the UI every time Run is pressed
     output$mytabs = renderUI({
@@ -208,56 +220,169 @@ server <- function(input, output, clientData, session) {
               ylab="Mean Genetic Value")
     })   # end of renderPlot
     
+    #reactDT <- reactiveValues(data = yt)
+    # Global settings for all DTs in senarios
+    sumset_DT = list(sumset_table,
+                      options = list(
+                        searching = F, # no search box
+                        paginate = F,  # no num of pages
+                        lengthChange = F, # no show entries
+                        scrollX = T # horizontal slider
+                      ),
+                      class = "cell-border, compact, hover", 
+                      rownames = F, #TRUE,
+                      colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error'),
+                      filter = "none",
+                      escape = FALSE,
+                      autoHideNavigation = TRUE,
+                      selection = "none",
+                      editable = list(target = "cell", disable = list(columns = 0)),
+                      server = TRUE) # server = F doesn't work with replaceData() cell editing
+
+    
+    # source('plotInTab.R')
     
     if (input$run_btn == 1)
     {
       output$cyPlot1 <- nplot
-      output$stages_summary1 = DT::renderDT(summary_settings)
+      reactDT1 <- reactiveValues(data = sumset_table)
+      output$stages_summary1 = DT::renderDT(reactDT1$data, options = sumset_DT$options, class = sumset_DT$class, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+      
+      # Update editable DT through a proxy DT on cell edit event
+      proxy = dataTableProxy('stages_summary1')
+      #
+      observeEvent(input$stages_summary1_cell_edit, {
+        info = input$stages_summary1_cell_edit
+        i = info$row
+        j = info$col # +1 required when rownames = F in DT
+        v = info$value
+        str(info)
+        # Character string needs to be coerced to same type as target value. Here as.integer()
+        reactDT1$data[i, j] = DT::coerceValue(v, reactDT1$data[i, j])
+        # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
+        replaceData(proxy, reactDT1$data, resetPaging = FALSE)  # important 
+      })
+      
+      # Execute runScenario() for the current settings
+      observeEvent(input$update_btn1, {
+        
+        varG = isolate(input$varG)
+        varGxL = isolate(input$varGxL)
+        varGxY = isolate(input$varGxY)
+        
+        entries = isolate(reactDT1$data[,1]) # c(1000,100,10) 
+        years = isolate(reactDT1$data[,2]) # c(1,1,1)
+        locs = isolate(reactDT1$data[,3]) # c(1,4,8)
+        reps = isolate(reactDT1$data[,4]) # c(1,2,3)
+        error = isolate(reactDT1$data[,5]) # c(1,1,1)
+        varieties = isolate(input$varieties)
+        
+        output$cyPlot1 <- renderPlot({
+          
+          result = runScenario(varG,varGxL,varGxY,entries,years,locs,reps,error,varieties)
+          boxplot(t(result),
+                  xlab="Stage",
+                  ylab="Mean Genetic Value")
+        })   # end of renderPlot
+        
+      }) # endof update btn
     }
     else if (input$run_btn == 2)
     {
       output$cyPlot2 <- nplot
-      output$stages_summary2 = DT::renderDT(summary_settings)
+      reactDT2 <- reactiveValues(data = sumset_table)
+      output$stages_summary2 = DT::renderDT(reactDT2$data, options = sumset_DT$options, class = sumset_DT$class, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+      # Update editable DT through a proxy DT on cell edit event
+      proxy = dataTableProxy('stages_summary2')
+      #
+      observeEvent(input$stages_summary2_cell_edit, {
+        info = input$stages_summary2_cell_edit
+        i = info$row
+        j = info$col # +1 required when rownames = F in DT
+        v = info$value
+        str(info)
+        # Character string needs to be coerced to same type as target value. Here as.integer()
+        reactDT2$data[i, j] = DT::coerceValue(v, reactDT2$data[i, j])
+        # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
+        replaceData(proxy, reactDT2$data, resetPaging = FALSE)  # important 
+      })
+      
+      # Execute runScenario() for the current settings
+      observeEvent(input$update_btn2, {
+        output$cyPlot2 <- renderPlot({
+          result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+                               isolate(reactDT2$data[,1]),isolate(reactDT2$data[,2]),
+                               isolate(reactDT2$data[,3]),isolate(reactDT2$data[,4]),
+                               isolate(reactDT2$data[,5]),isolate(input$varieties))
+          boxplot(t(result),xlab="Stage",ylab="Mean Genetic Value")
+        })   # end of renderPlot
+      }) # endof update btn      
     }
     else if (input$run_btn == 3)
     {
       output$cyPlot3 <- nplot
-      output$stages_summary3 = DT::renderDT(summary_settings)
+      reactDT3 <- reactiveValues(data = sumset_table)
+      output$stages_summary3 = DT::renderDT(reactDT3$data, options = sumset_DT$options, class = sumset_DT$class, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+      # Update editable DT through a proxy DT on cell edit event
+      proxy = dataTableProxy('stages_summary3')
+      #
+      observeEvent(input$stages_summary3_cell_edit, {
+        info = input$stages_summary3_cell_edit
+        i = info$row
+        j = info$col # +1 required when rownames = F in DT
+        v = info$value
+        str(info)
+        # Character string needs to be coerced to same type as target value. Here as.integer()
+        reactDT3$data[i, j] = DT::coerceValue(v, reactDT3$data[i, j])
+        # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
+        replaceData(proxy, reactDT3$data, resetPaging = FALSE)  # important 
+      })
+      
+      # Execute runScenario() for the current settings
+      observeEvent(input$update_btn3, {
+        output$cyPlot3 <- renderPlot({
+          result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+                               isolate(reactDT3$data[,1]),isolate(reactDT3$data[,2]),
+                               isolate(reactDT3$data[,3]),isolate(reactDT3$data[,4]),
+                               isolate(reactDT3$data[,5]),isolate(input$varieties))
+          boxplot(t(result),xlab="Stage",ylab="Mean Genetic Value")
+        })   # end of renderPlot
+      }) # endof update btn  
     }
     else if (input$run_btn == 4)
     {
       output$cyPlot4 <- nplot
-      output$stages_summary4 = DT::renderDT(summary_settings)
+      output$stages_summary4 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
     }
     else if (input$run_btn == 5)
     {
       output$cyPlot5 <- nplot
-      output$stages_summary5 = DT::renderDT(summary_settings)
+      output$stages_summary5 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
     }
     else if (input$run_btn == 6)
     {
       output$cyPlot6 <- nplot
-      output$stages_summary6 = DT::renderDT(summary_settings)
+      output$stages_summary6 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
     }
     else if (input$run_btn == 7)
     {
       output$cyPlot7 <- nplot
-      output$stages_summary7 = DT::renderDT(summary_settings)
+      output$stages_summary7 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
     }
     else if (input$run_btn == 8)
     {
       output$cyPlot8 <- nplot
-      output$stages_summary8 = DT::renderDT(summary_settings)
+      output$stages_summary8 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
     }
     else if (input$run_btn == 9)
     {
       output$cyPlot9 <- nplot
-      output$stages_summary9 = DT::renderDT(summary_settings)
+      output$stages_summary9 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
     }
     else if (input$run_btn == 10)
     {
       output$cyPlot10 <- nplot
-      output$stages_summary10 = DT::renderDT(summary_settings)
+      output$stages_summary10 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
     }
     else
       assign(paste('output$cyPlot', sep = "", input$run_btn), nplot) # DOESNOT WORK
