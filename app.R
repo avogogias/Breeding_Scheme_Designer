@@ -45,7 +45,7 @@ ui <- fluidPage(title = "Cycle Scenarios",
                     bsTooltip("varGxY", "Genotype-by-year interaction variance.",
                               "right", "hover", NULL),
                     
-                    numericInput("negen", "Early Generations",
+                    numericInput("negen", "Crossing/Selfing Years",
                                  min = 0, max = 100, value = 4, step = 1, width = '80px'), 
                     # Add tooltip with instructions/info
                     bsTooltip("negen", "GNumber of early generation years. This phase of the breeding program is modeled without selection.",
@@ -73,9 +73,14 @@ ui <- fluidPage(title = "Cycle Scenarios",
                               "right", "hover", NULL),
                     
                     # Economic cost summary output for scenario
-                     textOutput("tYears", inline = T),
-                    textOutput("tLocs", inline = T),
-                    textOutput("tPlots", inline = T),
+                    #textOutput("tYears", inline = T),
+                    #textOutput("tLocs", inline = T),
+                    #textOutput("tPlots", inline = T),
+                    tags$h4("Summary Cost"),
+                    div( # CUSTOMISE div style for DT
+                      DT::DTOutput("cost_table"),
+                      style = "font-size: 85%; width: 100%"
+                    ),
                     
                     tags$br(),
                     
@@ -104,16 +109,39 @@ server <- function(input, output, clientData, session) {
   locs = c(1,4,8)
   reps = c(1,2,3)
   error = c(1,1,1)
-  yt = cbind(stage,entries,years,locs,reps,error)
+  h2 = c(0.5,0.5,0.5)
+  yt = cbind(stage,entries,years,locs,reps,error,h2)
   
   
   # Using reactiveVales to add a server side set of variable observable and mutable at the same time
   yti <- reactiveValues(data = yt)
   
   # Render static table with total years, locs and plots
-  output$tYears = renderText({ sum(yti$data[,3]) })  # years
-  output$tLocs = renderText({ sum(yti$data[,4]) })  # locs
-  output$tPlots = renderText({ yti$data[1,2] })  # plots
+  # output$tYears = renderText({ sum(yti$data[,3]) })  # years
+  # output$tLocs = renderText({ sum(yti$data[,4]) })  # locs
+  # output$tPlots = renderText({ yti$data[1,2] })  # plots
+  # cost_df = cbind(tYears, tLocs, tPlots)
+
+  # function calculates Total Plots given a DT matrix as input
+  totalPlots <- function(mtx = yt) {
+    print(nrow(mtx))
+    print(prod(mtx[1,1:4]))
+    tp = 0
+    for (i in 1:nrow(mtx))
+      tp = tp + prod(mtx[i,1:4])
+    print(tp)
+  }
+  
+  output$cost_table = DT::renderDT(cbind(sum(yti$data[,3])+input$negen,sum(yti$data[,4]), totalPlots(yti$data)), 
+                                   options = list(
+                                     searching = F, # no search box
+                                     paginate = F,  # no num of pages
+                                     lengthChange = F, # no show entries
+                                     scrollX = T # horizontal slider
+                                   ),
+                                   rownames = F,
+                                   colnames = c('Total Years', 'Total Locs', 'Total Plots'),
+                                   server = F )
   
   # Render DT with default data entries
   output$stages_table = DT::renderDT(yti$data, 
@@ -125,12 +153,12 @@ server <- function(input, output, clientData, session) {
                                      ),
                                      class = "cell-border, compact, hover", 
                                      rownames = F, #TRUE,
-                                     colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error'),
+                                     colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2'),
                                      filter = "none",
                                      escape = FALSE,
                                      autoHideNavigation = TRUE,
                                      selection = "none",
-                                     editable = list(target = "cell", disable = list(columns = 0)),
+                                     editable = list(target = "cell", disable = list(columns = c(0, 6))),
                                      server = TRUE) # server = F doesn't work with replaceData() cell editing
   
   # Update editable DT through a proxy DT on cell edit event
@@ -157,8 +185,10 @@ server <- function(input, output, clientData, session) {
   
   # Observe Button Clicks for adding or removing rows (stages) from the DT
   observeEvent(input$add_btn, {
-    
-    yti$data = rbind(yti$data, c(length(yti$data[,1])+1,2,1,1,1,1))
+    print(yti$data[1,3:6])
+    # calc h2 for this stage
+    her = input$varG / ( input$varG + input$varGxY/yti$data[1,3] + input$varGxL/yti$data[1,3]*yti$data[1,4] + yti$data[1,6]/yti$data[1,3]*yti$data[1,4]*yti$data[1,5])
+    yti$data = rbind(yti$data, c(length(yti$data[,1])+1,2,1,1,1,1,round(her, 3)))
     
     # replaceData(proxy, yti$data, resetPaging = FALSE)  # important 
     
@@ -185,10 +215,11 @@ server <- function(input, output, clientData, session) {
     locs = isolate(yti$data[,4]) # c(1,4,8)
     reps = isolate(yti$data[,5]) # c(1,2,3)
     error = isolate(yti$data[,6]) # c(1,1,1)
+    h2 = isolate(yti$data[,7])
     varieties = isolate(input$varieties)
     
     # store settings for summary plot TODO
-    sumset_table = data.frame(entries, years, locs, reps, error)
+    sumset_table = data.frame(entries, years, locs, reps, error, h2)
     
     # Create a new tab in the UI every time Run is pressed
     output$mytabs = renderUI({
@@ -231,12 +262,12 @@ server <- function(input, output, clientData, session) {
                       ),
                       class = "cell-border, compact, hover", 
                       rownames = F, #TRUE,
-                      colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error'),
+                      colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2'),
                       filter = "none",
                       escape = FALSE,
                       autoHideNavigation = TRUE,
                       selection = "none",
-                      editable = list(target = "cell", disable = list(columns = 0)),
+                      editable = list(target = "cell", disable = list(columns = c(0, 6))),
                       server = TRUE) # server = F doesn't work with replaceData() cell editing
 
     
