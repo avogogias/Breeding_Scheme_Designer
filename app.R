@@ -105,16 +105,33 @@ server <- function(input, output, clientData, session) {
   # Default matrix values
   stage = c(1,2,3)
   entries = c(1000,100,10)
-  years = c(1,1,1)
+  years = c(1,1,2)
   locs = c(1,4,8)
   reps = c(1,2,3)
   error = c(1,1,1)
-  h2 = c(0.5,0.5,0.5)
+  h2 = c(0.5,0.5,0.5) # this is a calculated value
+
+  # updateH2 <- function(){
+  #   for (i in stage)
+  #   {
+  #     print(paste("The index is",i))
+  #     h2[i] = input$varG #/ ( input$varG + input$varGxY/years[i] + input$varGxL/years[i]*locs[i] + error[i]/years[i]*locs[i]*reps[i])
+  #   }
+  #   print(h2)
+  # }
+  
   yt = cbind(stage,entries,years,locs,reps,error,h2)
-  
-  
   # Using reactiveVales to add a server side set of variable observable and mutable at the same time
   yti <- reactiveValues(data = yt)
+  
+  # Update H2 for every stage as soon as input data that affect H2 change
+  observe({
+    for (i in 1:nrow(yti$data))
+    {
+      yti$data[i,7] = round(input$varG/(input$varG + input$varGxY/yti$data[i,3] + input$varGxL/(yti$data[i,3]*yti$data[i,4]) + yti$data[i,6]/(yti$data[i,3]*yti$data[i,4]*yti$data[i,5])), 3)
+      # print(paste("H2 for stage", i, "is", yti$data[i,7]))
+    }
+  })
   
   # Render static table with total years, locs and plots
   # output$tYears = renderText({ sum(yti$data[,3]) })  # years
@@ -131,7 +148,7 @@ server <- function(input, output, clientData, session) {
       tp = tp + prod(mtx[i,1:4])
     print(tp)
   }
-  
+  # Display a table with costs calculated based on user input (stages etc.)
   output$cost_table = DT::renderDT(cbind(sum(yti$data[,3])+input$negen,sum(yti$data[,4]), totalPlots(yti$data)), 
                                    options = list(
                                      searching = F, # no search box
@@ -187,8 +204,8 @@ server <- function(input, output, clientData, session) {
   observeEvent(input$add_btn, {
     print(yti$data[1,3:6])
     # calc h2 for this stage
-    her = input$varG / ( input$varG + input$varGxY/yti$data[1,3] + input$varGxL/yti$data[1,3]*yti$data[1,4] + yti$data[1,6]/yti$data[1,3]*yti$data[1,4]*yti$data[1,5])
-    yti$data = rbind(yti$data, c(length(yti$data[,1])+1,2,1,1,1,1,round(her, 3)))
+    new_h2 = input$varG / (input$varG + input$varGxY + input$varGxL + 1)
+    yti$data = rbind(yti$data, c(length(yti$data[,1])+1,2,1,1,1,1,round(new_h2, 3)))
     
     # replaceData(proxy, yti$data, resetPaging = FALSE)  # important 
     
@@ -210,6 +227,7 @@ server <- function(input, output, clientData, session) {
     varGxL = isolate(input$varGxL)
     varGxY = isolate(input$varGxY)
     
+    stages = isolate(yti$data[,1]) # 
     entries = isolate(yti$data[,2]) # c(1000,100,10) 
     years = isolate(yti$data[,3]) # c(1,1,1)
     locs = isolate(yti$data[,4]) # c(1,4,8)
@@ -219,7 +237,7 @@ server <- function(input, output, clientData, session) {
     varieties = isolate(input$varieties)
     
     # store settings for summary plot TODO
-    sumset_table = data.frame(entries, years, locs, reps, error, h2)
+    sumset_table = data.frame(stages, entries, years, locs, reps, error, h2)
     
     # Create a new tab in the UI every time Run is pressed
     output$mytabs = renderUI({
@@ -253,8 +271,7 @@ server <- function(input, output, clientData, session) {
     
     #reactDT <- reactiveValues(data = yt)
     # Global settings for all DTs in senarios
-    sumset_DT = list(sumset_table,
-                      options = list(
+    sumset_DT = list( options = list(
                         searching = F, # no search box
                         paginate = F,  # no num of pages
                         lengthChange = F, # no show entries
@@ -277,15 +294,14 @@ server <- function(input, output, clientData, session) {
     {
       output$cyPlot1 <- nplot
       reactDT1 <- reactiveValues(data = sumset_table)
-      output$stages_summary1 = DT::renderDT(reactDT1$data, options = sumset_DT$options, class = sumset_DT$class, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
-      
+      output$stages_summary1 = DT::renderDT(reactDT1$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
       # Update editable DT through a proxy DT on cell edit event
       proxy = dataTableProxy('stages_summary1')
       #
       observeEvent(input$stages_summary1_cell_edit, {
         info = input$stages_summary1_cell_edit
         i = info$row
-        j = info$col # +1 required when rownames = F in DT
+        j = info$col + 1 # required when rownames = F in DT
         v = info$value
         str(info)
         # Character string needs to be coerced to same type as target value. Here as.integer()
@@ -296,40 +312,37 @@ server <- function(input, output, clientData, session) {
       
       # Execute runScenario() for the current settings
       observeEvent(input$update_btn1, {
-        
-        varG = isolate(input$varG)
-        varGxL = isolate(input$varGxL)
-        varGxY = isolate(input$varGxY)
-        
-        entries = isolate(reactDT1$data[,1]) # c(1000,100,10) 
-        years = isolate(reactDT1$data[,2]) # c(1,1,1)
-        locs = isolate(reactDT1$data[,3]) # c(1,4,8)
-        reps = isolate(reactDT1$data[,4]) # c(1,2,3)
-        error = isolate(reactDT1$data[,5]) # c(1,1,1)
-        varieties = isolate(input$varieties)
-        
         output$cyPlot1 <- renderPlot({
-          
-          result = runScenario(varG,varGxL,varGxY,entries,years,locs,reps,error,varieties)
-          boxplot(t(result),
-                  xlab="Stage",
-                  ylab="Mean Genetic Value")
+          result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+                               isolate(reactDT1$data[,2]),isolate(reactDT1$data[,3]),
+                               isolate(reactDT1$data[,4]),isolate(reactDT1$data[,5]),
+                               isolate(reactDT1$data[,6]),isolate(input$varieties))
+          boxplot(t(result),xlab="Stage",ylab="Mean Genetic Value")
         })   # end of renderPlot
-        
-      }) # endof update btn
+      }) # endof update btn  
+
+      # Update H2 for every stage as soon as input data that affect H2 change
+      observe({
+        for (i in 1:nrow(reactDT1$data))
+        {
+          reactDT1$data[i,7] = round(input$varG/(input$varG + input$varGxY/reactDT1$data[i,3] + input$varGxL/(reactDT1$data[i,3]*reactDT1$data[i,4]) + reactDT1$data[i,6]/(reactDT1$data[i,3]*reactDT1$data[i,4]*reactDT1$data[i,5])), 3)
+          # print(paste("H2 for stage", i, "is", yti$data[i,7]))
+        }
+      })
+      
     }
     else if (input$run_btn == 2)
     {
       output$cyPlot2 <- nplot
       reactDT2 <- reactiveValues(data = sumset_table)
-      output$stages_summary2 = DT::renderDT(reactDT2$data, options = sumset_DT$options, class = sumset_DT$class, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+      output$stages_summary2 = DT::renderDT(reactDT2$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
       # Update editable DT through a proxy DT on cell edit event
       proxy = dataTableProxy('stages_summary2')
       #
       observeEvent(input$stages_summary2_cell_edit, {
         info = input$stages_summary2_cell_edit
         i = info$row
-        j = info$col # +1 required when rownames = F in DT
+        j = info$col + 1 # required when rownames = F in DT
         v = info$value
         str(info)
         # Character string needs to be coerced to same type as target value. Here as.integer()
@@ -342,25 +355,34 @@ server <- function(input, output, clientData, session) {
       observeEvent(input$update_btn2, {
         output$cyPlot2 <- renderPlot({
           result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                               isolate(reactDT2$data[,1]),isolate(reactDT2$data[,2]),
-                               isolate(reactDT2$data[,3]),isolate(reactDT2$data[,4]),
-                               isolate(reactDT2$data[,5]),isolate(input$varieties))
+                               isolate(reactDT2$data[,2]),isolate(reactDT2$data[,3]),
+                               isolate(reactDT2$data[,4]),isolate(reactDT2$data[,5]),
+                               isolate(reactDT2$data[,6]),isolate(input$varieties))
           boxplot(t(result),xlab="Stage",ylab="Mean Genetic Value")
         })   # end of renderPlot
-      }) # endof update btn      
+      }) # endof update btn  
+      
+      # Update H2 for every stage as soon as input data that affect H2 change
+      observe({
+        for (i in 1:nrow(reactDT2$data))
+        {
+          reactDT2$data[i,7] = round(input$varG/(input$varG + input$varGxY/reactDT2$data[i,3] + input$varGxL/(reactDT2$data[i,3]*reactDT2$data[i,4]) + reactDT2$data[i,6]/(reactDT2$data[i,3]*reactDT2$data[i,4]*reactDT2$data[i,5])), 3)
+          # print(paste("H2 for stage", i, "is", yti$data[i,7]))
+        }
+      })
     }
     else if (input$run_btn == 3)
     {
       output$cyPlot3 <- nplot
       reactDT3 <- reactiveValues(data = sumset_table)
-      output$stages_summary3 = DT::renderDT(reactDT3$data, options = sumset_DT$options, class = sumset_DT$class, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+      output$stages_summary3 = DT::renderDT(reactDT3$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
       # Update editable DT through a proxy DT on cell edit event
       proxy = dataTableProxy('stages_summary3')
       #
       observeEvent(input$stages_summary3_cell_edit, {
         info = input$stages_summary3_cell_edit
         i = info$row
-        j = info$col # +1 required when rownames = F in DT
+        j = info$col + 1 # required when rownames = F in DT
         v = info$value
         str(info)
         # Character string needs to be coerced to same type as target value. Here as.integer()
@@ -373,12 +395,21 @@ server <- function(input, output, clientData, session) {
       observeEvent(input$update_btn3, {
         output$cyPlot3 <- renderPlot({
           result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                               isolate(reactDT3$data[,1]),isolate(reactDT3$data[,2]),
-                               isolate(reactDT3$data[,3]),isolate(reactDT3$data[,4]),
-                               isolate(reactDT3$data[,5]),isolate(input$varieties))
+                               isolate(reactDT3$data[,2]),isolate(reactDT3$data[,3]),
+                               isolate(reactDT3$data[,4]),isolate(reactDT3$data[,5]),
+                               isolate(reactDT3$data[,6]),isolate(input$varieties))
           boxplot(t(result),xlab="Stage",ylab="Mean Genetic Value")
         })   # end of renderPlot
       }) # endof update btn  
+      
+      # Update H2 for every stage as soon as input data that affect H2 change
+      observe({
+        for (i in 1:nrow(reactDT3$data))
+        {
+          reactDT3$data[i,7] = round(input$varG/(input$varG + input$varGxY/reactDT3$data[i,3] + input$varGxL/(reactDT3$data[i,3]*reactDT3$data[i,4]) + reactDT3$data[i,6]/(reactDT3$data[i,3]*reactDT3$data[i,4]*reactDT3$data[i,5])), 3)
+          # print(paste("H2 for stage", i, "is", yti$data[i,7]))
+        }
+      })
     }
     else if (input$run_btn == 4)
     {
