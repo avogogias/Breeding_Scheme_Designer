@@ -91,7 +91,10 @@ ui <- fluidPage(title = "Cycle Scenarios",
                   ), # endof SidebarPanel
                   # Show plots and charts 
                   mainPanel(
-                    uiOutput('mytabs')
+                    splitLayout(
+                      uiOutput('mytabs'),
+                      plotOutput('sumtab')
+                    )
                   ) # endof mainPanel
                 ) # endof sidebarLayout
                 
@@ -269,8 +272,7 @@ server <- function(input, output, clientData, session) {
               ylab="Mean Genetic Value")
     })   # end of renderPlot
     
-    #reactDT <- reactiveValues(data = yt)
-    # Global settings for all DTs in senarios
+    # Global settings for all DTs in senario tabs
     sumset_DT = list( options = list(
                         searching = F, # no search box
                         paginate = F,  # no num of pages
@@ -288,8 +290,9 @@ server <- function(input, output, clientData, session) {
                       server = TRUE) # server = F doesn't work with replaceData() cell editing
 
     
-    # source('plotInTab.R')
-    
+    # The following blocks of code are repeated for every run_btn index
+    # Ideally this control would take place recursively but building an
+    # output name dynamically using assign, doesn't seem to work.
     if (input$run_btn == 1)
     {
       output$cyPlot1 <- nplot
@@ -451,7 +454,15 @@ server <- function(input, output, clientData, session) {
     
     # TODO create a summary for each scenario / stage to place under boxplot
     # output$stages_summary1 = DT::renderDT(summary_settings)
-
+  
+    output$sumtab <- renderPlot({
+      result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+                           isolate(yti$data[,2]),isolate(yti$data[,3]),
+                           isolate(yti$data[,4]),isolate(yti$data[,5]),
+                           isolate(yti$data[,6]),isolate(input$varieties))
+      boxplot(t(result),xlab="Stage",ylab="Mean Genetic Value")
+    })   # end of renderPlot
+      
     
   }) # end of run button
   
