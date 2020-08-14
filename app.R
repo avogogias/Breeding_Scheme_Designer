@@ -3,6 +3,7 @@ library(DT)
 library(shinyBS)
 library(Rcpp)
 library(RcppArmadillo)
+library(ggplot2) 
 
 sourceCpp("Engine.cpp")
 
@@ -91,10 +92,11 @@ ui <- fluidPage(title = "Cycle Scenarios",
                   ), # endof SidebarPanel
                   # Show plots and charts 
                   mainPanel(
-                    splitLayout(
-                      uiOutput('mytabs'),
-                      plotOutput('sumtab')
-                    )
+                    #splitLayout(,)
+                    tabsetPanel(
+                      tabPanel("Scenarios", uiOutput('mytabs')),
+                      tabPanel("Overview", plotOutput('sumtab'))
+                    ) # endo of tabsetPanel
                   ) # endof mainPanel
                 ) # endof sidebarLayout
                 
@@ -316,11 +318,11 @@ server <- function(input, output, clientData, session) {
       # Execute runScenario() for the current settings
       observeEvent(input$update_btn1, {
         output$cyPlot1 <- renderPlot({
-          result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+          result1 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
                                isolate(reactDT1$data[,2]),isolate(reactDT1$data[,3]),
                                isolate(reactDT1$data[,4]),isolate(reactDT1$data[,5]),
                                isolate(reactDT1$data[,6]),isolate(input$varieties))
-          boxplot(t(result),xlab="Stage",ylab="Mean Genetic Value")
+          boxplot(t(result1),xlab="Stage",ylab="Mean Genetic Value")
         })   # end of renderPlot
       }) # endof update btn  
 
@@ -357,11 +359,11 @@ server <- function(input, output, clientData, session) {
       # Execute runScenario() for the current settings
       observeEvent(input$update_btn2, {
         output$cyPlot2 <- renderPlot({
-          result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+          result2 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
                                isolate(reactDT2$data[,2]),isolate(reactDT2$data[,3]),
                                isolate(reactDT2$data[,4]),isolate(reactDT2$data[,5]),
                                isolate(reactDT2$data[,6]),isolate(input$varieties))
-          boxplot(t(result),xlab="Stage",ylab="Mean Genetic Value")
+          boxplot(t(result2),xlab="Stage",ylab="Mean Genetic Value")
         })   # end of renderPlot
       }) # endof update btn  
       
@@ -397,11 +399,11 @@ server <- function(input, output, clientData, session) {
       # Execute runScenario() for the current settings
       observeEvent(input$update_btn3, {
         output$cyPlot3 <- renderPlot({
-          result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+          result3 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
                                isolate(reactDT3$data[,2]),isolate(reactDT3$data[,3]),
                                isolate(reactDT3$data[,4]),isolate(reactDT3$data[,5]),
                                isolate(reactDT3$data[,6]),isolate(input$varieties))
-          boxplot(t(result),xlab="Stage",ylab="Mean Genetic Value")
+          boxplot(t(result3),xlab="Stage",ylab="Mean Genetic Value")
         })   # end of renderPlot
       }) # endof update btn  
       
@@ -456,11 +458,20 @@ server <- function(input, output, clientData, session) {
     # output$stages_summary1 = DT::renderDT(summary_settings)
   
     output$sumtab <- renderPlot({
-      result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                           isolate(yti$data[,2]),isolate(yti$data[,3]),
-                           isolate(yti$data[,4]),isolate(yti$data[,5]),
-                           isolate(yti$data[,6]),isolate(input$varieties))
-      boxplot(t(result),xlab="Stage",ylab="Mean Genetic Value")
+      # result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+      #                      isolate(yti$data[,2]),isolate(yti$data[,3]),
+      #                      isolate(yti$data[,4]),isolate(yti$data[,5]),
+      #                      isolate(yti$data[,6]),isolate(input$varieties))
+      # boxplot(t(result),xlab="Stage",ylab="Mean Genetic Value")
+      
+      # Dorcus multiple boxplots comparison code
+      # Note that "Gain" is the mean of F1s
+      PYT = readRDS("PYT20.rds")
+      ggplot(PYT,aes(x=Crosses,y=Gain,fill=Parents))+
+        geom_boxplot()+
+        ylab("Gain (Relative to Mean)")+
+        ggtitle("PYT Crossing Block (Year 20)")
+      
     })   # end of renderPlot
       
     
