@@ -92,12 +92,14 @@ ui <- fluidPage(title = "Cycle Scenarios",
                   ), # endof SidebarPanel
                   # Show plots and charts 
                   mainPanel(
-                    #splitLayout(,)
-                    tabsetPanel(
-                      tabPanel("Scenarios", uiOutput('mytabs')),
-                      tabPanel("Overview", plotOutput('sumtab'))
-                    ) # endo of tabsetPanel
-                  ) # endof mainPanel
+                    uiOutput('mytabs') # old
+                    # #splitLayout(,)
+                    # tabsetPanel(
+                    #   tabPanel("Scenarios", uiOutput('mytabs')),
+                    #   tabPanel("Overview", plotOutput('sumtab'))
+                    # ) # endo of tabsetPanel
+                  ), # endof mainPanel
+                  fluid = T # layout is not fixed, default is T
                 ) # endof sidebarLayout
                 
 )
@@ -115,6 +117,8 @@ server <- function(input, output, clientData, session) {
   reps = c(1,2,3)
   error = c(1,1,1)
   h2 = c(0.5,0.5,0.5) # this is a calculated value
+  
+  results_all = NULL
 
   # updateH2 <- function(){
   #   for (i in stage)
@@ -263,16 +267,34 @@ server <- function(input, output, clientData, session) {
     
     print(paste("Run", input$run_btn))
     
-    # Plot results in latest created tab
-    # TV WORKS    output$cyPlot1 <- renderPlot({
+    result = runScenario(varG,varGxL,varGxY,entries,years,locs,reps,error,varieties)
+    
+    # New Plot of ran result appearing in new tab
     # First save new plot in a variable before passing it to output
     nplot <- renderPlot({
-
-      result = runScenario(varG,varGxL,varGxY,entries,years,locs,reps,error,varieties)
       boxplot(t(result),
               xlab="Stage",
               ylab="Mean Genetic Value")
     })   # end of renderPlot
+    
+    # Build data frame with all scenario results to use in grouped boxplots overview tab
+    # groupResults <- function(r){
+    #   res = NULL
+    #   for(i in 1:nrow(r)) 
+    #   {
+    #     res = cbind(res, rbind(Stage = as.integer(i), Value = r[i,]))
+    #   }
+    #  # print(res) 
+    # }
+    # myDF = groupResults(result)
+    
+    # Store results from all runs in a matrix
+    for(i in 1:nrow(result)) 
+    {
+      results_all = cbind(results_all, rbind(Stage = as.integer(i), Value = result[i,], Scenario = input$run_btn))
+    }
+    head(t(results_all))
+    tail(t(results_all))
     
     # Global settings for all DTs in senario tabs
     sumset_DT = list( options = list(
@@ -415,6 +437,10 @@ server <- function(input, output, clientData, session) {
           # print(paste("H2 for stage", i, "is", yti$data[i,7]))
         }
       })
+      
+      # TEST MULTI PLOT for 3 runs
+      #result_all = cbind(result1, result2, result3)
+    
     }
     else if (input$run_btn == 4)
     {
@@ -464,13 +490,21 @@ server <- function(input, output, clientData, session) {
       #                      isolate(yti$data[,6]),isolate(input$varieties))
       # boxplot(t(result),xlab="Stage",ylab="Mean Genetic Value")
       
+      
+      #boxplot(t(results_all))
+      ggplot(as.data.frame(t(results_all)),aes(x=Stage,y=Value,fill=Scenario))+
+        geom_boxplot()
+      
       # Dorcus multiple boxplots comparison code
       # Note that "Gain" is the mean of F1s
-      PYT = readRDS("PYT20.rds")
-      ggplot(PYT,aes(x=Crosses,y=Gain,fill=Parents))+
-        geom_boxplot()+
-        ylab("Gain (Relative to Mean)")+
-        ggtitle("PYT Crossing Block (Year 20)")
+      # PYT = readRDS("PYT20.rds")
+      # ggplot(PYT,aes(x=Crosses,y=Gain,fill=Parents))+
+      #   geom_boxplot()+
+      #   ylab("Gain (Relative to Mean)")+
+      #   ggtitle("PYT Crossing Block (Year 20)")
+      
+      # First cbind results from all updated scenario runs and then plot
+      #result_all = cbind(result1, result2, result3)
       
     })   # end of renderPlot
       
