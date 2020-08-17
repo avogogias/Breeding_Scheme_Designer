@@ -158,7 +158,7 @@ server <- function(input, output, clientData, session) {
     print(tp)
   }
   # Display a table with costs calculated based on user input (stages etc.)
-  output$cost_table = DT::renderDT(cbind(sum(yti$data[,3])+input$negen,sum(yti$data[,4]), totalPlots(yti$data)), 
+  output$cost_table = DT::renderDT(cbind(sum(yti$data[,3])+input$negen,sum(yti$data[,3]*yti$data[,4]), totalPlots(yti$data)), 
                                    options = list(
                                      searching = F, # no search box
                                      paginate = F,  # no num of pages
@@ -289,7 +289,7 @@ server <- function(input, output, clientData, session) {
     # myDF = groupResults(result)
     
     # Store results from all runs in a matrix
-    for(i in 1:nrow(result)) 
+    for(i in 1:nrow(result)) # 1:input$run_btn
     {
       results_all = cbind(results_all, rbind(Stage = as.integer(i), Value = result[i,], Scenario = input$run_btn))
     }
@@ -492,7 +492,7 @@ server <- function(input, output, clientData, session) {
       
       
       #boxplot(t(results_all))
-      ggplot(as.data.frame(t(results_all)),aes(x=Stage,y=Value,fill=Scenario))+
+      ggplot(as.list(t(results_all)),aes(x=Stage,y=Value,fill=Scenario))+
         geom_boxplot()
       
       # Dorcus multiple boxplots comparison code
