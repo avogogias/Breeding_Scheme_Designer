@@ -119,18 +119,84 @@ if (input$run_btn == 1)
       # print(paste("H2 for stage", i, "is", yti$data[i,7]))
     }
   })
-  
-  # TEST MULTI PLOT for 3 runs
-  #result_all = cbind(result1, result2, result3)
-  
 } else if (input$run_btn == 4)
 {
   output$cyPlot4 <- nplot
-  output$stages_summary4 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  reactDT4 <- reactiveValues(data = sumset_table)
+  output$stages_summary4 = DT::renderDT(reactDT4$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  # Update editable DT through a proxy DT on cell edit event
+  proxy = dataTableProxy('stages_summary4')
+  #
+  observeEvent(input$stages_summary4_cell_edit, {
+    info = input$stages_summary4_cell_edit
+    i = info$row
+    j = info$col + 1 # required when rownames = F in DT
+    v = info$value
+    str(info)
+    # Character string needs to be coerced to same type as target value. Here as.integer()
+    reactDT4$data[i, j] = DT::coerceValue(v, reactDT4$data[i, j])
+    # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
+    replaceData(proxy, reactDT4$data, resetPaging = FALSE)  # important 
+  })
+  
+  # Execute runScenario() for the current settings
+  observeEvent(input$update_btn4, {
+    output$cyPlot4 <- renderPlot({
+      result4 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+                            isolate(reactDT4$data[,2]),isolate(reactDT4$data[,3]),
+                            isolate(reactDT4$data[,4]),isolate(reactDT4$data[,5]),
+                            isolate(reactDT4$data[,6]),isolate(input$varieties))
+      boxplot(t(result4),xlab="Stage",ylab="Mean Genetic Value")
+    })   # end of renderPlot
+  }) # endof update btn  
+  
+  # Update H2 for every stage as soon as input data that affect H2 change
+  observe({
+    for (i in 1:nrow(reactDT4$data))
+    {
+      reactDT4$data[i,7] = round(input$varG/(input$varG + input$varGxY/reactDT4$data[i,3] + input$varGxL/(reactDT4$data[i,3]*reactDT4$data[i,4]) + reactDT4$data[i,6]/(reactDT4$data[i,3]*reactDT4$data[i,4]*reactDT4$data[i,5])), 3)
+      # print(paste("H2 for stage", i, "is", yti$data[i,7]))
+    }
+  })
 } else if (input$run_btn == 5)
 {
   output$cyPlot5 <- nplot
-  output$stages_summary5 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  reactDT5 <- reactiveValues(data = sumset_table)
+  output$stages_summary5 = DT::renderDT(reactDT5$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  # Update editable DT through a proxy DT on cell edit event
+  proxy = dataTableProxy('stages_summary5')
+  #
+  observeEvent(input$stages_summary5_cell_edit, {
+    info = input$stages_summary5_cell_edit
+    i = info$row
+    j = info$col + 1 # required when rownames = F in DT
+    v = info$value
+    str(info)
+    # Character string needs to be coerced to same type as target value. Here as.integer()
+    reactDT5$data[i, j] = DT::coerceValue(v, reactDT5$data[i, j])
+    # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
+    replaceData(proxy, reactDT5$data, resetPaging = FALSE)  # important 
+  })
+  
+  # Execute runScenario() for the current settings
+  observeEvent(input$update_btn5, {
+    output$cyPlot5 <- renderPlot({
+      result5 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+                            isolate(reactDT5$data[,2]),isolate(reactDT5$data[,3]),
+                            isolate(reactDT5$data[,4]),isolate(reactDT5$data[,5]),
+                            isolate(reactDT5$data[,6]),isolate(input$varieties))
+      boxplot(t(result5),xlab="Stage",ylab="Mean Genetic Value")
+    })   # end of renderPlot
+  }) # endof update btn  
+  
+  # Update H2 for every stage as soon as input data that affect H2 change
+  observe({
+    for (i in 1:nrow(reactDT5$data))
+    {
+      reactDT5$data[i,7] = round(input$varG/(input$varG + input$varGxY/reactDT5$data[i,3] + input$varGxL/(reactDT5$data[i,3]*reactDT5$data[i,4]) + reactDT5$data[i,6]/(reactDT5$data[i,3]*reactDT5$data[i,4]*reactDT5$data[i,5])), 3)
+      # print(paste("H2 for stage", i, "is", yti$data[i,7]))
+    }
+  })
 } else if (input$run_btn == 6)
 {
   output$cyPlot6 <- nplot
