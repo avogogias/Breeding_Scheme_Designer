@@ -120,7 +120,8 @@ server <- function(input, output, clientData, session) {
   h2 = c(0.5,0.5,0.5) # this is a calculated value
   
   # per-session object to store all results of this user session
-  results_all <- NULL
+  # results_all <- NULL
+  v <- reactiveValues(results_all = NULL)
 
   # updateH2 <- function(){
   #   for (i in stage)
@@ -294,10 +295,10 @@ server <- function(input, output, clientData, session) {
     # Store results from all runs in a global matrix
     for(i in 1:nrow(result)) # 1:input$run_btn
     {
-      results_all = cbind(results_all, rbind(Stage = i, Value = result[i,], Scenario = input$run_btn))
+      v$results_all = cbind(v$results_all, rbind(Stage = i, Value = result[i,], Scenario = input$run_btn))
     }
-    print(head(t(results_all)))
-    print(tail(t(results_all)))
+    print(head(t(v$results_all)))
+    print(tail(t(v$results_all)))
     
     # Global settings for all DTs in senario tabs
     sumset_DT = list( options = list(
@@ -330,9 +331,13 @@ server <- function(input, output, clientData, session) {
       # boxplot(t(result),xlab="Stage",ylab="Mean Genetic Value")
       
       
-      #boxplot(t(results_all))
-      ggplot(as.data.frame(t(results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
-        geom_boxplot()
+      # WORKS!
+      ggplot(as.data.frame(t(v$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
+        geom_boxplot()+
+        xlab("Stage")+
+        ylab("Gain")+
+        scale_fill_discrete(name="Scenario")+
+        ggtitle("Comparison between stages across all scenarios")
       
       # Dorcus multiple boxplots comparison code
       # Note that "Gain" is the mean of F1s
