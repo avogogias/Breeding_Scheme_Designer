@@ -4,7 +4,7 @@
 if (input$run_btn == 1)
 {
   output$cyPlot1 <- nplot
-  reactDT1 <- reactiveValues(data = sumset_table)
+  reactDT1 <- reactiveValues(data = stages_table)
   output$stages_summary1 = DT::renderDT(reactDT1$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary1')
@@ -44,7 +44,7 @@ if (input$run_btn == 1)
 } else if (input$run_btn == 2)
 {
   output$cyPlot2 <- nplot
-  reactDT2 <- reactiveValues(data = sumset_table)
+  reactDT2 <- reactiveValues(data = stages_table)
   output$stages_summary2 = DT::renderDT(reactDT2$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary2')
@@ -83,7 +83,7 @@ if (input$run_btn == 1)
 } else if (input$run_btn == 3)
 {
   output$cyPlot3 <- nplot
-  reactDT3 <- reactiveValues(data = sumset_table)
+  reactDT3 <- reactiveValues(data = stages_table)
   output$stages_summary3 = DT::renderDT(reactDT3$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary3')
@@ -122,7 +122,7 @@ if (input$run_btn == 1)
 } else if (input$run_btn == 4)
 {
   output$cyPlot4 <- nplot
-  reactDT4 <- reactiveValues(data = sumset_table)
+  reactDT4 <- reactiveValues(data = stages_table)
   output$stages_summary4 = DT::renderDT(reactDT4$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary4')
@@ -161,7 +161,7 @@ if (input$run_btn == 1)
 } else if (input$run_btn == 5)
 {
   output$cyPlot5 <- nplot
-  reactDT5 <- reactiveValues(data = sumset_table)
+  reactDT5 <- reactiveValues(data = stages_table)
   output$stages_summary5 = DT::renderDT(reactDT5$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary5')

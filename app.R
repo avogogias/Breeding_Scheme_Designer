@@ -104,8 +104,6 @@ ui <- fluidPage(title = "Cycle Scenarios",
                 
 )
 
-#results_all = NULL
-
 # Define server logic required to draw charts
 server <- function(input, output, clientData, session) {
   
@@ -119,8 +117,7 @@ server <- function(input, output, clientData, session) {
   error = c(1,1,1)
   h2 = c(0.5,0.5,0.5) # this is a calculated value
   
-  # per-session object to store all results of this user session
-  # results_all <- NULL
+  # per-session reactive values object to store all results of this user session
   v <- reactiveValues(results_all = NULL)
 
   # updateH2 <- function(){
@@ -249,7 +246,7 @@ server <- function(input, output, clientData, session) {
     varieties = isolate(input$varieties)
     
     # store settings for summary plot TODO
-    sumset_table = data.frame(stages, entries, years, locs, reps, error, h2)
+    stages_table = data.frame(stages, entries, years, locs, reps, error, h2)
     
     # Create a new tab in the UI every time Run is pressed
     output$mytabs = renderUI({
@@ -279,20 +276,8 @@ server <- function(input, output, clientData, session) {
               xlab="Stage",
               ylab="Mean Genetic Value")
     })   # end of renderPlot
-    
-    # Build data frame with all scenario results to use in grouped boxplots overview tab
-    # groupResults <- function(r){
-    #   res = NULL
-    #   for(i in 1:nrow(r)) 
-    #   {
-    #     res = cbind(res, rbind(Stage = as.integer(i), Value = r[i,]))
-    #   }
-    #  # print(res) 
-    # }
-    # myDF = groupResults(result)
-    
-    
-    # Store results from all runs in a global matrix
+
+    # Store results from all runs in a reactive matrix
     for(i in 1:nrow(result)) # 1:input$run_btn
     {
       v$results_all = cbind(v$results_all, rbind(Stage = i, Value = result[i,], Scenario = input$run_btn))
@@ -317,40 +302,35 @@ server <- function(input, output, clientData, session) {
                       editable = list(target = "cell", disable = list(columns = c(0, 6))),
                       server = TRUE) # server = F doesn't work with replaceData() cell editing
 
-    # Load content from file locally as if it was pasted here
+    # Include content from R file locally as if it was pasted here to manage if-else
     source('if_run_btn.r', local=TRUE)
     
-    # TODO create a summary for each scenario / stage to place under boxplot
-    # output$stages_summary1 = DT::renderDT(summary_settings)
-  
+    
+    
+    # Attempt to enrich v object with I/O data for every scenario - NOT USED
+    v$data = list(v$data, list("id" = input$run_btn, 
+                               "in" = list("varG" = varG,
+                                           "varGxY" = varGxY,
+                                           "varGxL" = varGxL,
+                                           "stages_table" = stages_table,
+                                           "varieties" = varieties), 
+                               "out" = result)
+                  )
+    
+    
+    ## Try to load input data using a for loop instead of if-else
+    # for (i in 1:input$run_btn)
+    # TODO
+    
+    
     output$sumtab <- renderPlot({
-      # result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-      #                      isolate(yti$data[,2]),isolate(yti$data[,3]),
-      #                      isolate(yti$data[,4]),isolate(yti$data[,5]),
-      #                      isolate(yti$data[,6]),isolate(input$varieties))
-      # boxplot(t(result),xlab="Stage",ylab="Mean Genetic Value")
-      
-      
-      # WORKS!
       ggplot(as.data.frame(t(v$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
         geom_boxplot()+
         xlab("Stage")+
         ylab("Gain")+
         scale_fill_discrete(name="Scenario")+
         ggtitle("Comparison between stages across all scenarios")
-      
-      # Dorcus multiple boxplots comparison code
-      # Note that "Gain" is the mean of F1s
-      # PYT = readRDS("PYT20.rds")
-      # ggplot(PYT,aes(x=Crosses,y=Gain,fill=Parents))+
-      #   geom_boxplot()+
-      #   ylab("Gain (Relative to Mean)")+
-      #   ggtitle("PYT Crossing Block (Year 20)")
-      
-      # First cbind results from all updated scenario runs and then plot
-      #result_all = cbind(result1, result2, result3)
-      
-    })   # end of renderPlot
+    })   # end of renderPlot for Overview tab
       
     
   }) # end of run button
