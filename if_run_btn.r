@@ -23,13 +23,40 @@ if (input$run_btn == 1)
   
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn1, {
+    result1 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+                          isolate(reactDT1$data[,2]),isolate(reactDT1$data[,3]),
+                          isolate(reactDT1$data[,4]),isolate(reactDT1$data[,5]),
+                          isolate(reactDT1$data[,6]),isolate(input$varieties))
     output$cyPlot1 <- renderPlot({
-      result1 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                            isolate(reactDT1$data[,2]),isolate(reactDT1$data[,3]),
-                            isolate(reactDT1$data[,4]),isolate(reactDT1$data[,5]),
-                            isolate(reactDT1$data[,6]),isolate(input$varieties))
+
       boxplot(t(result1),xlab="Stage",ylab="Mean Genetic Value")
     })   # end of renderPlot
+    
+    # Update results_all entries
+    # First remove previous run entries
+     v$results_all <- v$results_all[,v$results_all[3,]!=1] # WORKS!
+    print("UPDATED RESULTS")
+    print(head(t(v$results_all)))
+    print(tail(t(v$results_all)))
+    # Then add to matrix
+    for(i in 1:nrow(result1)) # 1:input$run_btn
+    {
+      v$results_all = cbind(v$results_all, rbind(Stage = i, Value = result1[i,], Scenario = 1))
+    }
+    print(head(t(v$results_all)))
+    print(tail(t(v$results_all)))
+
+    # Render Group Boxplot with updated entries
+    output$sumtab <- renderPlot({
+      ggplot(as.data.frame(t(v$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
+        geom_boxplot()+
+        xlab("Stage")+
+        ylab("Gain")+
+        scale_fill_discrete(name="Scenario")+
+        ggtitle("Comparison between stages across all scenarios")
+    })   # end of renderPlot for Overview tab
+
+    
   }) # endof update btn  
   
   # Update H2 for every stage as soon as input data that affect H2 change
