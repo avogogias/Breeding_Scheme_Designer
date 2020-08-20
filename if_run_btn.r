@@ -55,8 +55,6 @@ if (input$run_btn == 1)
         scale_fill_discrete(name="Scenario")+
         ggtitle("Comparison between stages across all scenarios")
     })   # end of renderPlot for Overview tab
-
-    
   }) # endof update btn  
   
   # Update H2 for every stage as soon as input data that affect H2 change
