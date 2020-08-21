@@ -119,9 +119,9 @@ server <- function(input, output, clientData, session) {
   h2 = c(0.5,0.5,0.5) # this is a calculated value
   
   # per-session reactive values object to store all results of this user session
-  v <- reactiveValues(results_all = NULL)
+  rv <- reactiveValues(results_all = NULL)
   # as in solution
-  rv <- reactiveValues()
+  #rv <- reactiveValues()
 
   # updateH2 <- function(){
   #   for (i in stage)
@@ -235,6 +235,17 @@ server <- function(input, output, clientData, session) {
   # Execute runScenario() for the current settings
   observeEvent(input$run_btn, {
     
+    # TV defining IDs to use in scenario elements
+    divID <- if (input$divID == "") gsub("\\.", "", format(Sys.time(), "%H%M%OS3")) 
+    else input$divID
+    dtID <- paste0(divID, "DT")
+    rm_btnID <- paste0(divID, "rmv")
+    up_btnID <- paste0(divID, "upd")
+    boxID <- paste0(divID, "box")
+    stagesID <- paste0(divID, "stg")
+    # scenarioID <- paste0(divID, "scn") # Attempt to use this instead of run_id FAILED!
+    
+    
     varG = isolate(input$varG)
     varGxL = isolate(input$varGxL)
     varGxY = isolate(input$varGxY)
@@ -249,7 +260,7 @@ server <- function(input, output, clientData, session) {
     varieties = isolate(input$varieties)
     
     # store settings for summary plot TODO
-    stages_table = data.frame(stages, entries, years, locs, reps, error, h2)
+    stages_current = data.frame(stages, entries, years, locs, reps, error, h2)
     
     # Create a new tab in the UI every time Run is pressed
     output$mytabs = renderUI({
@@ -283,10 +294,10 @@ server <- function(input, output, clientData, session) {
     # Store results from all runs in a reactive matrix
     for(i in 1:nrow(result)) # 1:input$run_btn
     {
-      v$results_all = cbind(v$results_all, rbind(Stage = i, Value = result[i,], Scenario = input$run_btn))
+      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result[i,], Scenario = input$run_btn)) # Scenario = scenarioID)) FAILS
     }
-    #print(head(t(v$results_all)))
-    #print(tail(t(v$results_all)))
+    #print(head(t(rv$results_all)))
+    #print(tail(t(rv$results_all)))
     
     # Global settings for all DTs in senario tabs
     sumset_DT = list( options = list(
@@ -315,7 +326,7 @@ server <- function(input, output, clientData, session) {
     #                            "in" = list("varG" = varG,
     #                                        "varGxY" = varGxY,
     #                                        "varGxL" = varGxL,
-    #                                        "stages_table" = stages_table,
+    #                                        "stages_current" = stages_current,
     #                                        "varieties" = varieties), 
     #                            "out" = result)
     #               )
@@ -326,7 +337,7 @@ server <- function(input, output, clientData, session) {
     # TODO
     
     output$sumtab <- renderPlot({
-      ggplot(as.data.frame(t(v$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
+      ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
         geom_boxplot()+
         xlab("Stage")+
         ylab("Gain")+
@@ -338,14 +349,16 @@ server <- function(input, output, clientData, session) {
     # ------------------------------ solution -----------------------------#
     # ///////////////////////////----------------\\\\\\\\\\\\\\\\\\\\\\\\\\#
     # Juxtapose I/O for each scenario in ALL tab using the placeholder
-    divID <- if (input$divID == "") gsub("\\.", "", format(Sys.time(), "%H%M%OS3")) 
-    else input$divID
-    dtID <- paste0(divID, "DT")
-    rm_btnID <- paste0(divID, "rmv")
-    up_btnID <- paste0(divID, "upd")
-    boxID <- paste0(divID, "box")
-    
-    reactDT <- paste0(divID, "stg")
+    # TV: IDs defined at the beginning of Run press loop
+    # divID <- if (input$divID == "") gsub("\\.", "", format(Sys.time(), "%H%M%OS3")) 
+    # else input$divID
+    # dtID <- paste0(divID, "DT")
+    # rm_btnID <- paste0(divID, "rmv")
+    # up_btnID <- paste0(divID, "upd")
+    # boxID <- paste0(divID, "box")
+    # 
+    # stagesID <- paste0(divID, "stg")
+    # scenarioID <- paste0(divID, "scn")
     
     # only create button if there is none
     if (is.null(rv[[divID]])) {
@@ -355,69 +368,69 @@ server <- function(input, output, clientData, session) {
         selector = "#placeholder",
         ui = tags$div(id = divID,
                       DT::DTOutput(dtID),
-                      actionButton(up_btnID, "Update", class = "pull-right btn btn-danger"),
+                      actionButton(up_btnID, "Update"),
                       actionButton(rm_btnID, "Remove", class = "pull-right btn btn-danger"),
                       output[[boxID]] <- nplot,
                       hr()
         )
       )
       
-      # TODO may need to replace reactDT with something like rv[[stID]]
-      # reactDT1 <- reactiveValues(data = stages_table)
-      rv[[reactDT]] <- stages_table
+      # TODO may need to replace stagesID with something like rv[[stID]]
+      # stagesID1 <- reactiveValues(data = stages_table)
+      rv[[stagesID]] <- stages_current
       
-      # print(reactDT)
-      # print(paste("h2 of stages table is", rv[[reactDT]][,7]))
+      # print(stagesID)
+      # print(paste("h2 of stages table is", rv[[stagesID]][,7])) # WORKS!
       
-      output[[dtID]] <- DT::renderDT(rv[[reactDT]], options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+      output[[dtID]] <- DT::renderDT(rv[[stagesID]], options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
       # Update editable DT through a proxy DT on cell edit event
       proxy = dataTableProxy(dtID)
       #
-      observeEvent(input$dtID_cell_edit, {
-        info = input$dtID_cell_edit
+      observeEvent(input[[paste0(dtID, "_cell_edit")]], { # WORKS !
+        info = input[[paste0(dtID, "_cell_edit")]]
         i = info$row
         j = info$col + 1 # required when rownames = F in DT
         v = info$value
         str(info)
         # Character string needs to be coerced to same type as target value. Here as.integer()
-        rv[[reactDT]][i, j] = DT::coerceValue(v, rv[[reactDT]][i, j])
+        rv[[stagesID]][i, j] = DT::coerceValue(v, rv[[stagesID]][i, j])
+        print(paste0("new edit in ", rv[[stagesID]][i, j]))
         # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
-        replaceData(proxy, rv[[reactDT]], resetPaging = FALSE)  # important 
+        replaceData(proxy, rv[[stagesID]], resetPaging = FALSE)  # important 
       })
       
       # Execute runScenario() for the current settings
       observeEvent(input[[up_btnID]], {
-        result1 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                              isolate(rv[[reactDT]][,2]),isolate(rv[[reactDT]][,3]),
-                              isolate(rv[[reactDT]][,4]),isolate(rv[[reactDT]][,5]),
-                              isolate(rv[[reactDT]][,6]),isolate(input$varieties))
+        nresult = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+                              isolate(rv[[stagesID]][,2]),isolate(rv[[stagesID]][,3]),
+                              isolate(rv[[stagesID]][,4]),isolate(rv[[stagesID]][,5]),
+                              isolate(rv[[stagesID]][,6]),isolate(input$varieties)) # WORKS!
         
-        print(reactDT)
-        print(paste("ON UPDATE h2 of stage 1 is", rv[[reactDT]][1,7]))
-        
-        # Does not update output!!!!!!!!!!!!!!!!
+        # NOT WORKING !!!!!!!!!!!!!!!! NOT UPDATING 
         # output$boxID <- SAME
         output[[boxID]] <- renderPlot({
-            boxplot(t(result1),xlab="Stage",ylab="Mean Genetic Value")
+          boxplot(t(nresult),xlab="Stage",ylab="Mean Genetic Value")
+          print("HELLO I DONT WORK")
         })   # end of renderPlot
         
         # Update results_all entries
         # First remove previous run entries
-        v$results_all <- v$results_all[,v$results_all[3,]!=1] # WORKS!
-        print("UPDATED RESULTS_ALL WORKS!")
-        #print(head(t(v$results_all)))
-        #print(tail(t(v$results_all)))
+        rv$results_all <- rv$results_all[,rv$results_all[3,]!=1] # WORKS for Scenario 1!
+        # rv$results_all <- rv$results_all[,rv$results_all[3,]!=scenarioID] # FAILS
+        # print("UPDATED RESULTS_ALL WORKS!")
+        #print(head(t(rv$results_all)))
+        #print(tail(t(rv$results_all)))
         # Then add to matrix
-        for(i in 1:nrow(result1)) # 1:input$run_btn
+        for(i in 1:nrow(nresult)) # 1:input$run_btn
         {
-          v$results_all = cbind(v$results_all, rbind(Stage = i, Value = result1[i,], Scenario = 1))
+          rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = nresult[i,], Scenario = 1)) # WORKS # Scenario = scenarioID)) FAILS!
         }
-        #print(head(t(v$results_all)))
-        #print(tail(t(v$results_all)))
+        #print(head(t(rv$results_all)))
+        #print(tail(t(rv$results_all)))
         
-        # Render Group Boxplot with updated entries
+        # Render Group Boxplot with updated entries --- WORKS!
         output$sumtab <- renderPlot({
-          ggplot(as.data.frame(t(v$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
+          ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
             geom_boxplot()+
             xlab("Stage")+
             ylab("Gain")+
@@ -426,12 +439,12 @@ server <- function(input, output, clientData, session) {
         })   # end of renderPlot for Overview tab
       }) # endof update btn  
       
-      # Update H2 for every stage as soon as input data that affect H2 change
+      # Update H2 for every stage as soon as input data that affect H2 change ---- WORKS!
       observe({
-        for (i in 1:nrow(rv[[reactDT]]))
+        for (i in 1:nrow(rv[[stagesID]]))
         {
-          rv[[reactDT]][i,7] = round(input$varG/(input$varG + input$varGxY/rv[[reactDT]][i,3] + input$varGxL/(rv[[reactDT]][i,3]*rv[[reactDT]][i,4]) + rv[[reactDT]][i,6]/(rv[[reactDT]][i,3]*rv[[reactDT]][i,4]*rv[[reactDT]][i,5])), 3)
-          print(paste("H2 for reactDT", reactDT,"in stage", i, "is", rv[[reactDT]][i,7]))
+          rv[[stagesID]][i,7] = round(input$varG/(input$varG + input$varGxY/rv[[stagesID]][i,3] + input$varGxL/(rv[[stagesID]][i,3]*rv[[stagesID]][i,4]) + rv[[stagesID]][i,6]/(rv[[stagesID]][i,3]*rv[[stagesID]][i,4]*rv[[stagesID]][i,5])), 3)
+          #print(paste("H2 for stagesID", stagesID,"in stage", i, "is", rv[[stagesID]][i,7], "and years = ", rv[[stagesID]][i,3]))
         }
       })
       

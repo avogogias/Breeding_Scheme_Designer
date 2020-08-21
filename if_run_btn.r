@@ -1,16 +1,25 @@
+# Currently results_all updates only for scenarios 1-5
+
 # The following blocks of code are repeated for every run_btn index
 # Ideally this control would take place recursively but building an
 # output name dynamically using assign, doesn't seem to work.
 if (input$run_btn == 1)
 {
-  output$cyPlot1 <- nplot
-  reactDT1 <- reactiveValues(data = stages_table)
-  output$stages_summary1 = DT::renderDT(reactDT1$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  output[[paste0("cyPlot", input$run_btn)]] <- nplot
+  # output$cyPlot1 <- nplot
+  assign(paste0("reactDT", input$run_btn), reactiveValues(data = stages_current))
+  #reactDT1 <- reactiveValues(data = stages_current)
+  output[[paste0("stages_summary", input$run_btn)]] = DT::renderDT(reactDT1$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  #output$stages_summary1 = DT::renderDT(reactDT1$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
-  proxy = dataTableProxy('stages_summary1')
+  proxy = dataTableProxy(paste0('stages_summary', input$run_btn))
+  #proxy = dataTableProxy('stages_summary1')
   #
-  observeEvent(input$stages_summary1_cell_edit, {
-    info = input$stages_summary1_cell_edit
+  
+  observeEvent(input[[paste0('stages_summary', input$run_btn, "_cell_edit")]], {
+#  observeEvent(input$stages_summary1_cell_edit, {
+    info = input[[paste0('stages_summary', input$run_btn, "_cell_edit")]]
+    # info = input$stages_summary1_cell_edit
     i = info$row
     j = info$col + 1 # required when rownames = F in DT
     v = info$value
@@ -34,21 +43,21 @@ if (input$run_btn == 1)
     
     # Update results_all entries
     # First remove previous run entries
-     v$results_all <- v$results_all[,v$results_all[3,]!=1] # WORKS!
+    rv$results_all <- rv$results_all[,rv$results_all[3,]!=1] # WORKS!
     print("UPDATED RESULTS")
-    print(head(t(v$results_all)))
-    print(tail(t(v$results_all)))
+    #print(head(t(rv$results_all)))
+    #print(tail(t(rv$results_all)))
     # Then add to matrix
     for(i in 1:nrow(result1)) # 1:input$run_btn
     {
-      v$results_all = cbind(v$results_all, rbind(Stage = i, Value = result1[i,], Scenario = 1))
+      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result1[i,], Scenario = 1))
     }
-    print(head(t(v$results_all)))
-    print(tail(t(v$results_all)))
+    #print(head(t(rv$results_all)))
+    #print(tail(t(rv$results_all)))
 
     # Render Group Boxplot with updated entries
     output$sumtab <- renderPlot({
-      ggplot(as.data.frame(t(v$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
+      ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
         geom_boxplot()+
         xlab("Stage")+
         ylab("Gain")+
@@ -69,7 +78,7 @@ if (input$run_btn == 1)
 } else if (input$run_btn == 2)
 {
   output$cyPlot2 <- nplot
-  reactDT2 <- reactiveValues(data = stages_table)
+  reactDT2 <- reactiveValues(data = stages_current)
   output$stages_summary2 = DT::renderDT(reactDT2$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary2')
@@ -88,13 +97,40 @@ if (input$run_btn == 1)
   
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn2, {
+    result2 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+                          isolate(reactDT2$data[,2]),isolate(reactDT2$data[,3]),
+                          isolate(reactDT2$data[,4]),isolate(reactDT2$data[,5]),
+                          isolate(reactDT2$data[,6]),isolate(input$varieties))
+    
     output$cyPlot2 <- renderPlot({
-      result2 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                            isolate(reactDT2$data[,2]),isolate(reactDT2$data[,3]),
-                            isolate(reactDT2$data[,4]),isolate(reactDT2$data[,5]),
-                            isolate(reactDT2$data[,6]),isolate(input$varieties))
+
       boxplot(t(result2),xlab="Stage",ylab="Mean Genetic Value")
     })   # end of renderPlot
+    
+    # Update results_all entries
+    # First remove previous run entries
+    rv$results_all <- rv$results_all[,rv$results_all[3,]!=2] # WORKS!
+    print("UPDATED RESULTS")
+    #print(head(t(rv$results_all)))
+    #print(tail(t(rv$results_all)))
+    # Then add to matrix
+    for(i in 1:nrow(result2)) # 1:input$run_btn
+    {
+      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result2[i,], Scenario = 2))
+    }
+    #print(head(t(rv$results_all)))
+    #print(tail(t(rv$results_all)))
+    
+    # Render Group Boxplot with updated entries
+    output$sumtab <- renderPlot({
+      ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
+        geom_boxplot()+
+        xlab("Stage")+
+        ylab("Gain")+
+        scale_fill_discrete(name="Scenario")+
+        ggtitle("Comparison between stages across all scenarios")
+    })   # end of renderPlot for Overview tab
+    
   }) # endof update btn  
   
   # Update H2 for every stage as soon as input data that affect H2 change
@@ -108,7 +144,7 @@ if (input$run_btn == 1)
 } else if (input$run_btn == 3)
 {
   output$cyPlot3 <- nplot
-  reactDT3 <- reactiveValues(data = stages_table)
+  reactDT3 <- reactiveValues(data = stages_current)
   output$stages_summary3 = DT::renderDT(reactDT3$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary3')
@@ -127,13 +163,41 @@ if (input$run_btn == 1)
   
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn3, {
+    
+    result3 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+                          isolate(reactDT3$data[,2]),isolate(reactDT3$data[,3]),
+                          isolate(reactDT3$data[,4]),isolate(reactDT3$data[,5]),
+                          isolate(reactDT3$data[,6]),isolate(input$varieties))
     output$cyPlot3 <- renderPlot({
-      result3 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                            isolate(reactDT3$data[,2]),isolate(reactDT3$data[,3]),
-                            isolate(reactDT3$data[,4]),isolate(reactDT3$data[,5]),
-                            isolate(reactDT3$data[,6]),isolate(input$varieties))
+
       boxplot(t(result3),xlab="Stage",ylab="Mean Genetic Value")
     })   # end of renderPlot
+    
+    
+    # Update results_all entries
+    # First remove previous run entries
+    rv$results_all <- rv$results_all[,rv$results_all[3,]!=3] # WORKS!
+    print("UPDATED RESULTS")
+    #print(head(t(rv$results_all)))
+    #print(tail(t(rv$results_all)))
+    # Then add to matrix
+    for(i in 1:nrow(result3)) # 1:input$run_btn
+    {
+      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result3[i,], Scenario = 3))
+    }
+    #print(head(t(rv$results_all)))
+    #print(tail(t(rv$results_all)))
+    
+    # Render Group Boxplot with updated entries
+    output$sumtab <- renderPlot({
+      ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
+        geom_boxplot()+
+        xlab("Stage")+
+        ylab("Gain")+
+        scale_fill_discrete(name="Scenario")+
+        ggtitle("Comparison between stages across all scenarios")
+    })   # end of renderPlot for Overview tab
+    
   }) # endof update btn  
   
   # Update H2 for every stage as soon as input data that affect H2 change
@@ -147,7 +211,7 @@ if (input$run_btn == 1)
 } else if (input$run_btn == 4)
 {
   output$cyPlot4 <- nplot
-  reactDT4 <- reactiveValues(data = stages_table)
+  reactDT4 <- reactiveValues(data = stages_current)
   output$stages_summary4 = DT::renderDT(reactDT4$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary4')
@@ -166,13 +230,42 @@ if (input$run_btn == 1)
   
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn4, {
+    
+    result4 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+                          isolate(reactDT4$data[,2]),isolate(reactDT4$data[,3]),
+                          isolate(reactDT4$data[,4]),isolate(reactDT4$data[,5]),
+                          isolate(reactDT4$data[,6]),isolate(input$varieties))
     output$cyPlot4 <- renderPlot({
-      result4 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                            isolate(reactDT4$data[,2]),isolate(reactDT4$data[,3]),
-                            isolate(reactDT4$data[,4]),isolate(reactDT4$data[,5]),
-                            isolate(reactDT4$data[,6]),isolate(input$varieties))
+
       boxplot(t(result4),xlab="Stage",ylab="Mean Genetic Value")
     })   # end of renderPlot
+    
+    
+    
+    # Update results_all entries
+    # First remove previous run entries
+    rv$results_all <- rv$results_all[,rv$results_all[3,]!=4] # WORKS!
+    print("UPDATED RESULTS")
+    #print(head(t(rv$results_all)))
+    #print(tail(t(rv$results_all)))
+    # Then add to matrix
+    for(i in 1:nrow(result4)) # 1:input$run_btn
+    {
+      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result4[i,], Scenario = 4))
+    }
+    #print(head(t(rv$results_all)))
+    #print(tail(t(rv$results_all)))
+    
+    # Render Group Boxplot with updated entries
+    output$sumtab <- renderPlot({
+      ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
+        geom_boxplot()+
+        xlab("Stage")+
+        ylab("Gain")+
+        scale_fill_discrete(name="Scenario")+
+        ggtitle("Comparison between stages across all scenarios")
+    })   # end of renderPlot for Overview tab
+    
   }) # endof update btn  
   
   # Update H2 for every stage as soon as input data that affect H2 change
@@ -186,7 +279,7 @@ if (input$run_btn == 1)
 } else if (input$run_btn == 5)
 {
   output$cyPlot5 <- nplot
-  reactDT5 <- reactiveValues(data = stages_table)
+  reactDT5 <- reactiveValues(data = stages_current)
   output$stages_summary5 = DT::renderDT(reactDT5$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary5')
@@ -205,13 +298,43 @@ if (input$run_btn == 1)
   
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn5, {
+    
+    result5 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+                          isolate(reactDT5$data[,2]),isolate(reactDT5$data[,3]),
+                          isolate(reactDT5$data[,4]),isolate(reactDT5$data[,5]),
+                          isolate(reactDT5$data[,6]),isolate(input$varieties))
     output$cyPlot5 <- renderPlot({
-      result5 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                            isolate(reactDT5$data[,2]),isolate(reactDT5$data[,3]),
-                            isolate(reactDT5$data[,4]),isolate(reactDT5$data[,5]),
-                            isolate(reactDT5$data[,6]),isolate(input$varieties))
+
       boxplot(t(result5),xlab="Stage",ylab="Mean Genetic Value")
     })   # end of renderPlot
+    
+    
+    
+    # Update results_all entries
+    # First remove previous run entries
+    rv$results_all <- rv$results_all[,rv$results_all[3,]!=5] # WORKS!
+    print("UPDATED RESULTS")
+    #print(head(t(rv$results_all)))
+    #print(tail(t(rv$results_all)))
+    # Then add to matrix
+    for(i in 1:nrow(result5)) # 1:input$run_btn
+    {
+      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result5[i,], Scenario = 5))
+    }
+    #print(head(t(rv$results_all)))
+    #print(tail(t(rv$results_all)))
+    
+    # Render Group Boxplot with updated entries
+    output$sumtab <- renderPlot({
+      ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
+        geom_boxplot()+
+        xlab("Stage")+
+        ylab("Gain")+
+        scale_fill_discrete(name="Scenario")+
+        ggtitle("Comparison between stages across all scenarios")
+    })   # end of renderPlot for Overview tab
+    
+    
   }) # endof update btn  
   
   # Update H2 for every stage as soon as input data that affect H2 change
