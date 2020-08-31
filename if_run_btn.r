@@ -16,10 +16,10 @@ if (input$run_btn == 1)
   #proxy = dataTableProxy('stages_summary1')
   #
   
-  observeEvent(input[[paste0('stages_summary', input$run_btn, "_cell_edit")]], {
-#  observeEvent(input$stages_summary1_cell_edit, {
-    info = input[[paste0('stages_summary', input$run_btn, "_cell_edit")]]
-    # info = input$stages_summary1_cell_edit
+  # observeEvent(input[[paste0('stages_summary', input$run_btn, "_cell_edit")]], {
+  observeEvent(input$stages_summary1_cell_edit, {
+    #info = input[[paste0('stages_summary', input$run_btn, "_cell_edit")]]
+    info = input$stages_summary1_cell_edit
     i = info$row
     j = info$col + 1 # required when rownames = F in DT
     v = info$value

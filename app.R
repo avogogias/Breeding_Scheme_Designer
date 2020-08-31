@@ -21,8 +21,9 @@ ui <- fluidPage(title = "Cycle Scenarios",
                     
                     tags$h3("Create a new scenario"),
                     
-                    textInput("divID", "Enter a unique ID for your scenario:", ""),
-                    helpText("Leave the text input blank for automatically unique IDs."),
+                    # User-defined scenario id 
+                    # textInput("divID", "Enter a unique ID for your scenario:", ""),
+                    # helpText("Leave the text input blank for automatically unique IDs."),
                     
                     tags$h4("Variance"),
                     
@@ -94,7 +95,7 @@ ui <- fluidPage(title = "Cycle Scenarios",
                   mainPanel(
                     # uiOutput('mytabs') # old
                     # #splitLayout(,)
-                    tabsetPanel(
+                    tabsetPanel(id = "my_tabs",
                       tabPanel("ALL", tags$div(id = "placeholder")),
                       tabPanel("Scenarios", uiOutput('mytabs')),
                       tabPanel("Overview", plotOutput('sumtab'))
@@ -236,8 +237,9 @@ server <- function(input, output, clientData, session) {
   observeEvent(input$run_btn, {
     
     # TV defining IDs to use in scenario elements
-    divID <- if (input$divID == "") gsub("\\.", "", format(Sys.time(), "%H%M%OS3")) 
-    else input$divID
+    # divID <- if (input$divID == "") gsub("\\.", "", format(Sys.time(), "%H%M%OS3")) 
+    # else input$divID
+    divID <- gsub("\\.", "", format(Sys.time(), "%H%M%OS3")) # always auto-generated
     dtID <- paste0(divID, "DT")
     rm_btnID <- paste0(divID, "rmv")
     up_btnID <- paste0(divID, "upd")
@@ -459,6 +461,19 @@ server <- function(input, output, clientData, session) {
         
         rv[[divID]] <- NULL
         
+        # TV TODO: also remove scenario from results_all and update Overview plot accordingly
+        # First remove previous run entries
+        # rv$results_all <- rv$results_all[,rv$results_all[3,]!=1] 
+        # Render Group Boxplot with updated entries
+        # output$sumtab <- renderPlot({
+        #   ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
+        #     geom_boxplot()+
+        #     xlab("Stage")+
+        #     ylab("Gain")+
+        #     scale_fill_discrete(name="Scenario")+
+        #     ggtitle("Comparison between stages across all scenarios")
+        # })   # end of renderPlot for Overview tab
+        
       }, ignoreInit = TRUE, once = TRUE)
       
       # otherwise, print a message to the console
@@ -468,6 +483,8 @@ server <- function(input, output, clientData, session) {
     
   }) # end of run button
   
+  # TV hide ALL tab 
+  shiny::hideTab(inputId = "my_tabs", target = "ALL")
   
 } # endof server
 
