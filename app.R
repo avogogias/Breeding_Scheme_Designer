@@ -126,6 +126,9 @@ server <- function(input, output, clientData, session) {
   rv <- reactiveValues(results_all = NULL)
   # as in solution
   #rv <- reactiveValues()
+  
+  # defines a common reactive list to store all scenario input info (stages DT + other) to replace reactDT
+  scenariosInput <- reactiveValues(stagesDT = list(), varG = list(), varGxL = list(), varGxY = list(), varieties = list()) # initially will store stages_current and updated accordingly
 
   # updateH2 <- function(){
   #   for (i in stage)
@@ -330,8 +333,8 @@ server <- function(input, output, clientData, session) {
                       server = TRUE) # server = F doesn't work with replaceData() cell editing
 
     # Include content from R file locally as if it was pasted here to manage if-else
-    source('if_run_btn.r', local=TRUE)
-    
+    # source('if_run_btn.r', local=TRUE) # OLD METHOD with if-else loop handling WORKS but with duplicated code
+    source('update_scenarios.r', local = TRUE)
     
     
     # # Attempt to enrich v object with I/O data for every scenario - NOT USED
