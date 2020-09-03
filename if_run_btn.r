@@ -1,15 +1,15 @@
 # Currently results_all updates only for scenarios 1-5
-
+# Common lines of code between Scenario IDs
 cnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2')
+output[[paste0("cyPlot", tail(Scenarios,1))]] <- nplot
+
 
 # The following blocks of code are repeated for every run_btn index
 # Ideally this control would take place recursively but building an
 # output name dynamically using assign, doesn't seem to work.
 if (tail(Scenarios,1) == 1)
 {
-  output[[paste0("cyPlot", tail(Scenarios,1))]] <- nplot
-  # output$cyPlot1 <- nplot
-  #assign(paste0("reactDT", tail(Scenarios,1)), reactiveValues(data = stages_current))
+  #assign(paste0("reactDT", tail(Scenarios,1)), reactiveValues(data = stages_current)) # WORKS BUT not useful
   reactDT1 <- reactiveValues(data = stages_current)
   output[[paste0("stages_summary", tail(Scenarios,1))]] = DT::renderDT(reactDT1$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
   #output$stages_summary1 = DT::renderDT(reactDT1$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
@@ -17,7 +17,7 @@ if (tail(Scenarios,1) == 1)
   proxy = dataTableProxy(paste0('stages_summary', tail(Scenarios,1)))
   #proxy = dataTableProxy('stages_summary1')
   #
-  
+
   # observeEvent(input[[paste0('stages_summary', tail(Scenarios,1), "_cell_edit")]], {
   observeEvent(input$stages_summary1_cell_edit, {
     #info = input[[paste0('stages_summary', tail(Scenarios,1), "_cell_edit")]]
@@ -30,9 +30,9 @@ if (tail(Scenarios,1) == 1)
     reactDT1$data[i, j] = DT::coerceValue(v, reactDT1$data[i, j])
     #reactDT1$data[i, j] = DT::coerceValue(v, reactDT1$data[i, j])
     # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
-    replaceData(proxy, reactDT1$data, resetPaging = FALSE)  # important 
+    replaceData(proxy, reactDT1$data, resetPaging = FALSE)  # important
   })
-  
+
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn1, {
     result1 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
@@ -43,7 +43,7 @@ if (tail(Scenarios,1) == 1)
 
       boxplot(t(result1),xlab="Stage",ylab="Mean Genetic Value")
     })   # end of renderPlot
-    
+
     # Update results_all entries
     # First remove previous run entries
     rv$results_all <- rv$results_all[,rv$results_all[3,]!=1] # WORKS!
@@ -67,8 +67,8 @@ if (tail(Scenarios,1) == 1)
         scale_fill_discrete(name="Scenario")+
         ggtitle("Comparison between stages across all scenarios")
     })   # end of renderPlot for Overview tab
-  }) # endof update btn  
-  
+  }) # endof update btn
+
   # Update H2 for every stage as soon as input data that affect H2 change
   observe({
     for (i in 1:nrow(reactDT1$data))
@@ -77,10 +77,10 @@ if (tail(Scenarios,1) == 1)
       # print(paste("H2 for stage", i, "is", yti$data[i,7]))
     }
   })
-  
+
 } else if (tail(Scenarios,1) == 2)
 {
-  output$cyPlot2 <- nplot
+  # output$cyPlot2 <- nplot
   reactDT2 <- reactiveValues(data = stages_current)
   output$stages_summary2 = DT::renderDT(reactDT2$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
@@ -95,21 +95,21 @@ if (tail(Scenarios,1) == 1)
     # Character string needs to be coerced to same type as target value. Here as.integer()
     reactDT2$data[i, j] = DT::coerceValue(v, reactDT2$data[i, j])
     # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
-    replaceData(proxy, reactDT2$data, resetPaging = FALSE)  # important 
+    replaceData(proxy, reactDT2$data, resetPaging = FALSE)  # important
   })
-  
+
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn2, {
     result2 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
                           isolate(reactDT2$data[,2]),isolate(reactDT2$data[,3]),
                           isolate(reactDT2$data[,4]),isolate(reactDT2$data[,5]),
                           isolate(reactDT2$data[,6]),isolate(input$varieties))
-    
+
     output$cyPlot2 <- renderPlot({
 
       boxplot(t(result2),xlab="Stage",ylab="Mean Genetic Value")
     })   # end of renderPlot
-    
+
     # Update results_all entries
     # First remove previous run entries
     rv$results_all <- rv$results_all[,rv$results_all[3,]!=2] # WORKS!
@@ -123,7 +123,7 @@ if (tail(Scenarios,1) == 1)
     }
     #print(head(t(rv$results_all)))
     #print(tail(t(rv$results_all)))
-    
+
     # Render Group Boxplot with updated entries
     output$sumtab <- renderPlot({
       ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
@@ -133,9 +133,9 @@ if (tail(Scenarios,1) == 1)
         scale_fill_discrete(name="Scenario")+
         ggtitle("Comparison between stages across all scenarios")
     })   # end of renderPlot for Overview tab
-    
-  }) # endof update btn  
-  
+
+  }) # endof update btn
+
   # Update H2 for every stage as soon as input data that affect H2 change
   observe({
     for (i in 1:nrow(reactDT2$data))
@@ -146,7 +146,7 @@ if (tail(Scenarios,1) == 1)
   })
 } else if (tail(Scenarios,1) == 3)
 {
-  output$cyPlot3 <- nplot
+  # output$cyPlot3 <- nplot
   reactDT3 <- reactiveValues(data = stages_current)
   output$stages_summary3 = DT::renderDT(reactDT3$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
@@ -161,12 +161,12 @@ if (tail(Scenarios,1) == 1)
     # Character string needs to be coerced to same type as target value. Here as.integer()
     reactDT3$data[i, j] = DT::coerceValue(v, reactDT3$data[i, j])
     # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
-    replaceData(proxy, reactDT3$data, resetPaging = FALSE)  # important 
+    replaceData(proxy, reactDT3$data, resetPaging = FALSE)  # important
   })
-  
+
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn3, {
-    
+
     result3 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
                           isolate(reactDT3$data[,2]),isolate(reactDT3$data[,3]),
                           isolate(reactDT3$data[,4]),isolate(reactDT3$data[,5]),
@@ -175,8 +175,8 @@ if (tail(Scenarios,1) == 1)
 
       boxplot(t(result3),xlab="Stage",ylab="Mean Genetic Value")
     })   # end of renderPlot
-    
-    
+
+
     # Update results_all entries
     # First remove previous run entries
     rv$results_all <- rv$results_all[,rv$results_all[3,]!=3] # WORKS!
@@ -190,7 +190,7 @@ if (tail(Scenarios,1) == 1)
     }
     #print(head(t(rv$results_all)))
     #print(tail(t(rv$results_all)))
-    
+
     # Render Group Boxplot with updated entries
     output$sumtab <- renderPlot({
       ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
@@ -200,9 +200,9 @@ if (tail(Scenarios,1) == 1)
         scale_fill_discrete(name="Scenario")+
         ggtitle("Comparison between stages across all scenarios")
     })   # end of renderPlot for Overview tab
-    
-  }) # endof update btn  
-  
+
+  }) # endof update btn
+
   # Update H2 for every stage as soon as input data that affect H2 change
   observe({
     for (i in 1:nrow(reactDT3$data))
@@ -213,7 +213,7 @@ if (tail(Scenarios,1) == 1)
   })
 } else if (tail(Scenarios,1) == 4)
 {
-  output$cyPlot4 <- nplot
+  # output$cyPlot4 <- nplot
   reactDT4 <- reactiveValues(data = stages_current)
   output$stages_summary4 = DT::renderDT(reactDT4$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
@@ -228,12 +228,12 @@ if (tail(Scenarios,1) == 1)
     # Character string needs to be coerced to same type as target value. Here as.integer()
     reactDT4$data[i, j] = DT::coerceValue(v, reactDT4$data[i, j])
     # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
-    replaceData(proxy, reactDT4$data, resetPaging = FALSE)  # important 
+    replaceData(proxy, reactDT4$data, resetPaging = FALSE)  # important
   })
-  
+
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn4, {
-    
+
     result4 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
                           isolate(reactDT4$data[,2]),isolate(reactDT4$data[,3]),
                           isolate(reactDT4$data[,4]),isolate(reactDT4$data[,5]),
@@ -242,9 +242,9 @@ if (tail(Scenarios,1) == 1)
 
       boxplot(t(result4),xlab="Stage",ylab="Mean Genetic Value")
     })   # end of renderPlot
-    
-    
-    
+
+
+
     # Update results_all entries
     # First remove previous run entries
     rv$results_all <- rv$results_all[,rv$results_all[3,]!=4] # WORKS!
@@ -258,7 +258,7 @@ if (tail(Scenarios,1) == 1)
     }
     #print(head(t(rv$results_all)))
     #print(tail(t(rv$results_all)))
-    
+
     # Render Group Boxplot with updated entries
     output$sumtab <- renderPlot({
       ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
@@ -268,9 +268,9 @@ if (tail(Scenarios,1) == 1)
         scale_fill_discrete(name="Scenario")+
         ggtitle("Comparison between stages across all scenarios")
     })   # end of renderPlot for Overview tab
-    
-  }) # endof update btn  
-  
+
+  }) # endof update btn
+
   # Update H2 for every stage as soon as input data that affect H2 change
   observe({
     for (i in 1:nrow(reactDT4$data))
@@ -281,7 +281,7 @@ if (tail(Scenarios,1) == 1)
   })
 } else if (tail(Scenarios,1) == 5)
 {
-  output$cyPlot5 <- nplot
+  # output$cyPlot5 <- nplot
   reactDT5 <- reactiveValues(data = stages_current)
   output$stages_summary5 = DT::renderDT(reactDT5$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
@@ -296,12 +296,12 @@ if (tail(Scenarios,1) == 1)
     # Character string needs to be coerced to same type as target value. Here as.integer()
     reactDT5$data[i, j] = DT::coerceValue(v, reactDT5$data[i, j])
     # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
-    replaceData(proxy, reactDT5$data, resetPaging = FALSE)  # important 
+    replaceData(proxy, reactDT5$data, resetPaging = FALSE)  # important
   })
-  
+
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn5, {
-    
+
     result5 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
                           isolate(reactDT5$data[,2]),isolate(reactDT5$data[,3]),
                           isolate(reactDT5$data[,4]),isolate(reactDT5$data[,5]),
@@ -310,9 +310,9 @@ if (tail(Scenarios,1) == 1)
 
       boxplot(t(result5),xlab="Stage",ylab="Mean Genetic Value")
     })   # end of renderPlot
-    
-    
-    
+
+
+
     # Update results_all entries
     # First remove previous run entries
     rv$results_all <- rv$results_all[,rv$results_all[3,]!=5] # WORKS!
@@ -326,7 +326,7 @@ if (tail(Scenarios,1) == 1)
     }
     #print(head(t(rv$results_all)))
     #print(tail(t(rv$results_all)))
-    
+
     # Render Group Boxplot with updated entries
     output$sumtab <- renderPlot({
       ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
@@ -336,10 +336,10 @@ if (tail(Scenarios,1) == 1)
         scale_fill_discrete(name="Scenario")+
         ggtitle("Comparison between stages across all scenarios")
     })   # end of renderPlot for Overview tab
-    
-    
-  }) # endof update btn  
-  
+
+
+  }) # endof update btn
+
   # Update H2 for every stage as soon as input data that affect H2 change
   observe({
     for (i in 1:nrow(reactDT5$data))
@@ -350,23 +350,23 @@ if (tail(Scenarios,1) == 1)
   })
 } else if (tail(Scenarios,1) == 6)
 {
-  output$cyPlot6 <- nplot
+  #output$cyPlot6 <- nplot
   output$stages_summary6 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
 } else if (tail(Scenarios,1) == 7)
 {
-  output$cyPlot7 <- nplot
+  #output$cyPlot7 <- nplot
   output$stages_summary7 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
 } else if (tail(Scenarios,1) == 8)
 {
-  output$cyPlot8 <- nplot
+  #output$cyPlot8 <- nplot
   output$stages_summary8 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
 } else if (tail(Scenarios,1) == 9)
 {
-  output$cyPlot9 <- nplot
+  # output$cyPlot9 <- nplot
   output$stages_summary9 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
 } else if (tail(Scenarios,1) == 10)
 {
-  output$cyPlot10 <- nplot
+  # output$cyPlot10 <- nplot
   output$stages_summary10 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
 } else
   assign(paste('output$cyPlot', sep = "", tail(Scenarios,1)), nplot) # DOESNOT WORK
