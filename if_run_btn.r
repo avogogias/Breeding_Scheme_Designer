@@ -1,24 +1,26 @@
 # Currently results_all updates only for scenarios 1-5
 
+cnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2')
+
 # The following blocks of code are repeated for every run_btn index
 # Ideally this control would take place recursively but building an
 # output name dynamically using assign, doesn't seem to work.
-if (input$run_btn == 1)
+if (tail(Scenarios,1) == 1)
 {
-  output[[paste0("cyPlot", input$run_btn)]] <- nplot
+  output[[paste0("cyPlot", tail(Scenarios,1))]] <- nplot
   # output$cyPlot1 <- nplot
-  assign(paste0("reactDT", input$run_btn), reactiveValues(data = stages_current))
-  #reactDT1 <- reactiveValues(data = stages_current)
-  output[[paste0("stages_summary", input$run_btn)]] = DT::renderDT(reactDT1$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
-  #output$stages_summary1 = DT::renderDT(reactDT1$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  #assign(paste0("reactDT", tail(Scenarios,1)), reactiveValues(data = stages_current))
+  reactDT1 <- reactiveValues(data = stages_current)
+  output[[paste0("stages_summary", tail(Scenarios,1))]] = DT::renderDT(reactDT1$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  #output$stages_summary1 = DT::renderDT(reactDT1$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
-  proxy = dataTableProxy(paste0('stages_summary', input$run_btn))
+  proxy = dataTableProxy(paste0('stages_summary', tail(Scenarios,1)))
   #proxy = dataTableProxy('stages_summary1')
   #
   
-  # observeEvent(input[[paste0('stages_summary', input$run_btn, "_cell_edit")]], {
+  # observeEvent(input[[paste0('stages_summary', tail(Scenarios,1), "_cell_edit")]], {
   observeEvent(input$stages_summary1_cell_edit, {
-    #info = input[[paste0('stages_summary', input$run_btn, "_cell_edit")]]
+    #info = input[[paste0('stages_summary', tail(Scenarios,1), "_cell_edit")]]
     info = input$stages_summary1_cell_edit
     i = info$row
     j = info$col + 1 # required when rownames = F in DT
@@ -26,6 +28,7 @@ if (input$run_btn == 1)
     str(info)
     # Character string needs to be coerced to same type as target value. Here as.integer()
     reactDT1$data[i, j] = DT::coerceValue(v, reactDT1$data[i, j])
+    #reactDT1$data[i, j] = DT::coerceValue(v, reactDT1$data[i, j])
     # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
     replaceData(proxy, reactDT1$data, resetPaging = FALSE)  # important 
   })
@@ -48,7 +51,7 @@ if (input$run_btn == 1)
     #print(head(t(rv$results_all)))
     #print(tail(t(rv$results_all)))
     # Then add to matrix
-    for(i in 1:nrow(result1)) # 1:input$run_btn
+    for(i in 1:nrow(result1)) # 1:tail(Scenarios,1)
     {
       rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result1[i,], Scenario = 1))
     }
@@ -75,11 +78,11 @@ if (input$run_btn == 1)
     }
   })
   
-} else if (input$run_btn == 2)
+} else if (tail(Scenarios,1) == 2)
 {
   output$cyPlot2 <- nplot
   reactDT2 <- reactiveValues(data = stages_current)
-  output$stages_summary2 = DT::renderDT(reactDT2$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  output$stages_summary2 = DT::renderDT(reactDT2$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary2')
   #
@@ -114,7 +117,7 @@ if (input$run_btn == 1)
     #print(head(t(rv$results_all)))
     #print(tail(t(rv$results_all)))
     # Then add to matrix
-    for(i in 1:nrow(result2)) # 1:input$run_btn
+    for(i in 1:nrow(result2)) # 1:tail(Scenarios,1)
     {
       rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result2[i,], Scenario = 2))
     }
@@ -141,11 +144,11 @@ if (input$run_btn == 1)
       # print(paste("H2 for stage", i, "is", yti$data[i,7]))
     }
   })
-} else if (input$run_btn == 3)
+} else if (tail(Scenarios,1) == 3)
 {
   output$cyPlot3 <- nplot
   reactDT3 <- reactiveValues(data = stages_current)
-  output$stages_summary3 = DT::renderDT(reactDT3$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  output$stages_summary3 = DT::renderDT(reactDT3$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary3')
   #
@@ -181,7 +184,7 @@ if (input$run_btn == 1)
     #print(head(t(rv$results_all)))
     #print(tail(t(rv$results_all)))
     # Then add to matrix
-    for(i in 1:nrow(result3)) # 1:input$run_btn
+    for(i in 1:nrow(result3)) # 1:tail(Scenarios,1)
     {
       rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result3[i,], Scenario = 3))
     }
@@ -208,11 +211,11 @@ if (input$run_btn == 1)
       # print(paste("H2 for stage", i, "is", yti$data[i,7]))
     }
   })
-} else if (input$run_btn == 4)
+} else if (tail(Scenarios,1) == 4)
 {
   output$cyPlot4 <- nplot
   reactDT4 <- reactiveValues(data = stages_current)
-  output$stages_summary4 = DT::renderDT(reactDT4$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  output$stages_summary4 = DT::renderDT(reactDT4$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary4')
   #
@@ -249,7 +252,7 @@ if (input$run_btn == 1)
     #print(head(t(rv$results_all)))
     #print(tail(t(rv$results_all)))
     # Then add to matrix
-    for(i in 1:nrow(result4)) # 1:input$run_btn
+    for(i in 1:nrow(result4)) # 1:tail(Scenarios,1)
     {
       rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result4[i,], Scenario = 4))
     }
@@ -276,11 +279,11 @@ if (input$run_btn == 1)
       # print(paste("H2 for stage", i, "is", yti$data[i,7]))
     }
   })
-} else if (input$run_btn == 5)
+} else if (tail(Scenarios,1) == 5)
 {
   output$cyPlot5 <- nplot
   reactDT5 <- reactiveValues(data = stages_current)
-  output$stages_summary5 = DT::renderDT(reactDT5$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  output$stages_summary5 = DT::renderDT(reactDT5$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary5')
   #
@@ -317,7 +320,7 @@ if (input$run_btn == 1)
     #print(head(t(rv$results_all)))
     #print(tail(t(rv$results_all)))
     # Then add to matrix
-    for(i in 1:nrow(result5)) # 1:input$run_btn
+    for(i in 1:nrow(result5)) # 1:tail(Scenarios,1)
     {
       rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result5[i,], Scenario = 5))
     }
@@ -345,25 +348,25 @@ if (input$run_btn == 1)
       # print(paste("H2 for stage", i, "is", yti$data[i,7]))
     }
   })
-} else if (input$run_btn == 6)
+} else if (tail(Scenarios,1) == 6)
 {
   output$cyPlot6 <- nplot
-  output$stages_summary6 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
-} else if (input$run_btn == 7)
+  output$stages_summary6 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
+} else if (tail(Scenarios,1) == 7)
 {
   output$cyPlot7 <- nplot
-  output$stages_summary7 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
-} else if (input$run_btn == 8)
+  output$stages_summary7 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
+} else if (tail(Scenarios,1) == 8)
 {
   output$cyPlot8 <- nplot
-  output$stages_summary8 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
-} else if (input$run_btn == 9)
+  output$stages_summary8 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
+} else if (tail(Scenarios,1) == 9)
 {
   output$cyPlot9 <- nplot
-  output$stages_summary9 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
-} else if (input$run_btn == 10)
+  output$stages_summary9 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
+} else if (tail(Scenarios,1) == 10)
 {
   output$cyPlot10 <- nplot
-  output$stages_summary10 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  output$stages_summary10 = DT::renderDT(sumset_DT[[1]], options = sumset_DT$options, class = sumset_DT$class, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
 } else
-  assign(paste('output$cyPlot', sep = "", input$run_btn), nplot) # DOESNOT WORK
+  assign(paste('output$cyPlot', sep = "", tail(Scenarios,1)), nplot) # DOESNOT WORK

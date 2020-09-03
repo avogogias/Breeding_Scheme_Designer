@@ -10,6 +10,7 @@ sourceCpp("Engine.cpp")
 ui <- fluidPage(title = "Cycle Scenarios",
                 
                # theme = "bootstrap.css",
+               withMathJax(), # display mathematical equations
                 
                 titlePanel("Cycle Scenarios"),            
                 
@@ -109,6 +110,8 @@ ui <- fluidPage(title = "Cycle Scenarios",
 # Define server logic required to draw charts
 server <- function(input, output, clientData, session) {
   
+  # TV to use complementary to generated divID for identifying Scenarios ID
+  Scenarios <<- c() #simple list of scenario ids, so will be [1,2,3] if three scenarions
   
   # Default matrix values
   stage = c(1,2,3)
@@ -183,7 +186,7 @@ server <- function(input, output, clientData, session) {
                                      ),
                                      class = "cell-border, compact, hover", 
                                      rownames = F, #TRUE,
-                                     colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2'),
+                                     colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', toString(withMathJax('$$h_2$$'))), # '$$h_2$$'),  # 'h2'),
                                      filter = "none",
                                      escape = FALSE,
                                      autoHideNavigation = TRUE,
@@ -236,10 +239,18 @@ server <- function(input, output, clientData, session) {
   # Execute runScenario() for the current settings
   observeEvent(input$run_btn, {
     
+    # TV increment Scenarios counter list e.g. [1, 2, 3] for 3 scenarios, used in place of input$run_btn
+    if (length(Scenarios) == 0){
+      Scenarios <<- c(1)                # if no Scenario defines so far, make the first one "1"
+    }
+    else{
+      Scenarios <<- c(Scenarios,  tail(Scenarios,1)+1)   # if a Scenario is added, just add a number to the last number in the "Scenarios" vector
+    }
+    
     # TV defining IDs to use in scenario elements
     # divID <- if (input$divID == "") gsub("\\.", "", format(Sys.time(), "%H%M%OS3")) 
     # else input$divID
-    divID <- gsub("\\.", "", format(Sys.time(), "%H%M%OS3")) # always auto-generated
+    divID <- gsub("\\.", "", format(Sys.time(), "%H%M%OS3")) # always auto-generated ID for each scenario
     dtID <- paste0(divID, "DT")
     rm_btnID <- paste0(divID, "rmv")
     up_btnID <- paste0(divID, "upd")
@@ -266,7 +277,7 @@ server <- function(input, output, clientData, session) {
     
     # Create a new tab in the UI every time Run is pressed
     output$mytabs = renderUI({
-      nTabs = input$run_btn # use this value also as the tabs counter
+      nTabs = tail(Scenarios,1) # input$run_btn # use this value also as the tabs counter
       # TV myTabs = lapply(paste('Scenario', 1: nTabs), tabPanel) 
       myTabs = lapply(1: nTabs, function(i){
         tabPanel(paste('Scenario', sep = " ", i),
@@ -281,7 +292,7 @@ server <- function(input, output, clientData, session) {
       do.call(tabsetPanel, myTabs)
     })
     
-    print(paste("Run", input$run_btn))
+    print(paste("Run", tail(Scenarios,1))) # input$run_btn))
     
     result = runScenario(varG,varGxL,varGxY,entries,years,locs,reps,error,varieties)
     
@@ -296,7 +307,7 @@ server <- function(input, output, clientData, session) {
     # Store results from all runs in a reactive matrix
     for(i in 1:nrow(result)) # 1:input$run_btn
     {
-      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result[i,], Scenario = input$run_btn)) # Scenario = scenarioID)) FAILS
+      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result[i,], Scenario = tail(Scenarios,1))) # Scenario = scenarioID)) FAILS
     }
     #print(head(t(rv$results_all)))
     #print(tail(t(rv$results_all)))
@@ -310,7 +321,7 @@ server <- function(input, output, clientData, session) {
                       ),
                       class = "cell-border, compact, hover", 
                       rownames = F, #TRUE,
-                      colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2'),
+                      # colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', toString(withMathJax('$$h_2$$'))), # inserted manually
                       filter = "none",
                       escape = FALSE,
                       autoHideNavigation = TRUE,
@@ -324,7 +335,7 @@ server <- function(input, output, clientData, session) {
     
     
     # # Attempt to enrich v object with I/O data for every scenario - NOT USED
-    # v$data = list(v$data, list("id" = input$run_btn, 
+    # v$data = list(v$data, list("id" = tail(Scenarios,1), 
     #                            "in" = list("varG" = varG,
     #                                        "varGxY" = varGxY,
     #                                        "varGxL" = varGxL,
@@ -335,7 +346,7 @@ server <- function(input, output, clientData, session) {
     
     
     ## Try to load input data using a for loop instead of if-else
-    # for (i in 1:input$run_btn)
+    # for (i in 1:tail(Scenarios,1))
     # TODO
     
     output$sumtab <- renderPlot({
@@ -384,7 +395,7 @@ server <- function(input, output, clientData, session) {
       # print(stagesID)
       # print(paste("h2 of stages table is", rv[[stagesID]][,7])) # WORKS!
       
-      output[[dtID]] <- DT::renderDT(rv[[stagesID]], options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+      output[[dtID]] <- DT::renderDT(rv[[stagesID]], options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2'), editable = sumset_DT$editable, server = sumset_DT$server)
       # Update editable DT through a proxy DT on cell edit event
       proxy = dataTableProxy(dtID)
       #
@@ -484,7 +495,7 @@ server <- function(input, output, clientData, session) {
   }) # end of run button
   
   # TV hide ALL tab 
-  shiny::hideTab(inputId = "my_tabs", target = "ALL")
+  # shiny::hideTab(inputId = "my_tabs", target = "ALL")
   
 } # endof server
 
