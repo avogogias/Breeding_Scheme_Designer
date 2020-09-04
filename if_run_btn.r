@@ -59,7 +59,7 @@ if (tail(Scenarios,1) == 1)
     #print(tail(t(rv$results_all)))
 
     # Render Group Boxplot with updated entries
-    output$sumtab <- renderPlot({
+    output$overviewTab <- renderPlot({
       ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
         geom_boxplot()+
         xlab("Stage")+
@@ -125,7 +125,7 @@ if (tail(Scenarios,1) == 1)
     #print(tail(t(rv$results_all)))
 
     # Render Group Boxplot with updated entries
-    output$sumtab <- renderPlot({
+    output$overviewTab <- renderPlot({
       ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
         geom_boxplot()+
         xlab("Stage")+
@@ -192,7 +192,7 @@ if (tail(Scenarios,1) == 1)
     #print(tail(t(rv$results_all)))
 
     # Render Group Boxplot with updated entries
-    output$sumtab <- renderPlot({
+    output$overviewTab <- renderPlot({
       ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
         geom_boxplot()+
         xlab("Stage")+
@@ -260,7 +260,7 @@ if (tail(Scenarios,1) == 1)
     #print(tail(t(rv$results_all)))
 
     # Render Group Boxplot with updated entries
-    output$sumtab <- renderPlot({
+    output$overviewTab <- renderPlot({
       ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
         geom_boxplot()+
         xlab("Stage")+
@@ -328,7 +328,7 @@ if (tail(Scenarios,1) == 1)
     #print(tail(t(rv$results_all)))
 
     # Render Group Boxplot with updated entries
-    output$sumtab <- renderPlot({
+    output$overviewTab <- renderPlot({
       ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
         geom_boxplot()+
         xlab("Stage")+

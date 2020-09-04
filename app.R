@@ -9,8 +9,8 @@ sourceCpp("Engine.cpp")
 
 ui <- fluidPage(title = "Cycle Scenarios",
                 
-               # theme = "bootstrap.css",
-               withMathJax(), # display mathematical equations
+               # theme = "bootstrap.css", # CSS theme file could be added here
+               withMathJax(), # display mathematical equations using LaTeX format
                 
                 titlePanel("Cycle Scenarios"),            
                 
@@ -22,12 +22,12 @@ ui <- fluidPage(title = "Cycle Scenarios",
                     
                     tags$h3("Create a new scenario"),
                     
-                    # User-defined scenario id 
+                    # User-defined scenario ID could be typed using the following:
                     # textInput("divID", "Enter a unique ID for your scenario:", ""),
                     # helpText("Leave the text input blank for automatically unique IDs."),
                     
                     tags$h4("Variance"),
-                    
+                   
                     # Make divs appear in one line
                     bootstrapPage(
                       # Set Genetic Variance 
@@ -58,7 +58,7 @@ ui <- fluidPage(title = "Cycle Scenarios",
                               "right", "hover", NULL),
                     
                     tags$h4("Yield Trials"),
-                    div( # CUSTOMISE div style for DT
+                    div( # CUSTOMISE div CSS style for DT
                       DT::DTOutput("stages_table"),
                       style = "font-size: 85%; width: 100%"
                       ),
@@ -68,8 +68,8 @@ ui <- fluidPage(title = "Cycle Scenarios",
                     #                           Number of locations. Increasing this value will increase heritability by decreasing variation due to GxL(Y) and plot error.
                     #                           Number of replications. Increasing this value will increase heritability by decreasing variation due to plot error.",
                     #                           "right", "hover", NULL),
-                    actionButton("add_btn", "Add"),
-                    actionButton("delete_btn", "Delete"),
+                    actionButton("add_btn", "Add"), # Add stage
+                    actionButton("delete_btn", "Delete"), # Delete last stage
                     
                     
                     numericInput("varieties", "Varieties",
@@ -99,7 +99,7 @@ ui <- fluidPage(title = "Cycle Scenarios",
                     tabsetPanel(id = "my_tabs",
                       tabPanel("ALL", tags$div(id = "placeholder")),
                       tabPanel("Scenarios", uiOutput('mytabs')),
-                      tabPanel("Overview", plotOutput('sumtab'))
+                      tabPanel("Overview", plotOutput('overviewTab'))
                     ) # endo of tabsetPanel
                   ), # endof mainPanel
                   fluid = T # layout is not fixed, default is T
@@ -111,7 +111,7 @@ ui <- fluidPage(title = "Cycle Scenarios",
 server <- function(input, output, clientData, session) {
   
   # TV to use complementary to generated divID for identifying Scenarios ID
-  Scenarios <<- c() #simple list of scenario ids, so will be [1,2,3] if three scenarions
+  Scenarios <<- c() #simple list of scenario ids, so will be [1,2,3] if three scenarios
   
   # Default matrix values
   stage = c(1,2,3)
@@ -124,9 +124,7 @@ server <- function(input, output, clientData, session) {
   
   # per-session reactive values object to store all results of this user session
   rv <- reactiveValues(results_all = NULL)
-  # as in solution
-  #rv <- reactiveValues()
-  
+
   # defines a common reactive list to store all scenario input info (stages DT + other) to replace reactDT
   scenariosInput <- reactiveValues(stagesDT = list(), varG = list(), varGxL = list(), varGxY = list(), varieties = list()) # initially will store stages_current and updated accordingly
 
@@ -158,7 +156,7 @@ server <- function(input, output, clientData, session) {
   # output$tPlots = renderText({ yti$data[1,2] })  # plots
   # cost_df = cbind(tYears, tLocs, tPlots)
 
-  # function calculates Total Plots given a DT matrix as input
+  # function calculates Total Plots given a stages matrix as input
   totalPlots <- function(mtx = yt) {
     # print(nrow(mtx))
     # print(prod(mtx[1,1:4]))
@@ -167,7 +165,7 @@ server <- function(input, output, clientData, session) {
       tp = tp + prod(mtx[i,1:4])
     print(tp)
   }
-  # Display a table with costs calculated based on user input (stages etc.)
+  # Display a DT table with costs calculated based on user input (stages etc.)
   output$cost_table = DT::renderDT(cbind(sum(yti$data[,3])+input$negen,sum(yti$data[,3]*yti$data[,4]), totalPlots(yti$data)), 
                                    options = list(
                                      searching = F, # no search box
@@ -179,7 +177,7 @@ server <- function(input, output, clientData, session) {
                                    colnames = c('Total Years', 'Total Locs', 'Total Plots'),
                                    server = F )
   
-  # Render DT with default data entries
+  # Render stages DT with default data entries
   output$stages_table = DT::renderDT(yti$data, 
                                      options = list(
                                        searching = F, # no search box
@@ -225,24 +223,25 @@ server <- function(input, output, clientData, session) {
     # calc h2 for this stage
     new_h2 = input$varG / (input$varG + input$varGxY + input$varGxL + 1)
     yti$data = rbind(yti$data, c(length(yti$data[,1])+1,2,1,1,1,1,round(new_h2, 3)))
-    
-    # replaceData(proxy, yti$data, resetPaging = FALSE)  # important 
-    
   })
   
   observeEvent(input$delete_btn, {
-    
     if (length(yti$data[,1])>2) # TV for >1 it crushes!
       yti$data = yti$data[1:length(yti$data[,1])-1,]
-    
-    # replaceData(proxy, yti$data, resetPaging = FALSE)  # important 
-    
   })
   
+  
+  
+  #***********************************************
+  #-----------------------------------------------  
+  # ************* RUN BUTTON OBSERVER ************
+  # *************---------------------************
+  #***********************************************
+  #-----------------------------------------------
   # Execute runScenario() for the current settings
   observeEvent(input$run_btn, {
     
-    # TV increment Scenarios counter list e.g. [1, 2, 3] for 3 scenarios, used in place of input$run_btn
+    # Increment Scenarios counter list e.g. [1, 2, 3] for 3 scenarios, used in place of input$run_btn
     if (length(Scenarios) == 0){
       Scenarios <<- c(1)                # if no Scenario defines so far, make the first one "1"
     }
@@ -250,7 +249,7 @@ server <- function(input, output, clientData, session) {
       Scenarios <<- c(Scenarios,  tail(Scenarios,1)+1)   # if a Scenario is added, just add a number to the last number in the "Scenarios" vector
     }
     
-    # TV defining IDs to use in scenario elements
+    # Handle auto/user-defined IDs for scenarios
     # divID <- if (input$divID == "") gsub("\\.", "", format(Sys.time(), "%H%M%OS3")) 
     # else input$divID
     divID <- gsub("\\.", "", format(Sys.time(), "%H%M%OS3")) # always auto-generated ID for each scenario
@@ -259,7 +258,7 @@ server <- function(input, output, clientData, session) {
     up_btnID <- paste0(divID, "upd")
     boxID <- paste0(divID, "box")
     stagesID <- paste0(divID, "stg")
-    # scenarioID <- paste0(divID, "scn") # Attempt to use this instead of run_id FAILED!
+    # scenarioID <- paste0(divID, "scn") # Alternative to Scenarios ID vector
     
     
     varG = isolate(input$varG)
@@ -279,23 +278,21 @@ server <- function(input, output, clientData, session) {
     stages_current = data.frame(stages, entries, years, locs, reps, error, h2)
     
     # Create a new tab in the UI every time Run is pressed
+    # UI input elements of all Scenario tabs are rendered
     output$mytabs = renderUI({
-      nTabs = tail(Scenarios,1) # input$run_btn # use this value also as the tabs counter
-      # TV myTabs = lapply(paste('Scenario', 1: nTabs), tabPanel) 
-      myTabs = lapply(1: nTabs, function(i){
-        tabPanel(paste('Scenario', sep = " ", i),
-                 plotOutput(paste('cyPlot', sep = "", i)),
-                 # add a summary of settings used for this scenario. Could be a DT
-                 DT::DTOutput(paste('stages_summary', sep = "", i)),
-                 # maybe add an update scenario button
-                 actionButton(paste("update_btn", sep = "", i), "Update")
+      myTabs = lapply(1: tail(Scenarios,1), function(i){
+        tabPanel(paste0('Scenario', i),
+                 plotOutput(paste0('cyPlot', i)),
+                 # input settings used for this scenario
+                 DT::DTOutput(paste0('stages_summary', i)),
+                 # update scenario button
+                 actionButton(paste0("update_btn", i), "Update")
         )
       }) 
-      # TV do.call(tabsetPanel, myTabs)
       do.call(tabsetPanel, myTabs)
     })
     
-    print(paste("Run", tail(Scenarios,1))) # input$run_btn))
+    print(paste("Start Run", tail(Scenarios,1))) # input$run_btn))
     
     result = runScenario(varG,varGxL,varGxY,entries,years,locs,reps,error,varieties)
     
@@ -308,7 +305,7 @@ server <- function(input, output, clientData, session) {
     })   # end of renderPlot
 
     # Store results from all runs in a reactive matrix
-    for(i in 1:nrow(result)) # 1:input$run_btn
+    for(i in 1:nrow(result)) 
     {
       rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result[i,], Scenario = tail(Scenarios,1))) # Scenario = scenarioID)) FAILS
     }
@@ -333,8 +330,8 @@ server <- function(input, output, clientData, session) {
                       server = TRUE) # server = F doesn't work with replaceData() cell editing
 
     # Include content from R file locally as if it was pasted here to manage if-else
-    # source('if_run_btn.r', local=TRUE) # OLD METHOD with if-else loop handling WORKS but with duplicated code
-    source('update_scenarios.r', local = TRUE)
+    # source('if_run_btn.r', local=TRUE) # OLD METHOD with if-else loop handling but with duplicated code for up to 5 scenarios WORKS!
+    source('update_scenarios.r', local = TRUE) # alternative recursive method IN PROGRESS
     
     
     # # Attempt to enrich v object with I/O data for every scenario - NOT USED
@@ -352,7 +349,7 @@ server <- function(input, output, clientData, session) {
     # for (i in 1:tail(Scenarios,1))
     # TODO
     
-    output$sumtab <- renderPlot({
+    output$overviewTab <- renderPlot({
       ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
         geom_boxplot()+
         xlab("Stage")+
@@ -445,7 +442,7 @@ server <- function(input, output, clientData, session) {
         #print(tail(t(rv$results_all)))
         
         # Render Group Boxplot with updated entries --- WORKS!
-        output$sumtab <- renderPlot({
+        output$overviewTab <- renderPlot({
           ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
             geom_boxplot()+
             xlab("Stage")+
@@ -479,7 +476,7 @@ server <- function(input, output, clientData, session) {
         # First remove previous run entries
         # rv$results_all <- rv$results_all[,rv$results_all[3,]!=1] 
         # Render Group Boxplot with updated entries
-        # output$sumtab <- renderPlot({
+        # output$overviewTab <- renderPlot({
         #   ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
         #     geom_boxplot()+
         #     xlab("Stage")+

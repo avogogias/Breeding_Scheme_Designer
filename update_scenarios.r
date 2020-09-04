@@ -54,7 +54,7 @@ observeEvent(input[[paste0('update_btn', tail(Scenarios,1))]], { #$update_btn1, 
   #print(tail(t(rv$results_all)))
   
   # Render Group Boxplot with updated entries
-  output$sumtab <- renderPlot({
+  output$overviewTab <- renderPlot({
     ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
       geom_boxplot()+
       xlab("Stage")+
@@ -67,20 +67,20 @@ observeEvent(input[[paste0('update_btn', tail(Scenarios,1))]], { #$update_btn1, 
 # Update H2 for every stage as soon as input data that affect H2 change
 observe({
   # cell_edit for each scenario first needs to work for this loop to work
-  for (j in 1:tail(Scenarios, 1))
-  {
-    for (i in 1:nrow(scenariosInput$stagesDT[[j]]))
-    {
-      scenariosInput$stagesDT[[j]][i,7] = round(input$varG/(input$varG + input$varGxY/scenariosInput$stagesDT[[j]][i,3] + input$varGxL/(scenariosInput$stagesDT[[j]][i,3]*scenariosInput$stagesDT[[j]][i,4]) + scenariosInput$stagesDT[[j]][i,6]/(scenariosInput$stagesDT[[j]][i,3]*scenariosInput$stagesDT[[j]][i,4]*scenariosInput$stagesDT[[j]][i,5])), 3)
-      # print(paste("H2 for stage", i, "is", yti$data[i,7]))
-    }  
-  }
-  
-  
-  # for (i in 1:nrow(scenariosInput$stagesDT[[tail(Scenarios, 1)]]))
+  # for (j in 1:tail(Scenarios, 1))
   # {
-  #   scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,7] = round(input$varG/(input$varG + input$varGxY/scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,3] + input$varGxL/(scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,3]*scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,4]) + scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,6]/(scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,3]*scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,4]*scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,5])), 3)
-  #   # print(paste("H2 for stage", i, "is", yti$data[i,7]))
+  #   for (i in 1:nrow(scenariosInput$stagesDT[[j]]))
+  #   {
+  #     scenariosInput$stagesDT[[j]][i,7] = round(input$varG/(input$varG + input$varGxY/scenariosInput$stagesDT[[j]][i,3] + input$varGxL/(scenariosInput$stagesDT[[j]][i,3]*scenariosInput$stagesDT[[j]][i,4]) + scenariosInput$stagesDT[[j]][i,6]/(scenariosInput$stagesDT[[j]][i,3]*scenariosInput$stagesDT[[j]][i,4]*scenariosInput$stagesDT[[j]][i,5])), 3)
+  #     # print(paste("H2 for stage", i, "is", yti$data[i,7]))
+  #   }  
   # }
+  
+  
+  for (i in 1:nrow(scenariosInput$stagesDT[[tail(Scenarios, 1)]]))
+  {
+    scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,7] = round(input$varG/(input$varG + input$varGxY/scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,3] + input$varGxL/(scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,3]*scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,4]) + scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,6]/(scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,3]*scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,4]*scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,5])), 3)
+    # print(paste("H2 for stage", i, "is", yti$data[i,7]))
+  }
 })
 
