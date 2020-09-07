@@ -4,14 +4,15 @@ cnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2')
 output[[paste0("cyPlot", tail(Scenarios,1))]] <- nplot
 
 # TV store scenario input in the reactive data structure scenariosInput
-scenariosInput$stagesDT[[tail(Scenarios, 1)]] <<- stages_current
-scenariosInput$varG[[tail(Scenarios, 1)]] <<- varG 
-scenariosInput$varGxL[[tail(Scenarios, 1)]] <<- varGxL 
-scenariosInput$varGxY[[tail(Scenarios, 1)]] <<- varGxY 
-scenariosInput$varieties[[tail(Scenarios, 1)]] <<- varieties
+scenariosInput$stagesDT[[tail(Scenarios, 1)]] <- stages_current
+scenariosInput$varG[[tail(Scenarios, 1)]] <- varG 
+scenariosInput$varGxL[[tail(Scenarios, 1)]] <- varGxL 
+scenariosInput$varGxY[[tail(Scenarios, 1)]] <- varGxY 
+scenariosInput$varieties[[tail(Scenarios, 1)]] <- varieties
 
 output[[paste0("stages_summary", tail(Scenarios,1))]] = DT::renderDT(scenariosInput$stagesDT[[tail(Scenarios, 1)]], options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
-proxy = dataTableProxy(paste0('stages_summary', tail(Scenarios,1)))
+# proxy = dataTableProxy(paste0('stages_summary', tail(Scenarios,1)))
+assign(paste0("proxy", tail(Scenarios,1)), dataTableProxy(paste0('stages_summary', tail(Scenarios,1))))
 
 observeEvent(input[[paste0("stages_summary", tail(Scenarios,1), "_cell_edit")]], { #$stages_summary1_cell_edit, {
   info = input[[paste0('stages_summary', tail(Scenarios,1), "_cell_edit")]]
@@ -25,6 +26,8 @@ observeEvent(input[[paste0("stages_summary", tail(Scenarios,1), "_cell_edit")]],
   #reactDT1$data[i, j] = DT::coerceValue(v, reactDT1$data[i, j])
   # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
   replaceData(proxy, scenariosInput$stagesDT[[tail(Scenarios, 1)]], resetPaging = FALSE)  # important 
+  # replaceData(paste0("proxy", tail(Scenarios,1)), scenariosInput$stagesDT[[tail(Scenarios, 1)]], resetPaging = FALSE)  # important 
+  
 })
 
 # Execute runScenario() for the current settings
@@ -42,16 +45,12 @@ observeEvent(input[[paste0('update_btn', tail(Scenarios,1))]], { #$update_btn1, 
   # Update results_all entries
   # First remove previous run entries
   rv$results_all <- rv$results_all[,rv$results_all[3,]!=tail(Scenarios,1)] # WORKS!
-  print("UPDATED RESULTS")
-  #print(head(t(rv$results_all)))
-  #print(tail(t(rv$results_all)))
   # Then add to matrix
   for(i in 1:nrow(result)) # 1:tail(Scenarios,1)
   {
     rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result[i,], Scenario = tail(Scenarios,1)))
   }
-  #print(head(t(rv$results_all)))
-  #print(tail(t(rv$results_all)))
+
   
   # Render Group Boxplot with updated entries
   output$overviewTab <- renderPlot({
