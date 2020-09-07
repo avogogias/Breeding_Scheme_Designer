@@ -15,8 +15,6 @@ if (tail(Scenarios,1) == 1)
   #output$stages_summary1 = DT::renderDT(reactDT1$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy(paste0('stages_summary', tail(Scenarios,1)))
-  #proxy = dataTableProxy('stages_summary1')
-  #
 
   # observeEvent(input[[paste0('stages_summary', tail(Scenarios,1), "_cell_edit")]], {
   observeEvent(input$stages_summary1_cell_edit, {
@@ -28,35 +26,31 @@ if (tail(Scenarios,1) == 1)
     str(info)
     # Character string needs to be coerced to same type as target value. Here as.integer()
     reactDT1$data[i, j] = DT::coerceValue(v, reactDT1$data[i, j])
-    #reactDT1$data[i, j] = DT::coerceValue(v, reactDT1$data[i, j])
+
     # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
     replaceData(proxy, reactDT1$data, resetPaging = FALSE)  # important
   })
 
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn1, {
-    result1 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+    result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
                           isolate(reactDT1$data[,2]),isolate(reactDT1$data[,3]),
                           isolate(reactDT1$data[,4]),isolate(reactDT1$data[,5]),
                           isolate(reactDT1$data[,6]),isolate(input$varieties))
     output$cyPlot1 <- renderPlot({
 
-      boxplot(t(result1),xlab="Stage",ylab="Mean Genetic Value")
+      boxplot(t(result),xlab="Stage",ylab="Mean Genetic Value")
     })   # end of renderPlot
 
     # Update results_all entries
     # First remove previous run entries
     rv$results_all <- rv$results_all[,rv$results_all[3,]!=1] # WORKS!
-    print("UPDATED RESULTS")
-    #print(head(t(rv$results_all)))
-    #print(tail(t(rv$results_all)))
+
     # Then add to matrix
-    for(i in 1:nrow(result1)) # 1:tail(Scenarios,1)
+    for(i in 1:nrow(result)) # 1:tail(Scenarios,1)
     {
-      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result1[i,], Scenario = 1))
+      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result[i,], Scenario = 1))
     }
-    #print(head(t(rv$results_all)))
-    #print(tail(t(rv$results_all)))
 
     # Render Group Boxplot with updated entries
     output$overviewTab <- renderPlot({
@@ -74,9 +68,20 @@ if (tail(Scenarios,1) == 1)
     for (i in 1:nrow(reactDT1$data))
     {
       reactDT1$data[i,7] = updateH2(reactDT1$data[i,]) # round(input$varG/(input$varG + input$varGxY/reactDT1$data[i,3] + input$varGxL/(reactDT1$data[i,3]*reactDT1$data[i,4]) + reactDT1$data[i,6]/(reactDT1$data[i,3]*reactDT1$data[i,4]*reactDT1$data[i,5])), 3)
-      # print(paste("H2 for stage", i, "is", yti$data[i,7]))
     }
   })
+  
+  # Update cost table as soon as input data that affect cost change
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(sum(reactDT1$data[,3])+input$negen,sum(reactDT1$data[,3]*reactDT1$data[,4]), totalPlots(reactDT1$data)), 
+                                   options = list(
+                                     searching = F, # no search box
+                                     paginate = F,  # no num of pages
+                                     lengthChange = F, # no show entries
+                                     scrollX = T # horizontal slider
+                                   ),
+                                   rownames = F,
+                                   colnames = c('Total Years', 'Total Locs', 'Total Plots'),
+                                   server = F )  
 
 } else if (tail(Scenarios,1) == 2)
 {
@@ -100,14 +105,14 @@ if (tail(Scenarios,1) == 1)
 
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn2, {
-    result2 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+    result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
                           isolate(reactDT2$data[,2]),isolate(reactDT2$data[,3]),
                           isolate(reactDT2$data[,4]),isolate(reactDT2$data[,5]),
                           isolate(reactDT2$data[,6]),isolate(input$varieties))
 
     output$cyPlot2 <- renderPlot({
 
-      boxplot(t(result2),xlab="Stage",ylab="Mean Genetic Value")
+      boxplot(t(result),xlab="Stage",ylab="Mean Genetic Value")
     })   # end of renderPlot
 
     # Update results_all entries
@@ -117,12 +122,10 @@ if (tail(Scenarios,1) == 1)
     #print(head(t(rv$results_all)))
     #print(tail(t(rv$results_all)))
     # Then add to matrix
-    for(i in 1:nrow(result2)) # 1:tail(Scenarios,1)
+    for(i in 1:nrow(result)) # 1:tail(Scenarios,1)
     {
-      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result2[i,], Scenario = 2))
+      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result[i,], Scenario = 2))
     }
-    #print(head(t(rv$results_all)))
-    #print(tail(t(rv$results_all)))
 
     # Render Group Boxplot with updated entries
     output$overviewTab <- renderPlot({
@@ -141,9 +144,21 @@ if (tail(Scenarios,1) == 1)
     for (i in 1:nrow(reactDT2$data))
     {
       reactDT2$data[i,7] = updateH2(reactDT2$data[i,]) # round(input$varG/(input$varG + input$varGxY/reactDT2$data[i,3] + input$varGxL/(reactDT2$data[i,3]*reactDT2$data[i,4]) + reactDT2$data[i,6]/(reactDT2$data[i,3]*reactDT2$data[i,4]*reactDT2$data[i,5])), 3)
-      # print(paste("H2 for stage", i, "is", yti$data[i,7]))
     }
   })
+  
+  # Update cost table as soon as input data that affect cost change
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(sum(reactDT2$data[,3])+input$negen,sum(reactDT2$data[,3]*reactDT2$data[,4]), totalPlots(reactDT2$data)), 
+                                                               options = list(
+                                                                 searching = F, # no search box
+                                                                 paginate = F,  # no num of pages
+                                                                 lengthChange = F, # no show entries
+                                                                 scrollX = T # horizontal slider
+                                                               ),
+                                                               rownames = F,
+                                                               colnames = c('Total Years', 'Total Locs', 'Total Plots'),
+                                                               server = F )    
+  
 } else if (tail(Scenarios,1) == 3)
 {
   # output$cyPlot3 <- nplot
@@ -167,29 +182,25 @@ if (tail(Scenarios,1) == 1)
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn3, {
 
-    result3 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+    result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
                           isolate(reactDT3$data[,2]),isolate(reactDT3$data[,3]),
                           isolate(reactDT3$data[,4]),isolate(reactDT3$data[,5]),
                           isolate(reactDT3$data[,6]),isolate(input$varieties))
     output$cyPlot3 <- renderPlot({
 
-      boxplot(t(result3),xlab="Stage",ylab="Mean Genetic Value")
+      boxplot(t(result),xlab="Stage",ylab="Mean Genetic Value")
     })   # end of renderPlot
 
 
     # Update results_all entries
     # First remove previous run entries
     rv$results_all <- rv$results_all[,rv$results_all[3,]!=3] # WORKS!
-    print("UPDATED RESULTS")
-    #print(head(t(rv$results_all)))
-    #print(tail(t(rv$results_all)))
+
     # Then add to matrix
-    for(i in 1:nrow(result3)) # 1:tail(Scenarios,1)
+    for(i in 1:nrow(result)) # 1:tail(Scenarios,1)
     {
-      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result3[i,], Scenario = 3))
+      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result[i,], Scenario = 3))
     }
-    #print(head(t(rv$results_all)))
-    #print(tail(t(rv$results_all)))
 
     # Render Group Boxplot with updated entries
     output$overviewTab <- renderPlot({
@@ -208,9 +219,21 @@ if (tail(Scenarios,1) == 1)
     for (i in 1:nrow(reactDT3$data))
     {
       reactDT3$data[i,7] = updateH2(reactDT3$data[i,]) # round(input$varG/(input$varG + input$varGxY/reactDT3$data[i,3] + input$varGxL/(reactDT3$data[i,3]*reactDT3$data[i,4]) + reactDT3$data[i,6]/(reactDT3$data[i,3]*reactDT3$data[i,4]*reactDT3$data[i,5])), 3)
-      # print(paste("H2 for stage", i, "is", yti$data[i,7]))
     }
   })
+  
+  # Update cost table as soon as input data that affect cost change
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(sum(reactDT3$data[,3])+input$negen,sum(reactDT3$data[,3]*reactDT3$data[,4]), totalPlots(reactDT3$data)), 
+                                                               options = list(
+                                                                 searching = F, # no search box
+                                                                 paginate = F,  # no num of pages
+                                                                 lengthChange = F, # no show entries
+                                                                 scrollX = T # horizontal slider
+                                                               ),
+                                                               rownames = F,
+                                                               colnames = c('Total Years', 'Total Locs', 'Total Plots'),
+                                                               server = F )      
+  
 } else if (tail(Scenarios,1) == 4)
 {
   # output$cyPlot4 <- nplot
@@ -234,13 +257,13 @@ if (tail(Scenarios,1) == 1)
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn4, {
 
-    result4 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+    result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
                           isolate(reactDT4$data[,2]),isolate(reactDT4$data[,3]),
                           isolate(reactDT4$data[,4]),isolate(reactDT4$data[,5]),
                           isolate(reactDT4$data[,6]),isolate(input$varieties))
     output$cyPlot4 <- renderPlot({
 
-      boxplot(t(result4),xlab="Stage",ylab="Mean Genetic Value")
+      boxplot(t(result),xlab="Stage",ylab="Mean Genetic Value")
     })   # end of renderPlot
 
 
@@ -248,16 +271,12 @@ if (tail(Scenarios,1) == 1)
     # Update results_all entries
     # First remove previous run entries
     rv$results_all <- rv$results_all[,rv$results_all[3,]!=4] # WORKS!
-    print("UPDATED RESULTS")
-    #print(head(t(rv$results_all)))
-    #print(tail(t(rv$results_all)))
+
     # Then add to matrix
-    for(i in 1:nrow(result4)) # 1:tail(Scenarios,1)
+    for(i in 1:nrow(result)) # 1:tail(Scenarios,1)
     {
-      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result4[i,], Scenario = 4))
+      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result[i,], Scenario = 4))
     }
-    #print(head(t(rv$results_all)))
-    #print(tail(t(rv$results_all)))
 
     # Render Group Boxplot with updated entries
     output$overviewTab <- renderPlot({
@@ -276,9 +295,23 @@ if (tail(Scenarios,1) == 1)
     for (i in 1:nrow(reactDT4$data))
     {
       reactDT4$data[i,7] = updateH2(reactDT4$data[i,]) # round(input$varG/(input$varG + input$varGxY/reactDT4$data[i,3] + input$varGxL/(reactDT4$data[i,3]*reactDT4$data[i,4]) + reactDT4$data[i,6]/(reactDT4$data[i,3]*reactDT4$data[i,4]*reactDT4$data[i,5])), 3)
-      # print(paste("H2 for stage", i, "is", yti$data[i,7]))
     }
   })
+  
+  
+  # Update cost table as soon as input data that affect cost change
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(sum(reactDT4$data[,3])+input$negen,sum(reactDT4$data[,3]*reactDT4$data[,4]), totalPlots(reactDT4$data)), 
+                                                               options = list(
+                                                                 searching = F, # no search box
+                                                                 paginate = F,  # no num of pages
+                                                                 lengthChange = F, # no show entries
+                                                                 scrollX = T # horizontal slider
+                                                               ),
+                                                               rownames = F,
+                                                               colnames = c('Total Years', 'Total Locs', 'Total Plots'),
+                                                               server = F )      
+  
+  
 } else if (tail(Scenarios,1) == 5)
 {
   # output$cyPlot5 <- nplot
@@ -302,13 +335,13 @@ if (tail(Scenarios,1) == 1)
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn5, {
 
-    result5 = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+    result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
                           isolate(reactDT5$data[,2]),isolate(reactDT5$data[,3]),
                           isolate(reactDT5$data[,4]),isolate(reactDT5$data[,5]),
                           isolate(reactDT5$data[,6]),isolate(input$varieties))
     output$cyPlot5 <- renderPlot({
 
-      boxplot(t(result5),xlab="Stage",ylab="Mean Genetic Value")
+      boxplot(t(result),xlab="Stage",ylab="Mean Genetic Value")
     })   # end of renderPlot
 
 
@@ -317,15 +350,12 @@ if (tail(Scenarios,1) == 1)
     # First remove previous run entries
     rv$results_all <- rv$results_all[,rv$results_all[3,]!=5] # WORKS!
     print("UPDATED RESULTS")
-    #print(head(t(rv$results_all)))
-    #print(tail(t(rv$results_all)))
+
     # Then add to matrix
-    for(i in 1:nrow(result5)) # 1:tail(Scenarios,1)
+    for(i in 1:nrow(result)) # 1:tail(Scenarios,1)
     {
-      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result5[i,], Scenario = 5))
+      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result[i,], Scenario = 5))
     }
-    #print(head(t(rv$results_all)))
-    #print(tail(t(rv$results_all)))
 
     # Render Group Boxplot with updated entries
     output$overviewTab <- renderPlot({
@@ -345,9 +375,22 @@ if (tail(Scenarios,1) == 1)
     for (i in 1:nrow(reactDT5$data))
     {
       reactDT5$data[i,7] = updateH2(reactDT5$data[i,]) # round(input$varG/(input$varG + input$varGxY/reactDT5$data[i,3] + input$varGxL/(reactDT5$data[i,3]*reactDT5$data[i,4]) + reactDT5$data[i,6]/(reactDT5$data[i,3]*reactDT5$data[i,4]*reactDT5$data[i,5])), 3)
-      # print(paste("H2 for stage", i, "is", yti$data[i,7]))
     }
   })
+  
+  
+  # Update cost table as soon as input data that affect cost change
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(sum(reactDT5$data[,3])+input$negen,sum(reactDT5$data[,3]*reactDT5$data[,4]), totalPlots(reactDT5$data)), 
+                                                               options = list(
+                                                                 searching = F, # no search box
+                                                                 paginate = F,  # no num of pages
+                                                                 lengthChange = F, # no show entries
+                                                                 scrollX = T # horizontal slider
+                                                               ),
+                                                               rownames = F,
+                                                               colnames = c('Total Years', 'Total Locs', 'Total Plots'),
+                                                               server = F )      
+  
 } else if (tail(Scenarios,1) == 6)
 {
   #output$cyPlot6 <- nplot

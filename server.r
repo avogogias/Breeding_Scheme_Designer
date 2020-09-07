@@ -185,7 +185,9 @@ server <- function(input, output, clientData, session) {
                  # input settings used for this scenario
                  DT::DTOutput(paste0('stages_summary', i)),
                  # update scenario button
-                 actionButton(paste0("update_btn", i), "Update")
+                 actionButton(paste0("update_btn", i), "Update"),
+                 # cost table for this scenario
+                 DT::DTOutput(paste0('costDT', i))
         )
       }) 
       do.call(tabsetPanel, myTabs)
