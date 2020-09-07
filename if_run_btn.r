@@ -33,25 +33,26 @@ if (tail(Scenarios,1) == 1)
 
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn1, {
+    
     result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
                           isolate(reactDT1$data[,2]),isolate(reactDT1$data[,3]),
                           isolate(reactDT1$data[,4]),isolate(reactDT1$data[,5]),
                           isolate(reactDT1$data[,6]),isolate(input$varieties))
+    
     output$cyPlot1 <- renderPlot({
-
       boxplot(t(result),xlab="Stage",ylab="Mean Genetic Value")
     })   # end of renderPlot
 
     # Update results_all entries
     # First remove previous run entries
     rv$results_all <- rv$results_all[,rv$results_all[3,]!=1] # WORKS!
-
+    #
     # Then add to matrix
     for(i in 1:nrow(result)) # 1:tail(Scenarios,1)
     {
       rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result[i,], Scenario = 1))
     }
-
+    #
     # Render Group Boxplot with updated entries
     output$overviewTab <- renderPlot({
       ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
@@ -61,7 +62,31 @@ if (tail(Scenarios,1) == 1)
         scale_fill_discrete(name="Scenario")+
         ggtitle("Comparison between stages across all scenarios")
     })   # end of renderPlot for Overview tab
-  }) # endof update btn
+    
+    
+    #------------ Overview Plot x Time --------------#
+    #------------------------------------------------#
+    # Update results_allxTime entries
+    # First remove previous run entries
+    rv$results_allxTime <- rv$results_allxTime[,rv$results_allxTime[3,]!=1] 
+    #
+    # Store all results conditioned by Time in rv
+    for(i in 1:nrow(result)) 
+    {
+      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = result[i,] / totalYears(reactDT1$data), Scenario = 1)) # Scenario = scenarioID)) FAILS
+    }
+    #
+    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
+    output$overviewTabxTime <- renderPlot({
+      ggplot(as.data.frame(t(rv$results_allxTime)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
+        geom_boxplot()+
+        xlab("Stage")+
+        ylab("Gain / Time")+
+        scale_fill_discrete(name="Scenario")+
+        ggtitle("Comparison between stages across all scenarios (by Time)")
+    })   # end of renderPlot for Overview tab
+    
+  }) # endof update btn1
 
   # Update H2 for every stage as soon as input data that affect H2 change
   observe({
@@ -136,6 +161,29 @@ if (tail(Scenarios,1) == 1)
         scale_fill_discrete(name="Scenario")+
         ggtitle("Comparison between stages across all scenarios")
     })   # end of renderPlot for Overview tab
+    
+    
+    #------------ Overview Plot x Time --------------#
+    #------------------------------------------------#
+    # Update results_allxTime entries
+    # First remove previous run entries
+    rv$results_allxTime <- rv$results_allxTime[,rv$results_allxTime[3,]!=2] 
+    #
+    # Store all results conditioned by Time in rv
+    for(i in 1:nrow(result)) 
+    {
+      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = result[i,] / totalYears(reactDT2$data), Scenario = 2)) # Scenario = scenarioID)) FAILS
+    }
+    #
+    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
+    output$overviewTabxTime <- renderPlot({
+      ggplot(as.data.frame(t(rv$results_allxTime)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
+        geom_boxplot()+
+        xlab("Stage")+
+        ylab("Gain / Time")+
+        scale_fill_discrete(name="Scenario")+
+        ggtitle("Comparison between stages across all scenarios (by Time)")
+    })   # end of renderPlot for Overview tab    
 
   }) # endof update btn
 
@@ -211,6 +259,29 @@ if (tail(Scenarios,1) == 1)
         scale_fill_discrete(name="Scenario")+
         ggtitle("Comparison between stages across all scenarios")
     })   # end of renderPlot for Overview tab
+    
+    
+    #------------ Overview Plot x Time --------------#
+    #------------------------------------------------#
+    # Update results_allxTime entries
+    # First remove previous run entries
+    rv$results_allxTime <- rv$results_allxTime[,rv$results_allxTime[3,]!=3] 
+    #
+    # Store all results conditioned by Time in rv
+    for(i in 1:nrow(result)) 
+    {
+      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = result[i,] / totalYears(reactDT3$data), Scenario = 3)) # Scenario = scenarioID)) FAILS
+    }
+    #
+    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
+    output$overviewTabxTime <- renderPlot({
+      ggplot(as.data.frame(t(rv$results_allxTime)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
+        geom_boxplot()+
+        xlab("Stage")+
+        ylab("Gain / Time")+
+        scale_fill_discrete(name="Scenario")+
+        ggtitle("Comparison between stages across all scenarios (by Time)")
+    })   # end of renderPlot for Overview tab    
 
   }) # endof update btn
 
@@ -287,6 +358,29 @@ if (tail(Scenarios,1) == 1)
         scale_fill_discrete(name="Scenario")+
         ggtitle("Comparison between stages across all scenarios")
     })   # end of renderPlot for Overview tab
+    
+    
+    #------------ Overview Plot x Time --------------#
+    #------------------------------------------------#
+    # Update results_allxTime entries
+    # First remove previous run entries
+    rv$results_allxTime <- rv$results_allxTime[,rv$results_allxTime[3,]!=4] 
+    #
+    # Store all results conditioned by Time in rv
+    for(i in 1:nrow(result)) 
+    {
+      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = result[i,] / totalYears(reactDT4$data), Scenario = 4)) # Scenario = scenarioID)) FAILS
+    }
+    #
+    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
+    output$overviewTabxTime <- renderPlot({
+      ggplot(as.data.frame(t(rv$results_allxTime)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
+        geom_boxplot()+
+        xlab("Stage")+
+        ylab("Gain / Time")+
+        scale_fill_discrete(name="Scenario")+
+        ggtitle("Comparison between stages across all scenarios (by Time)")
+    })   # end of renderPlot for Overview tab    
 
   }) # endof update btn
 
@@ -367,6 +461,28 @@ if (tail(Scenarios,1) == 1)
         ggtitle("Comparison between stages across all scenarios")
     })   # end of renderPlot for Overview tab
 
+    
+    #------------ Overview Plot x Time --------------#
+    #------------------------------------------------#
+    # Update results_allxTime entries
+    # First remove previous run entries
+    rv$results_allxTime <- rv$results_allxTime[,rv$results_allxTime[3,]!=5] 
+    #
+    # Store all results conditioned by Time in rv
+    for(i in 1:nrow(result)) 
+    {
+      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = result[i,] / totalYears(reactDT5$data), Scenario = 5)) # Scenario = scenarioID)) FAILS
+    }
+    #
+    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
+    output$overviewTabxTime <- renderPlot({
+      ggplot(as.data.frame(t(rv$results_allxTime)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
+        geom_boxplot()+
+        xlab("Stage")+
+        ylab("Gain / Time")+
+        scale_fill_discrete(name="Scenario")+
+        ggtitle("Comparison between stages across all scenarios (by Time)")
+    })   # end of renderPlot for Overview tab
 
   }) # endof update btn
 

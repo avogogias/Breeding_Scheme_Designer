@@ -20,17 +20,19 @@ server <- function(input, output, clientData, session) {
   h2 = c(0.5,0.5,0.5) # this is a calculated value initialised here
   
   # per-session reactive values object to store all results of this user session
-  rv <- reactiveValues(results_all = NULL)
+  rv <- reactiveValues(results_all = NULL, results_allxTime = NULL)
   # defines a common reactive list to store all scenario input info (stages DT + other) to replace reactDT
   scenariosInput <- reactiveValues(stagesDT = list(), varG = list(), varGxL = list(), varGxY = list(), varieties = list()) # initially will store stages_current and updated accordingly
   yt = cbind(stage,entries,years,locs,reps,error,h2)
   # Using reactiveVales to add a server side set of variable observable and mutable at the same time
   yti <- reactiveValues(data = yt)
 
-  # *********************** #
-  # ****** FUNCTIONS ****** #
-  # ****** --------- ****** #
-  # *********************** #
+  # ******************************************************** #
+  # ************************ FUNCTIONS ********************* #
+  # ************************ --------- ********************* #
+  # ************************ ......... ********************* #
+  # ************ All functions are defined here ************ #
+  # ******************************************************** #
   
   # function calculates h2 for a given as input a row of a DT matrix and 3 variances (optional)
   updateH2 <- function(stg = yt[1,], vG=input$varG, vGxY=input$varGxY, vGxL=input$varGxL){
@@ -39,14 +41,20 @@ server <- function(input, output, clientData, session) {
   }
   
   # function calculates Total Plots given a stages matrix as input
-  totalPlots <- function(mtx = yt) {
+  totalPlots <- function(scenarioDT = yt) {
     # print(nrow(mtx))
     # print(prod(mtx[1,1:4]))
     tp = 0
-    for (i in 1:nrow(mtx))
-      tp = tp + prod(mtx[i,1:4])
+    for (i in 1:nrow(scenarioDT))
+      tp = tp + prod(scenarioDT[i,1:4])
     print(tp)
-  }  
+  }
+  
+  # function returns total number of years for a scenario
+  totalYears <- function(scenarioDT = yt, selfingYears = input$negen) {
+    ty = sum(scenarioDT[,3]) + selfingYears
+    print(ty)
+  }
   
   # Update H2 (7th col in yti DT) for every stage in sidebar DT, as soon as input data that affect H2 change
   observe({
@@ -64,7 +72,7 @@ server <- function(input, output, clientData, session) {
   # output$tPlots = renderText({ yti$data[1,2] })  # plots
   # cost_df = cbind(tYears, tLocs, tPlots)
   # Display a DT table with costs calculated based on user input (stages etc.)
-  output$cost_table = DT::renderDT(cbind(sum(yti$data[,3])+input$negen,sum(yti$data[,3]*yti$data[,4]), totalPlots(yti$data)), 
+  output$cost_table = DT::renderDT(cbind(totalYears(yti$data), sum(yti$data[,3]*yti$data[,4]), totalPlots(yti$data)), 
                                    options = list(
                                      searching = F, # no search box
                                      paginate = F,  # no num of pages
@@ -213,6 +221,13 @@ server <- function(input, output, clientData, session) {
     #print(head(t(rv$results_all)))
     #print(tail(t(rv$results_all)))
     
+    # Store all results conditioned by Time in rv
+    for(i in 1:nrow(result)) 
+    {
+      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = result[i,] / totalYears(yti$data), Scenario = tail(Scenarios,1))) # Scenario = scenarioID)) FAILS
+    }
+
+    
     # Global settings for all DTs in senario tabs
     sumset_DT = list( options = list(
       searching = F, # no search box
@@ -250,11 +265,23 @@ server <- function(input, output, clientData, session) {
     # for (i in 1:tail(Scenarios,1))
     # TODO
     
+    # Render grouped boxplots for all scenario results without any processing
     output$overviewTab <- renderPlot({
       ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
         geom_boxplot()+
         xlab("Stage")+
         ylab("Gain")+
+        scale_fill_discrete(name="Scenario")+
+        ggtitle("Comparison between stages across all scenarios")
+    })   # end of renderPlot for Overview tab
+    
+
+    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
+    output$overviewTabxTime <- renderPlot({
+      ggplot(as.data.frame(t(rv$results_allxTime)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
+        geom_boxplot()+
+        xlab("Stage")+
+        ylab("Gain / Time")+
         scale_fill_discrete(name="Scenario")+
         ggtitle("Comparison between stages across all scenarios")
     })   # end of renderPlot for Overview tab
