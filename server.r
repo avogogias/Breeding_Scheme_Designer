@@ -1,50 +1,42 @@
+library(DT)
+library(Rcpp)
+library(RcppArmadillo)
+library(ggplot2) 
+
+sourceCpp("Engine.cpp")
+
 server <- function(input, output, clientData, session) {
   
   # TV to use complementary to generated divID for identifying Scenarios ID
   Scenarios <<- c() #simple list of scenario ids, so will be [1,2,3] if three scenarios
   
-  # Default matrix values
+  # Define default matrix values
   stage = c(1,2,3)
   entries = c(1000,100,10)
   years = c(1,1,2)
   locs = c(1,4,8)
   reps = c(1,2,3)
   error = c(1,1,1)
-  h2 = c(0.5,0.5,0.5) # this is a calculated value
+  h2 = c(0.5,0.5,0.5) # this is a calculated value initialised here
   
   # per-session reactive values object to store all results of this user session
   rv <- reactiveValues(results_all = NULL)
-  
   # defines a common reactive list to store all scenario input info (stages DT + other) to replace reactDT
   scenariosInput <- reactiveValues(stagesDT = list(), varG = list(), varGxL = list(), varGxY = list(), varieties = list()) # initially will store stages_current and updated accordingly
-  
-  # updateH2 <- function(){
-  #   for (i in stage)
-  #   {
-  #     print(paste("The index is",i))
-  #     h2[i] = input$varG #/ ( input$varG + input$varGxY/years[i] + input$varGxL/years[i]*locs[i] + error[i]/years[i]*locs[i]*reps[i])
-  #   }
-  #   print(h2)
-  # }
-  
   yt = cbind(stage,entries,years,locs,reps,error,h2)
   # Using reactiveVales to add a server side set of variable observable and mutable at the same time
   yti <- reactiveValues(data = yt)
+
+  # *********************** #
+  # ****** FUNCTIONS ****** #
+  # ****** --------- ****** #
+  # *********************** #
   
-  # Update H2 for every stage as soon as input data that affect H2 change
-  observe({
-    for (i in 1:nrow(yti$data))
-    {
-      yti$data[i,7] = round(input$varG/(input$varG + input$varGxY/yti$data[i,3] + input$varGxL/(yti$data[i,3]*yti$data[i,4]) + yti$data[i,6]/(yti$data[i,3]*yti$data[i,4]*yti$data[i,5])), 3)
-      # print(paste("H2 for stage", i, "is", yti$data[i,7]))
-    }
-  })
-  
-  # Render static table with total years, locs and plots
-  # output$tYears = renderText({ sum(yti$data[,3]) })  # years
-  # output$tLocs = renderText({ sum(yti$data[,4]) })  # locs
-  # output$tPlots = renderText({ yti$data[1,2] })  # plots
-  # cost_df = cbind(tYears, tLocs, tPlots)
+  # function calculates h2 for a given as input a row of a DT matrix and 3 variances (optional)
+  updateH2 <- function(stg = yt[1,], vG=input$varG, vGxY=input$varGxY, vGxL=input$varGxL){
+    h2 = round(vG/(vG + vGxY/stg[3] + vGxL/(stg[3]*stg[4]) + stg[6]/(stg[3]*stg[4]*stg[5])), 3)
+    print(h2)
+  }
   
   # function calculates Total Plots given a stages matrix as input
   totalPlots <- function(mtx = yt) {
@@ -54,7 +46,23 @@ server <- function(input, output, clientData, session) {
     for (i in 1:nrow(mtx))
       tp = tp + prod(mtx[i,1:4])
     print(tp)
-  }
+  }  
+  
+  # Update H2 (7th col in yti DT) for every stage in sidebar DT, as soon as input data that affect H2 change
+  observe({
+    for (i in 1:nrow(yti$data))
+    {
+      yti$data[i,7] = updateH2(yti$data[i,])
+      # yti$data[i,7] = round(input$varG/(input$varG + input$varGxY/yti$data[i,3] + input$varGxL/(yti$data[i,3]*yti$data[i,4]) + yti$data[i,6]/(yti$data[i,3]*yti$data[i,4]*yti$data[i,5])), 3)
+      # print(paste("H2 for stage", i, "is", yti$data[i,7]))
+    }
+  })
+  
+  # Render static table with total years, locs and plots
+  # output$tYears = renderText({ sum(yti$data[,3]) })  # years
+  # output$tLocs = renderText({ sum(yti$data[,4]) })  # locs
+  # output$tPlots = renderText({ yti$data[1,2] })  # plots
+  # cost_df = cbind(tYears, tLocs, tPlots)
   # Display a DT table with costs calculated based on user input (stages etc.)
   output$cost_table = DT::renderDT(cbind(sum(yti$data[,3])+input$negen,sum(yti$data[,3]*yti$data[,4]), totalPlots(yti$data)), 
                                    options = list(
@@ -109,7 +117,7 @@ server <- function(input, output, clientData, session) {
   
   # Observe Button Clicks for adding or removing rows (stages) from the DT
   observeEvent(input$add_btn, {
-    print(yti$data[1,3:6])
+    #print(yti$data[1,3:6])
     # calc h2 for this stage
     new_h2 = input$varG / (input$varG + input$varGxY + input$varGxL + 1)
     yti$data = rbind(yti$data, c(length(yti$data[,1])+1,2,1,1,1,1,round(new_h2, 3)))
@@ -221,8 +229,8 @@ server <- function(input, output, clientData, session) {
     server = TRUE) # server = F doesn't work with replaceData() cell editing
     
     # Include content from R file locally as if it was pasted here to manage if-else
-    # source('if_run_btn.r', local=TRUE) # OLD METHOD with if-else loop handling but with duplicated code for up to 5 scenarios WORKS!
-    source('update_scenarios.r', local = TRUE) # alternative recursive method IN PROGRESS
+    source('if_run_btn.r', local=TRUE) # OLD METHOD with if-else loop handling but with duplicated code for up to 5 scenarios WORKS!
+    # source('update_scenarios.r', local = TRUE) # alternative recursive method IN PROGRESS
     
     
     # # Attempt to enrich v object with I/O data for every scenario - NOT USED

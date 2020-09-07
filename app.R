@@ -1,11 +1,11 @@
 library(shiny)
-library(DT)
-library(shinyBS)
-library(Rcpp)
-library(RcppArmadillo)
-library(ggplot2) 
+# library(DT)
+# library(shinyBS)
+# library(Rcpp)
+# library(RcppArmadillo)
+# library(ggplot2) 
 
-sourceCpp("Engine.cpp")
+# sourceCpp("Engine.cpp")
 
 source('ui.r', local = TRUE)
 source('server.r')

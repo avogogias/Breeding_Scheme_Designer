@@ -95,7 +95,7 @@ if (is.null(rv[[divID]])) {
   observe({
     for (i in 1:nrow(rv[[stagesID]]))
     {
-      rv[[stagesID]][i,7] = round(input$varG/(input$varG + input$varGxY/rv[[stagesID]][i,3] + input$varGxL/(rv[[stagesID]][i,3]*rv[[stagesID]][i,4]) + rv[[stagesID]][i,6]/(rv[[stagesID]][i,3]*rv[[stagesID]][i,4]*rv[[stagesID]][i,5])), 3)
+      rv[[stagesID]][i,7] = updateH2(rv[[stagesID]][i,]) # round(input$varG/(input$varG + input$varGxY/rv[[stagesID]][i,3] + input$varGxL/(rv[[stagesID]][i,3]*rv[[stagesID]][i,4]) + rv[[stagesID]][i,6]/(rv[[stagesID]][i,3]*rv[[stagesID]][i,4]*rv[[stagesID]][i,5])), 3)
       #print(paste("H2 for stagesID", stagesID,"in stage", i, "is", rv[[stagesID]][i,7], "and years = ", rv[[stagesID]][i,3]))
     }
   })

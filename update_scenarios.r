@@ -78,7 +78,7 @@ observe({
   
   for (i in 1:nrow(scenariosInput$stagesDT[[tail(Scenarios, 1)]]))
   {
-    scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,7] = round(input$varG/(input$varG + input$varGxY/scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,3] + input$varGxL/(scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,3]*scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,4]) + scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,6]/(scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,3]*scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,4]*scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,5])), 3)
+    scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,7] = updateH2(scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,]) #round(input$varG/(input$varG + input$varGxY/scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,3] + input$varGxL/(scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,3]*scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,4]) + scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,6]/(scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,3]*scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,4]*scenariosInput$stagesDT[[tail(Scenarios, 1)]][i,5])), 3)
     # print(paste("H2 for stage", i, "is", yti$data[i,7]))
   }
 })

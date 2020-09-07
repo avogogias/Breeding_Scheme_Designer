@@ -1,3 +1,5 @@
+library(shinyBS)
+
 ui <- fluidPage(title = "Cycle Scenarios",
                 
                 # theme = "bootstrap.css", # CSS theme file could be added here
@@ -13,7 +15,8 @@ ui <- fluidPage(title = "Cycle Scenarios",
                     
                     tags$h3("Create a new scenario"),
                     
-                    # User-defined scenario ID could be typed using the following:
+                    # Currently scenario ID are generated automatically. Alternatively,
+                    # user-defined scenario ID could be typed using the following:
                     # textInput("divID", "Enter a unique ID for your scenario:", ""),
                     # helpText("Leave the text input blank for automatically unique IDs."),
                     
