@@ -40,6 +40,18 @@ server <- function(input, output, clientData, session) {
     print(h2)
   }
   
+  # function returns total number of years for a scenario
+  totalYears <- function(scenarioDT = yt, selfingYears = input$negen) {
+    ty = sum(scenarioDT[,3]) + selfingYears
+    print(ty)
+  }
+  
+  # function returns the total number of locations for a scenario
+  totalLocs <- function(scenarioDT = yt) {
+    tl = sum(scenarioDT[,3]*scenarioDT[,4])
+    print(tl)
+  }
+
   # function calculates Total Plots given a stages matrix as input
   totalPlots <- function(scenarioDT = yt) {
     # print(nrow(mtx))
@@ -48,13 +60,20 @@ server <- function(input, output, clientData, session) {
     for (i in 1:nrow(scenarioDT))
       tp = tp + prod(scenarioDT[i,1:4])
     print(tp)
+  }    
+  
+  # function returns total number of years passed until a particular stage is completed (default is stage 1)
+  stageCompleteYears <- function(scenarioDT = yt, stage = 1, selfingYears = input$negen) {
+    scy = sum(scenarioDT[1:stage,3]) + selfingYears
+    print(scy)
   }
   
-  # function returns total number of years for a scenario
-  totalYears <- function(scenarioDT = yt, selfingYears = input$negen) {
-    ty = sum(scenarioDT[,3]) + selfingYears
-    print(ty)
+  # function calcucates Gain / Time dividing the gain with the number of years passed until a stage is completed
+  gainTime <- function(scenarioDT = yt, result = result, stage = 1) {
+    gt = result[stage,] / stageCompleteYears(scenarioDT, stage) 
   }
+  
+  
   
   # Update H2 (7th col in yti DT) for every stage in sidebar DT, as soon as input data that affect H2 change
   observe({
@@ -72,7 +91,7 @@ server <- function(input, output, clientData, session) {
   # output$tPlots = renderText({ yti$data[1,2] })  # plots
   # cost_df = cbind(tYears, tLocs, tPlots)
   # Display a DT table with costs calculated based on user input (stages etc.)
-  output$cost_table = DT::renderDT(cbind(totalYears(yti$data), sum(yti$data[,3]*yti$data[,4]), totalPlots(yti$data)), 
+  output$cost_table = DT::renderDT(cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data)), 
                                    options = list(
                                      searching = F, # no search box
                                      paginate = F,  # no num of pages
@@ -224,7 +243,7 @@ server <- function(input, output, clientData, session) {
     # Store all results conditioned by Time in rv
     for(i in 1:nrow(result)) 
     {
-      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = result[i,] / totalYears(yti$data), Scenario = tail(Scenarios,1))) # Scenario = scenarioID)) FAILS
+      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = gainTime(yti$data, result, i), Scenario = tail(Scenarios,1))) # Scenario = scenarioID)) FAILS
     }
 
     

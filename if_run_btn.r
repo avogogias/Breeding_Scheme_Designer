@@ -73,7 +73,7 @@ if (tail(Scenarios,1) == 1)
     # Store all results conditioned by Time in rv
     for(i in 1:nrow(result)) 
     {
-      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = result[i,] / totalYears(reactDT1$data), Scenario = 1)) # Scenario = scenarioID)) FAILS
+      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = gainTime(reactDT1$data, result, i), Scenario = 1)) # Scenario = scenarioID)) FAILS
     }
     #
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
@@ -97,7 +97,7 @@ if (tail(Scenarios,1) == 1)
   })
   
   # Update cost table as soon as input data that affect cost change
-  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(sum(reactDT1$data[,3])+input$negen,sum(reactDT1$data[,3]*reactDT1$data[,4]), totalPlots(reactDT1$data)), 
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT1$data, input$negen), totalLocs(reactDT1$data), totalPlots(reactDT1$data)), 
                                    options = list(
                                      searching = F, # no search box
                                      paginate = F,  # no num of pages
@@ -172,7 +172,7 @@ if (tail(Scenarios,1) == 1)
     # Store all results conditioned by Time in rv
     for(i in 1:nrow(result)) 
     {
-      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = result[i,] / totalYears(reactDT2$data), Scenario = 2)) # Scenario = scenarioID)) FAILS
+      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = gainTime(reactDT2$data, result, i), Scenario = 2)) # Scenario = scenarioID)) FAILS
     }
     #
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
@@ -196,7 +196,7 @@ if (tail(Scenarios,1) == 1)
   })
   
   # Update cost table as soon as input data that affect cost change
-  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(sum(reactDT2$data[,3])+input$negen,sum(reactDT2$data[,3]*reactDT2$data[,4]), totalPlots(reactDT2$data)), 
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT2$data, input$negen), totalLocs(reactDT2$data), totalPlots(reactDT2$data)), 
                                                                options = list(
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
@@ -270,7 +270,7 @@ if (tail(Scenarios,1) == 1)
     # Store all results conditioned by Time in rv
     for(i in 1:nrow(result)) 
     {
-      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = result[i,] / totalYears(reactDT3$data), Scenario = 3)) # Scenario = scenarioID)) FAILS
+      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = gainTime(reactDT3$data, result, i), Scenario = 3)) # Scenario = scenarioID)) FAILS
     }
     #
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
@@ -294,7 +294,7 @@ if (tail(Scenarios,1) == 1)
   })
   
   # Update cost table as soon as input data that affect cost change
-  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(sum(reactDT3$data[,3])+input$negen,sum(reactDT3$data[,3]*reactDT3$data[,4]), totalPlots(reactDT3$data)), 
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT3$data, input$negen), totalLocs(reactDT3$data), totalPlots(reactDT3$data)), 
                                                                options = list(
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
@@ -369,7 +369,7 @@ if (tail(Scenarios,1) == 1)
     # Store all results conditioned by Time in rv
     for(i in 1:nrow(result)) 
     {
-      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = result[i,] / totalYears(reactDT4$data), Scenario = 4)) # Scenario = scenarioID)) FAILS
+      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = gainTime(reactDT4$data, result, i), Scenario = 4)) # Scenario = scenarioID)) FAILS
     }
     #
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
@@ -394,7 +394,7 @@ if (tail(Scenarios,1) == 1)
   
   
   # Update cost table as soon as input data that affect cost change
-  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(sum(reactDT4$data[,3])+input$negen,sum(reactDT4$data[,3]*reactDT4$data[,4]), totalPlots(reactDT4$data)), 
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT4$data, input$negen), totalLocs(reactDT4$data), totalPlots(reactDT4$data)), 
                                                                options = list(
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
@@ -471,7 +471,7 @@ if (tail(Scenarios,1) == 1)
     # Store all results conditioned by Time in rv
     for(i in 1:nrow(result)) 
     {
-      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = result[i,] / totalYears(reactDT5$data), Scenario = 5)) # Scenario = scenarioID)) FAILS
+      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = gainTime(reactDT5$data, result, i), Scenario = 5)) # Scenario = scenarioID)) FAILS
     }
     #
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
@@ -496,7 +496,7 @@ if (tail(Scenarios,1) == 1)
   
   
   # Update cost table as soon as input data that affect cost change
-  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(sum(reactDT5$data[,3])+input$negen,sum(reactDT5$data[,3]*reactDT5$data[,4]), totalPlots(reactDT5$data)), 
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT5$data, input$negen), totalLocs(reactDT5$data), totalPlots(reactDT5$data)), 
                                                                options = list(
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
