@@ -27,12 +27,12 @@ server <- function(input, output, clientData, session) {
   # Using reactiveVales to add a server side set of variable observable and mutable at the same time
   yti <- reactiveValues(data = yt)
 
-  # ******************************************************** #
-  # ************************ FUNCTIONS ********************* #
-  # ************************ --------- ********************* #
-  # ************************ ......... ********************* #
-  # ************ All functions are defined here ************ #
-  # ******************************************************** #
+  # ***************************************************** #
+  # ********************* FUNCTIONS ********************* #
+  # ********************* --------- ********************* #
+  # ********************* ......... ********************* #
+  # *********** All functions are defined here ********** #
+  # ***************************************************** #
   
   # function calculates h2 for a given as input a row of a DT matrix and 3 variances (optional)
   updateH2 <- function(stg = yt[1,], vG=input$varG, vGxY=input$varGxY, vGxL=input$varGxL){
@@ -63,17 +63,62 @@ server <- function(input, output, clientData, session) {
   }    
   
   # function returns total number of years passed until a particular stage is completed (default is stage 1)
-  stageCompleteYears <- function(scenarioDT = yt, stage = 1, selfingYears = input$negen) {
+  stageTotalYears <- function(scenarioDT = yt, stage = 1, selfingYears = input$negen) {
     scy = sum(scenarioDT[1:stage,3]) + selfingYears
     print(scy)
   }
   
   # function calcucates Gain / Time dividing the gain with the number of years passed until a stage is completed
   gainTime <- function(scenarioDT = yt, result = result, stage = 1) {
-    gt = result[stage,] / stageCompleteYears(scenarioDT, stage) 
+    gt = result[stage,] / stageTotalYears(scenarioDT, stage) 
   }
   
+  # function returns total plots in a stage (default is stage 1)
+  stageTotalPlots <-function(scenarioDT = yt, stage = 1) {
+    stp = prod(scenarioDT[stage,1:4])
+    print(stp)
+  }
+
+  # function creates a new Tab in the UI for a given ScenarioID
+  createTab <- function(scenarioID = 1) {
+    myTabs = lapply(1: scenarioID, function(i){
+      tabPanel(paste0('Scenario', i),
+               plotOutput(paste0('cyPlot', i)),
+               # input settings used for this scenario
+               DT::DTOutput(paste0('stages_summary', i)),
+               # update scenario button
+               actionButton(paste0("update_btn", i), "Update"),
+               # cost table for this scenario
+               DT::DTOutput(paste0('costDT', i))
+      )
+    }) 
+    do.call(tabsetPanel, myTabs)
+  }
+
+  # function plots the results of a scenario
+  plotScenario <- function(result = result) {
+    boxplot(t(result),
+            xlab="Stage",
+            ylab="Mean Genetic Value")
+  }
   
+  # function plots the results of all scenarios
+  plotScenarioGroup <- function(results_all = rv$results_all) {
+    ggplot(as.data.frame(t(results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
+      geom_boxplot()+
+      xlab("Stage")+
+      ylab("Gain")+
+      scale_fill_discrete(name="Scenario")+
+      ggtitle("Comparison between stages across all scenarios")
+  }
+
+  
+  #*************************************
+  #-------------------------------------  
+  # ************* OBSERVERS ************
+  # ------------------------------------
+  #*************************************
+
   
   # Update H2 (7th col in yti DT) for every stage in sidebar DT, as soon as input data that affect H2 change
   observe({
@@ -85,12 +130,7 @@ server <- function(input, output, clientData, session) {
     }
   })
   
-  # Render static table with total years, locs and plots
-  # output$tYears = renderText({ sum(yti$data[,3]) })  # years
-  # output$tLocs = renderText({ sum(yti$data[,4]) })  # locs
-  # output$tPlots = renderText({ yti$data[1,2] })  # plots
-  # cost_df = cbind(tYears, tLocs, tPlots)
-  # Display a DT table with costs calculated based on user input (stages etc.)
+  # Render a DT table with total costs (Years, Locs, Plots) calculated based on stages input
   output$cost_table = DT::renderDT(cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data)), 
                                    options = list(
                                      searching = F, # no search box
@@ -155,14 +195,6 @@ server <- function(input, output, clientData, session) {
       yti$data = yti$data[1:length(yti$data[,1])-1,]
   })
   
-  
-  
-  #***********************************************
-  #-----------------------------------------------  
-  # ************* RUN BUTTON OBSERVER ************
-  # *************---------------------************
-  #***********************************************
-  #-----------------------------------------------
   # Execute runScenario() for the current settings
   observeEvent(input$run_btn, {
     
@@ -206,18 +238,7 @@ server <- function(input, output, clientData, session) {
     # Create a new tab in the UI every time Run is pressed
     # UI input elements of all Scenario tabs are rendered
     output$mytabs = renderUI({
-      myTabs = lapply(1: tail(Scenarios,1), function(i){
-        tabPanel(paste0('Scenario', i),
-                 plotOutput(paste0('cyPlot', i)),
-                 # input settings used for this scenario
-                 DT::DTOutput(paste0('stages_summary', i)),
-                 # update scenario button
-                 actionButton(paste0("update_btn", i), "Update"),
-                 # cost table for this scenario
-                 DT::DTOutput(paste0('costDT', i))
-        )
-      }) 
-      do.call(tabsetPanel, myTabs)
+      createTab(scenarioID = tail(Scenarios,1))
     })
     
     print(paste("Start Run", tail(Scenarios,1))) # input$run_btn))
@@ -227,9 +248,7 @@ server <- function(input, output, clientData, session) {
     # New Plot of ran result appearing in new tab
     # First save new plot in a variable before passing it to output
     nplot <- renderPlot({
-      boxplot(t(result),
-              xlab="Stage",
-              ylab="Mean Genetic Value")
+      plotScenario(result)
     })   # end of renderPlot
     
     # Store results from all runs in a reactive matrix
@@ -286,23 +305,13 @@ server <- function(input, output, clientData, session) {
     
     # Render grouped boxplots for all scenario results without any processing
     output$overviewTab <- renderPlot({
-      ggplot(as.data.frame(t(rv$results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
-        geom_boxplot()+
-        xlab("Stage")+
-        ylab("Gain")+
-        scale_fill_discrete(name="Scenario")+
-        ggtitle("Comparison between stages across all scenarios")
+      plotScenarioGroup(rv$results_all)
     })   # end of renderPlot for Overview tab
     
 
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
     output$overviewTabxTime <- renderPlot({
-      ggplot(as.data.frame(t(rv$results_allxTime)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
-        geom_boxplot()+
-        xlab("Stage")+
-        ylab("Gain / Time")+
-        scale_fill_discrete(name="Scenario")+
-        ggtitle("Comparison between stages across all scenarios")
+      plotScenarioGroup(rv$results_allxTime)
     })   # end of renderPlot for Overview tab
     
     source('all_in_one.r', local = TRUE) # alternative recursive method that uses divID -- IN PROGRESS    
