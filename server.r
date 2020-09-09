@@ -7,6 +7,10 @@ sourceCpp("Engine.cpp")
 
 server <- function(input, output, clientData, session) {
   
+  # ***************************************************** #
+  # ********************* VARIABLES ********************* #
+  # ********************* --------- ********************* #
+  
   # TV to use complementary to generated divID for identifying Scenarios ID
   Scenarios <<- c() #simple list of scenario ids, so will be [1,2,3] if three scenarios
   
@@ -30,26 +34,25 @@ server <- function(input, output, clientData, session) {
   # ***************************************************** #
   # ********************* FUNCTIONS ********************* #
   # ********************* --------- ********************* #
-  # ********************* ......... ********************* #
   # *********** All functions are defined here ********** #
   # ***************************************************** #
   
   # function calculates h2 for a given as input a row of a DT matrix and 3 variances (optional)
   updateH2 <- function(stg = yt[1,], vG=input$varG, vGxY=input$varGxY, vGxL=input$varGxL){
     h2 = round(vG/(vG + vGxY/stg[3] + vGxL/(stg[3]*stg[4]) + stg[6]/(stg[3]*stg[4]*stg[5])), 3)
-    print(h2)
+    return(h2)
   }
   
   # function returns total number of years for a scenario
   totalYears <- function(scenarioDT = yt, selfingYears = input$negen) {
     ty = sum(scenarioDT[,3]) + selfingYears
-    print(ty)
+    return(ty)
   }
   
   # function returns the total number of locations for a scenario
   totalLocs <- function(scenarioDT = yt) {
     tl = sum(scenarioDT[,3]*scenarioDT[,4])
-    print(tl)
+    return(tl)
   }
 
   # function calculates Total Plots given a stages matrix as input
@@ -59,24 +62,25 @@ server <- function(input, output, clientData, session) {
     tp = 0
     for (i in 1:nrow(scenarioDT))
       tp = tp + prod(scenarioDT[i,1:4])
-    print(tp)
+    return(tp)
   }    
   
   # function returns total number of years passed until a particular stage is completed (default is stage 1)
   stageTotalYears <- function(scenarioDT = yt, stage = 1, selfingYears = input$negen) {
     scy = sum(scenarioDT[1:stage,3]) + selfingYears
-    print(scy)
+    return(scy)
   }
   
   # function calcucates Gain / Time dividing the gain with the number of years passed until a stage is completed
   gainTime <- function(scenarioDT = yt, result = result, stage = 1) {
     gt = result[stage,] / stageTotalYears(scenarioDT, stage) 
+    return(gt)
   }
   
   # function returns total plots in a stage (default is stage 1)
   stageTotalPlots <-function(scenarioDT = yt, stage = 1) {
     stp = prod(scenarioDT[stage,1:4])
-    print(stp)
+    return(stp)
   }
 
   # function creates a new Tab in the UI for a given ScenarioID
@@ -112,6 +116,31 @@ server <- function(input, output, clientData, session) {
       ggtitle("Comparison between stages across all scenarios")
   }
 
+  # Store results from all runs in a reactive matrix
+  storeScenarioResult <- function(result = result, results_all = rv$results_all, scenarioID = tail(Scenarios,1) ) {
+    for(i in 1:nrow(result)) 
+    {
+      results_all = cbind(results_all, rbind(Stage = i, Value = result[i,], Scenario = scenarioID)) 
+    } 
+    return(results_all)
+  }
+
+  # Store all results conditioned by Time in rv
+  storeScenarioResultxTime <- function(result = result, results_all = rv$results_allxTime, scenarioID = tail(Scenarios,1), scenarioDT =  yti$data) {
+    for(i in 1:nrow(result)) 
+    {
+      results_all = cbind(results_all, rbind(Stage = i, Value = gainTime(scenarioDT, result, i), Scenario = scenarioID))
+    }
+    return(results_all)
+  }
+  
+  # Remove scenario result from storage. By default remove last scenario.
+  removeScenarioResult <- function(scenarioID = tail(Scenarios,1), results_all = rv$results_all) {
+    results_all <- results_all[,results_all[3,] != scenarioID] 
+    return(results_all)
+  }
+  
+
   
   #*************************************
   #-------------------------------------  
@@ -125,8 +154,6 @@ server <- function(input, output, clientData, session) {
     for (i in 1:nrow(yti$data))
     {
       yti$data[i,7] = updateH2(yti$data[i,])
-      # yti$data[i,7] = round(input$varG/(input$varG + input$varGxY/yti$data[i,3] + input$varGxL/(yti$data[i,3]*yti$data[i,4]) + yti$data[i,6]/(yti$data[i,3]*yti$data[i,4]*yti$data[i,5])), 3)
-      # print(paste("H2 for stage", i, "is", yti$data[i,7]))
     }
   })
   
@@ -252,18 +279,18 @@ server <- function(input, output, clientData, session) {
     })   # end of renderPlot
     
     # Store results from all runs in a reactive matrix
-    for(i in 1:nrow(result)) 
-    {
-      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result[i,], Scenario = tail(Scenarios,1))) # Scenario = scenarioID)) FAILS
-    }
-    #print(head(t(rv$results_all)))
-    #print(tail(t(rv$results_all)))
+    rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = tail(Scenarios,1))
+    # for(i in 1:nrow(result))
+    # {
+    #   rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result[i,], Scenario = tail(Scenarios,1))) # Scenario = scenarioID)) FAILS
+    # }
     
     # Store all results conditioned by Time in rv
-    for(i in 1:nrow(result)) 
-    {
-      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = gainTime(yti$data, result, i), Scenario = tail(Scenarios,1))) # Scenario = scenarioID)) FAILS
-    }
+    rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = tail(Scenarios,1), scenarioDT =  yti$data)
+    # for(i in 1:nrow(result)) 
+    # {
+    #   rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = gainTime(yti$data, result, i), Scenario = tail(Scenarios,1))) # Scenario = scenarioID)) FAILS
+    # }
 
     
     # Global settings for all DTs in senario tabs

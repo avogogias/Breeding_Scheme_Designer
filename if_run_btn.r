@@ -45,14 +45,12 @@ if (tail(Scenarios,1) == 1)
 
     # Update results_all entries
     # First remove previous run entries
-    rv$results_all <- rv$results_all[,rv$results_all[3,]!=1] # WORKS!
+    rv$results_all = removeScenarioResult(1)
+    # rv$results_all <- rv$results_all[,rv$results_all[3,]!=1] # WORKS!
     #
     # Then add to matrix
-    for(i in 1:nrow(result)) # 1:tail(Scenarios,1)
-    {
-      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result[i,], Scenario = 1))
-    }
-    #
+    rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 1)
+
     # Render Group Boxplot with updated entries
     output$overviewTab <- renderPlot({
       plotScenarioGroup(rv$results_all)
@@ -63,13 +61,12 @@ if (tail(Scenarios,1) == 1)
     #------------------------------------------------#
     # Update results_allxTime entries
     # First remove previous run entries
-    rv$results_allxTime <- rv$results_allxTime[,rv$results_allxTime[3,]!=1] 
+    rv$results_allxTime = removeScenarioResult(1, rv$results_allxTime)
+    # rv$results_allxTime <- rv$results_allxTime[,rv$results_allxTime[3,]!=1] 
     #
     # Store all results conditioned by Time in rv
-    for(i in 1:nrow(result)) 
-    {
-      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = gainTime(reactDT1$data, result, i), Scenario = 1)) # Scenario = scenarioID)) FAILS
-    }
+    rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 1, scenarioDT = reactDT1$data)
+
     #
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
     output$overviewTabxTime <- renderPlot({
@@ -132,15 +129,10 @@ if (tail(Scenarios,1) == 1)
 
     # Update results_all entries
     # First remove previous run entries
-    rv$results_all <- rv$results_all[,rv$results_all[3,]!=2] # WORKS!
-    print("UPDATED RESULTS")
-    #print(head(t(rv$results_all)))
-    #print(tail(t(rv$results_all)))
+    rv$results_all = removeScenarioResult(2)
+    
     # Then add to matrix
-    for(i in 1:nrow(result)) # 1:tail(Scenarios,1)
-    {
-      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result[i,], Scenario = 2))
-    }
+    rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 2)
 
     # Render Group Boxplot with updated entries
     output$overviewTab <- renderPlot({
@@ -152,13 +144,10 @@ if (tail(Scenarios,1) == 1)
     #------------------------------------------------#
     # Update results_allxTime entries
     # First remove previous run entries
-    rv$results_allxTime <- rv$results_allxTime[,rv$results_allxTime[3,]!=2] 
+    rv$results_allxTime = removeScenarioResult(2, rv$results_allxTime) 
     #
     # Store all results conditioned by Time in rv
-    for(i in 1:nrow(result)) 
-    {
-      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = gainTime(reactDT2$data, result, i), Scenario = 2)) # Scenario = scenarioID)) FAILS
-    }
+    rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 2, scenarioDT = reactDT2$data)
     #
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
     output$overviewTabxTime <- renderPlot({
@@ -222,13 +211,10 @@ if (tail(Scenarios,1) == 1)
 
     # Update results_all entries
     # First remove previous run entries
-    rv$results_all <- rv$results_all[,rv$results_all[3,]!=3] # WORKS!
+    rv$results_all = removeScenarioResult(3)
 
     # Then add to matrix
-    for(i in 1:nrow(result)) # 1:tail(Scenarios,1)
-    {
-      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result[i,], Scenario = 3))
-    }
+    rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 3)
 
     # Render Group Boxplot with updated entries
     output$overviewTab <- renderPlot({
@@ -240,13 +226,10 @@ if (tail(Scenarios,1) == 1)
     #------------------------------------------------#
     # Update results_allxTime entries
     # First remove previous run entries
-    rv$results_allxTime <- rv$results_allxTime[,rv$results_allxTime[3,]!=3] 
+    rv$results_allxTime = removeScenarioResult(3, rv$results_allxTime)
     #
     # Store all results conditioned by Time in rv
-    for(i in 1:nrow(result)) 
-    {
-      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = gainTime(reactDT3$data, result, i), Scenario = 3)) # Scenario = scenarioID)) FAILS
-    }
+    rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 3, scenarioDT = reactDT3$data)
     #
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
     output$overviewTabxTime <- renderPlot({
@@ -311,13 +294,10 @@ if (tail(Scenarios,1) == 1)
 
     # Update results_all entries
     # First remove previous run entries
-    rv$results_all <- rv$results_all[,rv$results_all[3,]!=4] # WORKS!
+    rv$results_all = removeScenarioResult(4)
 
     # Then add to matrix
-    for(i in 1:nrow(result)) # 1:tail(Scenarios,1)
-    {
-      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result[i,], Scenario = 4))
-    }
+    rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 4)
 
     # Render Group Boxplot with updated entries
     output$overviewTab <- renderPlot({
@@ -329,13 +309,10 @@ if (tail(Scenarios,1) == 1)
     #------------------------------------------------#
     # Update results_allxTime entries
     # First remove previous run entries
-    rv$results_allxTime <- rv$results_allxTime[,rv$results_allxTime[3,]!=4] 
+    rv$results_allxTime = removeScenarioResult(4, rv$results_allxTime) 
     #
     # Store all results conditioned by Time in rv
-    for(i in 1:nrow(result)) 
-    {
-      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = gainTime(reactDT4$data, result, i), Scenario = 4)) # Scenario = scenarioID)) FAILS
-    }
+    rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 4, scenarioDT = reactDT4$data)
     #
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
     output$overviewTabxTime <- renderPlot({
@@ -402,14 +379,10 @@ if (tail(Scenarios,1) == 1)
 
     # Update results_all entries
     # First remove previous run entries
-    rv$results_all <- rv$results_all[,rv$results_all[3,]!=5] # WORKS!
-    print("UPDATED RESULTS")
+    rv$results_all = removeScenarioResult(5)
 
     # Then add to matrix
-    for(i in 1:nrow(result)) # 1:tail(Scenarios,1)
-    {
-      rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result[i,], Scenario = 5))
-    }
+    rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 5)
 
     # Render Group Boxplot with updated entries
     output$overviewTab <- renderPlot({
@@ -421,13 +394,10 @@ if (tail(Scenarios,1) == 1)
     #------------------------------------------------#
     # Update results_allxTime entries
     # First remove previous run entries
-    rv$results_allxTime <- rv$results_allxTime[,rv$results_allxTime[3,]!=5] 
+    rv$results_allxTime = removeScenarioResult(5, rv$results_allxTime)
     #
     # Store all results conditioned by Time in rv
-    for(i in 1:nrow(result)) 
-    {
-      rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = gainTime(reactDT5$data, result, i), Scenario = 5)) # Scenario = scenarioID)) FAILS
-    }
+    rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 5, scenarioDT = reactDT5$data)
     #
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
     output$overviewTabxTime <- renderPlot({
