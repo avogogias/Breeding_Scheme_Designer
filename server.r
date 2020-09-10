@@ -70,7 +70,7 @@ server <- function(input, output, clientData, session) {
     scy = sum(scenarioDT[1:stage,3]) + selfingYears
     return(scy)
   }
-  
+  #
   # function calcucates Gain / Time dividing the gain with the number of years passed until a stage is completed
   gainTime <- function(scenarioDT = yt, result = result, stage = 1) {
     gt = result[stage,] / stageTotalYears(scenarioDT, stage) 
@@ -79,10 +79,23 @@ server <- function(input, output, clientData, session) {
   
   # function returns total plots in a stage (default is stage 1)
   stageTotalPlots <-function(scenarioDT = yt, stage = 1) {
-    stp = prod(scenarioDT[stage,1:4])
+    # should be equal to the summary of products for up to that stage
+    stp = sum(prod(scenarioDT[1:stage,1:4])) # + previous stages total plots
     return(stp)
   }
-
+  
+  # function returns total plots in a stage (default is stage 1)
+  stageTotalLocs <-function(scenarioDT = yt, stage = 1) {
+    stl = sum(prod(scenarioDT[1:stage,1:4]))
+    return(stl)
+  }
+  
+  # Return the gain over cost as this is calculated from plot and loc costs in the program
+  gainCost <- function(scenarioDT = yt, result = result, stage = 1) {
+    gc = result[stage,]  / (stageTotalPlots(scenarioDT, stage)*input$costPerPlot + stageTotalLocs(scenarioDT, stage)*input$costPerLoc)
+    return(gc)
+  }
+  
   # function creates a new Tab in the UI for a given ScenarioID
   createTab <- function(scenarioID = 1) {
     myTabs = lapply(1: scenarioID, function(i){
@@ -107,11 +120,11 @@ server <- function(input, output, clientData, session) {
   }
   
   # function plots the results of all scenarios
-  plotScenarioGroup <- function(results_all = rv$results_all) {
+  plotScenarioGroup <- function(results_all = rv$results_all, ylabel = "Gain") {
     ggplot(as.data.frame(t(results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
       geom_boxplot()+
       xlab("Stage")+
-      ylab("Gain")+
+      ylab(ylabel)+
       scale_fill_discrete(name="Scenario")+
       ggtitle("Comparison between stages across all scenarios")
   }
@@ -139,7 +152,6 @@ server <- function(input, output, clientData, session) {
     results_all <- results_all[,results_all[3,] != scenarioID] 
     return(results_all)
   }
-  
 
   
   #*************************************
@@ -338,7 +350,7 @@ server <- function(input, output, clientData, session) {
 
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
     output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime)
+      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year")
     })   # end of renderPlot for Overview tab
     
     source('all_in_one.r', local = TRUE) # alternative recursive method that uses divID -- IN PROGRESS    

@@ -72,6 +72,22 @@ ui <- fluidPage(title = "Cycle Scenarios",
                     bsTooltip("varieties", "The final number of selected entries. Must be smaller than or equal to the number of entries in the last stage.",
                               "right", "hover", NULL),
                     
+                    # Make cost input divs appear in one line
+                    bootstrapPage(
+                      # Set Plot Cost 
+                      div(style="display:inline-block",numericInput("costPerPlot", "Plot Cost($):",
+                                                                    min = 0, max = 1000, value = 10, step = 1, width = '80px')),
+                      # Set Location Cost 
+                      div(style="display:inline-block",numericInput("costPerLoc", "Loc Cost($):",
+                                                                    min = 0, max = 1000000, value = 1000, step = 1, width = '80px'))
+                    ),
+                    # tooltip with help
+                    bsTooltip("costPerPlot", "The cost of a single plot in the program.",
+                              "right", "hover", NULL),
+                    # tooltip with help
+                    bsTooltip("costPerLoc", "The cost of a single location in the program.",
+                              "right", "hover", NULL),
+                    
                     # Economic cost summary output for scenario
                     tags$h4("Summary Cost"),
                     div( # CUSTOMISE div style for DT

@@ -70,7 +70,7 @@ if (tail(Scenarios,1) == 1)
     #
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
     output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime)
+      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year")
     })   # end of renderPlot for Overview tab
     
   }) # endof update btn1
@@ -151,7 +151,7 @@ if (tail(Scenarios,1) == 1)
     #
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
     output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime)
+      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year")
     })   # end of renderPlot for Overview tab    
 
   }) # endof update btn
@@ -233,7 +233,7 @@ if (tail(Scenarios,1) == 1)
     #
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
     output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime)
+      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year")
     })   # end of renderPlot for Overview tab    
 
   }) # endof update btn
@@ -316,7 +316,7 @@ if (tail(Scenarios,1) == 1)
     #
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
     output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime)
+      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year")
     })   # end of renderPlot for Overview tab    
 
   }) # endof update btn
@@ -401,7 +401,7 @@ if (tail(Scenarios,1) == 1)
     #
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
     output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime)
+      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year")
     })   # end of renderPlot for Overview tab
 
   }) # endof update btn
