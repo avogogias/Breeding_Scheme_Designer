@@ -2,6 +2,7 @@ library(DT)
 library(Rcpp)
 library(RcppArmadillo)
 library(ggplot2) 
+library(shinyjs)
 
 sourceCpp("Engine.cpp")
 
@@ -24,7 +25,7 @@ server <- function(input, output, clientData, session) {
   h2 = c(0.5,0.5,0.5) # this is a calculated value initialised here
   
   # per-session reactive values object to store all results of this user session
-  rv <- reactiveValues(results_all = NULL, results_allxTime = NULL)
+  rv <- reactiveValues(results_all = NULL, results_allxTime = NULL, results_allxCost = NULL)
   # defines a common reactive list to store all scenario input info (stages DT + other) to replace reactDT
   scenariosInput <- reactiveValues(stagesDT = list(), varG = list(), varGxL = list(), varGxY = list(), varieties = list()) # initially will store stages_current and updated accordingly
   yt = cbind(stage,entries,years,locs,reps,error,h2)
@@ -38,61 +39,69 @@ server <- function(input, output, clientData, session) {
   # ***************************************************** #
   
   # function calculates h2 for a given as input a row of a DT matrix and 3 variances (optional)
-  updateH2 <- function(stg = yt[1,], vG=input$varG, vGxY=input$varGxY, vGxL=input$varGxL){
+  updateH2 <- function(stg = yti$data[1,], vG=input$varG, vGxY=input$varGxY, vGxL=input$varGxL){
     h2 = round(vG/(vG + vGxY/stg[3] + vGxL/(stg[3]*stg[4]) + stg[6]/(stg[3]*stg[4]*stg[5])), 3)
     return(h2)
   }
   
   # function returns total number of years for a scenario
-  totalYears <- function(scenarioDT = yt, selfingYears = input$negen) {
+  totalYears <- function(scenarioDT = yti$data, selfingYears = input$negen) {
     ty = sum(scenarioDT[,3]) + selfingYears
     return(ty)
   }
   
   # function returns the total number of locations for a scenario
-  totalLocs <- function(scenarioDT = yt) {
+  totalLocs <- function(scenarioDT = yti$data) {
     tl = sum(scenarioDT[,3]*scenarioDT[,4])
     return(tl)
   }
 
   # function calculates Total Plots given a stages matrix as input
-  totalPlots <- function(scenarioDT = yt) {
-    # print(nrow(mtx))
-    # print(prod(mtx[1,1:4]))
+  totalPlots <- function(scenarioDT = yti$data) {
     tp = 0
     for (i in 1:nrow(scenarioDT))
-      tp = tp + prod(scenarioDT[i,1:4])
+      tp = tp + prod(scenarioDT[i,2:5])
     return(tp)
   }    
   
   # function returns total number of years passed until a particular stage is completed (default is stage 1)
-  stageTotalYears <- function(scenarioDT = yt, stage = 1, selfingYears = input$negen) {
+  stageTotalYears <- function(scenarioDT = yti$data, stage = 1, selfingYears = input$negen) {
     scy = sum(scenarioDT[1:stage,3]) + selfingYears
     return(scy)
   }
   #
   # function calcucates Gain / Time dividing the gain with the number of years passed until a stage is completed
-  gainTime <- function(scenarioDT = yt, result = result, stage = 1) {
+  gainTime <- function(scenarioDT = yti$data, result = result, stage = 1) {
     gt = result[stage,] / stageTotalYears(scenarioDT, stage) 
     return(gt)
   }
   
   # function returns total plots in a stage (default is stage 1)
-  stageTotalPlots <-function(scenarioDT = yt, stage = 1) {
+  stageTotalPlots <-function(scenarioDT = yti$data, stage = 1) {
     # should be equal to the summary of products for up to that stage
-    stp = sum(prod(scenarioDT[1:stage,1:4])) # + previous stages total plots
+    stp = 0
+    for (i in 1:stage)
+    {
+      stp = stp + prod(scenarioDT[i,2:5])
+    }
+    #stp = sum(prod(scenarioDT[1:stage,1:4])) # + previous stages total plots
     return(stp)
   }
   
   # function returns total plots in a stage (default is stage 1)
-  stageTotalLocs <-function(scenarioDT = yt, stage = 1) {
-    stl = sum(prod(scenarioDT[1:stage,1:4]))
+  stageTotalLocs <-function(scenarioDT = yti$data, stage = 1) {
+    stl = 0
+    for (i in 1:stage)
+    {
+      stl = stl + prod(scenarioDT[i,3:4])
+    }
+    # stl = sum(prod(scenarioDT[1:stage,1:4]))
     return(stl)
   }
   
   # Return the gain over cost as this is calculated from plot and loc costs in the program
-  gainCost <- function(scenarioDT = yt, result = result, stage = 1) {
-    gc = result[stage,]  / (stageTotalPlots(scenarioDT, stage)*input$costPerPlot + stageTotalLocs(scenarioDT, stage)*input$costPerLoc)
+  gainCost <- function(scenarioDT = yti$data, result = result, stage = 1, costPerPlot = input$costPerPlot, costPerLoc = input$costPerLoc) {
+    gc = result[stage,]  / (stageTotalPlots(scenarioDT, stage) * costPerPlot + stageTotalLocs(scenarioDT, stage) * costPerLoc)
     return(gc)
   }
   
@@ -138,11 +147,20 @@ server <- function(input, output, clientData, session) {
     return(results_all)
   }
 
-  # Store all results conditioned by Time in rv
+  # Store all Gain results conditioned by Time
   storeScenarioResultxTime <- function(result = result, results_all = rv$results_allxTime, scenarioID = tail(Scenarios,1), scenarioDT =  yti$data) {
     for(i in 1:nrow(result)) 
     {
       results_all = cbind(results_all, rbind(Stage = i, Value = gainTime(scenarioDT, result, i), Scenario = scenarioID))
+    }
+    return(results_all)
+  }
+  
+  # Store all Gain results conditioned by Cost
+  storeScenarioResultxCost <- function(result = result, results_all = rv$results_allxCost, scenarioID = tail(Scenarios,1), scenarioDT =  yti$data) {
+    for(i in 1:nrow(result)) 
+    {
+      results_all = cbind(results_all, rbind(Stage = i, Value = gainCost(scenarioDT, result, i), Scenario = scenarioID))
     }
     return(results_all)
   }
@@ -297,13 +315,12 @@ server <- function(input, output, clientData, session) {
     #   rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result[i,], Scenario = tail(Scenarios,1))) # Scenario = scenarioID)) FAILS
     # }
     
-    # Store all results conditioned by Time in rv
+    # Store all results of Gain per Year
     rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = tail(Scenarios,1), scenarioDT =  yti$data)
-    # for(i in 1:nrow(result)) 
-    # {
-    #   rv$results_allxTime = cbind(rv$results_allxTime, rbind(Stage = i, Value = gainTime(yti$data, result, i), Scenario = tail(Scenarios,1))) # Scenario = scenarioID)) FAILS
-    # }
 
+    # Store all results of Gain per cost 
+    rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = tail(Scenarios,1), scenarioDT =  yti$data)
+    
     
     # Global settings for all DTs in senario tabs
     sumset_DT = list( options = list(
@@ -347,17 +364,25 @@ server <- function(input, output, clientData, session) {
       plotScenarioGroup(rv$results_all)
     })   # end of renderPlot for Overview tab
     
-
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
     output$overviewTabxTime <- renderPlot({
       plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year")
     })   # end of renderPlot for Overview tab
+    
+    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
+    output$overviewTabxCost <- renderPlot({
+      plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost")
+    })   # end of renderPlot for Overview tab
+    
     
     source('all_in_one.r', local = TRUE) # alternative recursive method that uses divID -- IN PROGRESS    
     
   }) # end of run button
   
   # TV hide ALL tab 
-  # shiny::hideTab(inputId = "my_tabs", target = "ALL")
+  shiny::hideTab(inputId = "my_tabs", target = "ALL")
+  # TV hide Gain per Cost plot with shinyjs package
+  hide("overviewTabxCost")
+  
   
 } # endof server

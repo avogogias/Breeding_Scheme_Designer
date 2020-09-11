@@ -4,6 +4,7 @@ library(shiny)
 # library(Rcpp)
 # library(RcppArmadillo)
 # library(ggplot2) 
+# library(shinyjs)
 
 # sourceCpp("Engine.cpp")
 

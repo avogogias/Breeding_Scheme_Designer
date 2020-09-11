@@ -57,21 +57,30 @@ if (tail(Scenarios,1) == 1)
     })   # end of renderPlot for Overview tab
     
     
-    #------------ Overview Plot x Time --------------#
+    #------------ Overview Gain per Year ------------#
     #------------------------------------------------#
-    # Update results_allxTime entries
     # First remove previous run entries
     rv$results_allxTime = removeScenarioResult(1, rv$results_allxTime)
-    # rv$results_allxTime <- rv$results_allxTime[,rv$results_allxTime[3,]!=1] 
-    #
     # Store all results conditioned by Time in rv
     rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 1, scenarioDT = reactDT1$data)
-
     #
-    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
+    # Render grouped boxplots for Gain per Year
     output$overviewTabxTime <- renderPlot({
       plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year")
-    })   # end of renderPlot for Overview tab
+    })   
+    
+    
+    #------------ Overview Gain per Cost ------------#
+    #------------------------------------------------#
+    # First remove previous run entries
+    rv$results_allxCost = removeScenarioResult(1, rv$results_allxCost)
+    # Store all Gain results conditioned by Cost
+    rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 1, scenarioDT = reactDT1$data)
+    #
+    # Render grouped boxplots for Gain per Cost
+    output$overviewTabxCost <- renderPlot({
+      plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost")
+    })  
     
   }) # endof update btn1
 
@@ -153,7 +162,19 @@ if (tail(Scenarios,1) == 1)
     output$overviewTabxTime <- renderPlot({
       plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year")
     })   # end of renderPlot for Overview tab    
-
+    
+    #------------ Overview Gain per Cost ------------#
+    #------------------------------------------------#
+    # First remove previous run entries
+    rv$results_allxCost = removeScenarioResult(2, rv$results_allxCost)
+    # Store all Gain results conditioned by Cost
+    rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 2, scenarioDT = reactDT2$data)
+    #
+    # Render grouped boxplots for Gain per Cost
+    output$overviewTabxCost <- renderPlot({
+      plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost")
+    })  
+    
   }) # endof update btn
 
   # Update H2 for every stage as soon as input data that affect H2 change
@@ -235,7 +256,19 @@ if (tail(Scenarios,1) == 1)
     output$overviewTabxTime <- renderPlot({
       plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year")
     })   # end of renderPlot for Overview tab    
-
+    
+    #------------ Overview Gain per Cost ------------#
+    #------------------------------------------------#
+    # First remove previous run entries
+    rv$results_allxCost = removeScenarioResult(3, rv$results_allxCost)
+    # Store all Gain results conditioned by Cost
+    rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 3, scenarioDT = reactDT3$data)
+    #
+    # Render grouped boxplots for Gain per Cost
+    output$overviewTabxCost <- renderPlot({
+      plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost")
+    })  
+    
   }) # endof update btn
 
   # Update H2 for every stage as soon as input data that affect H2 change
@@ -318,6 +351,18 @@ if (tail(Scenarios,1) == 1)
     output$overviewTabxTime <- renderPlot({
       plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year")
     })   # end of renderPlot for Overview tab    
+    
+    #------------ Overview Gain per Cost ------------#
+    #------------------------------------------------#
+    # First remove previous run entries
+    rv$results_allxCost = removeScenarioResult(4, rv$results_allxCost)
+    # Store all Gain results conditioned by Cost
+    rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 4, scenarioDT = reactDT4$data)
+    #
+    # Render grouped boxplots for Gain per Cost
+    output$overviewTabxCost <- renderPlot({
+      plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost")
+    })  
 
   }) # endof update btn
 
@@ -403,7 +448,19 @@ if (tail(Scenarios,1) == 1)
     output$overviewTabxTime <- renderPlot({
       plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year")
     })   # end of renderPlot for Overview tab
-
+    
+    #------------ Overview Gain per Cost ------------#
+    #------------------------------------------------#
+    # First remove previous run entries
+    rv$results_allxCost = removeScenarioResult(5, rv$results_allxCost)
+    # Store all Gain results conditioned by Cost
+    rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 5, scenarioDT = reactDT5$data)
+    #
+    # Render grouped boxplots for Gain per Cost
+    output$overviewTabxCost <- renderPlot({
+      plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost")
+    })  
+    
   }) # endof update btn
 
   # Update H2 for every stage as soon as input data that affect H2 change

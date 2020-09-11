@@ -4,6 +4,7 @@ ui <- fluidPage(title = "Cycle Scenarios",
                 
                 # theme = "bootstrap.css", # CSS theme file could be added here
                 withMathJax(), # display mathematical equations using LaTeX format
+                useShinyjs(), # hide() or toggle() using shinyjs package
                 
                 titlePanel("Cycle Scenarios"),            
                 
