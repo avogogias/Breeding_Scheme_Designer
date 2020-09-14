@@ -64,6 +64,24 @@ server <- function(input, output, clientData, session) {
     return(tp)
   }    
   
+  # function calculates total cost of locations
+  totalLocsCost <-function(scenarioDT = yti$data, costPerLoc = input$costPerLoc) {
+    tlc = totalLocs(scenarioDT) * costPerLoc
+    return(tlc)
+  }
+  
+  # function calculates total cost of plots
+  totalPlotsCost <-function(scenarioDT = yti$data, costPerPlot = input$costPerPlot) {
+    tpc = totalPlots(scenarioDT) * costPerPlot
+    return(tpc)
+  }
+  
+  # function calculates total cost of scenario
+  totalCost <- function(scenarioDT = yti$data, costPerLoc = input$costPerLoc, costPerPlot = input$costPerPlot) {
+    tc = totalLocsCost(scenarioDT, costPerLoc) + totalPlotsCost(scenarioDT, costPerPlot)
+    return(tc)
+  }
+  
   # function returns total number of years passed until a particular stage is completed (default is stage 1)
   stageTotalYears <- function(scenarioDT = yti$data, stage = 1, selfingYears = input$negen) {
     scy = sum(scenarioDT[1:stage,3]) + selfingYears
@@ -171,6 +189,11 @@ server <- function(input, output, clientData, session) {
     return(results_all)
   }
 
+  #*************************************
+  #-------------------------------------  
+  # ************* RENDERERS ************
+  # ------------------------------------
+  #*************************************
   
   #*************************************
   #-------------------------------------  
@@ -188,7 +211,7 @@ server <- function(input, output, clientData, session) {
   })
   
   # Render a DT table with total costs (Years, Locs, Plots) calculated based on stages input
-  output$cost_table = DT::renderDT(cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data)), 
+  output$cost_table = DT::renderDT(cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data)), 
                                    options = list(
                                      searching = F, # no search box
                                      paginate = F,  # no num of pages
@@ -196,9 +219,9 @@ server <- function(input, output, clientData, session) {
                                      scrollX = T # horizontal slider
                                    ),
                                    rownames = F,
-                                   colnames = c('Total Years', 'Total Locs', 'Total Plots'),
+                                   colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
                                    server = F )
-  
+
   # Render stages DT with default data entries
   output$stages_table = DT::renderDT(yti$data, 
                                      options = list(
@@ -217,7 +240,7 @@ server <- function(input, output, clientData, session) {
                                      editable = list(target = "cell", disable = list(columns = c(0, 6))),
                                      server = TRUE) # server = F doesn't work with replaceData() cell editing
   
-  # Update editable DT through a proxy DT on cell edit event
+  # Update editable DT stages_table through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_table')
   #
   observeEvent(input$stages_table_cell_edit, {

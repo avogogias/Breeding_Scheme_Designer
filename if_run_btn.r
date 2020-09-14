@@ -93,16 +93,16 @@ if (tail(Scenarios,1) == 1)
   })
   
   # Update cost table as soon as input data that affect cost change
-  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT1$data, input$negen), totalLocs(reactDT1$data), totalPlots(reactDT1$data)), 
-                                   options = list(
-                                     searching = F, # no search box
-                                     paginate = F,  # no num of pages
-                                     lengthChange = F, # no show entries
-                                     scrollX = T # horizontal slider
-                                   ),
-                                   rownames = F,
-                                   colnames = c('Total Years', 'Total Locs', 'Total Plots'),
-                                   server = F )  
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT1$data, input$negen), totalLocs(reactDT1$data), totalPlots(reactDT1$data), totalLocsCost(reactDT1$data), totalPlotsCost(reactDT1$data), totalCost(reactDT1$data)), 
+                                                               options = list(
+                                                                 searching = F, # no search box
+                                                                 paginate = F,  # no num of pages
+                                                                 lengthChange = F, # no show entries
+                                                                 scrollX = T # horizontal slider
+                                                               ),
+                                                               rownames = F,
+                                                               colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
+                                                               server = F )  
 
 } else if (tail(Scenarios,1) == 2)
 {
@@ -186,7 +186,7 @@ if (tail(Scenarios,1) == 1)
   })
   
   # Update cost table as soon as input data that affect cost change
-  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT2$data, input$negen), totalLocs(reactDT2$data), totalPlots(reactDT2$data)), 
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT2$data, input$negen), totalLocs(reactDT2$data), totalPlots(reactDT2$data), totalLocsCost(reactDT2$data), totalPlotsCost(reactDT2$data), totalCost(reactDT2$data)), 
                                                                options = list(
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
@@ -194,8 +194,8 @@ if (tail(Scenarios,1) == 1)
                                                                  scrollX = T # horizontal slider
                                                                ),
                                                                rownames = F,
-                                                               colnames = c('Total Years', 'Total Locs', 'Total Plots'),
-                                                               server = F )    
+                                                               colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
+                                                               server = F )
   
 } else if (tail(Scenarios,1) == 3)
 {
@@ -280,7 +280,7 @@ if (tail(Scenarios,1) == 1)
   })
   
   # Update cost table as soon as input data that affect cost change
-  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT3$data, input$negen), totalLocs(reactDT3$data), totalPlots(reactDT3$data)), 
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT3$data, input$negen), totalLocs(reactDT3$data), totalPlots(reactDT3$data), totalLocsCost(reactDT3$data), totalPlotsCost(reactDT3$data), totalCost(reactDT3$data)), 
                                                                options = list(
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
@@ -288,8 +288,8 @@ if (tail(Scenarios,1) == 1)
                                                                  scrollX = T # horizontal slider
                                                                ),
                                                                rownames = F,
-                                                               colnames = c('Total Years', 'Total Locs', 'Total Plots'),
-                                                               server = F )      
+                                                               colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
+                                                               server = F )
   
 } else if (tail(Scenarios,1) == 4)
 {
@@ -376,7 +376,7 @@ if (tail(Scenarios,1) == 1)
   
   
   # Update cost table as soon as input data that affect cost change
-  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT4$data, input$negen), totalLocs(reactDT4$data), totalPlots(reactDT4$data)), 
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT4$data, input$negen), totalLocs(reactDT4$data), totalPlots(reactDT4$data), totalLocsCost(reactDT4$data), totalPlotsCost(reactDT4$data), totalCost(reactDT4$data)), 
                                                                options = list(
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
@@ -384,8 +384,8 @@ if (tail(Scenarios,1) == 1)
                                                                  scrollX = T # horizontal slider
                                                                ),
                                                                rownames = F,
-                                                               colnames = c('Total Years', 'Total Locs', 'Total Plots'),
-                                                               server = F )      
+                                                               colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
+                                                               server = F )
   
   
 } else if (tail(Scenarios,1) == 5)
@@ -473,7 +473,7 @@ if (tail(Scenarios,1) == 1)
   
   
   # Update cost table as soon as input data that affect cost change
-  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT5$data, input$negen), totalLocs(reactDT5$data), totalPlots(reactDT5$data)), 
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT5$data, input$negen), totalLocs(reactDT5$data), totalPlots(reactDT5$data), totalLocsCost(reactDT5$data), totalPlotsCost(reactDT5$data), totalCost(reactDT5$data)), 
                                                                options = list(
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
@@ -481,8 +481,8 @@ if (tail(Scenarios,1) == 1)
                                                                  scrollX = T # horizontal slider
                                                                ),
                                                                rownames = F,
-                                                               colnames = c('Total Years', 'Total Locs', 'Total Plots'),
-                                                               server = F )      
+                                                               colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
+                                                               server = F )
   
 } else if (tail(Scenarios,1) == 6)
 {

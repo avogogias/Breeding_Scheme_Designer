@@ -1,4 +1,5 @@
 library(shinyBS)
+library(shinyjs)
 
 ui <- fluidPage(title = "Cycle Scenarios",
                 
@@ -95,6 +96,10 @@ ui <- fluidPage(title = "Cycle Scenarios",
                       DT::DTOutput("cost_table"),
                       style = "font-size: 85%; width: 100%"
                     ),
+                    # div( # CUSTOMISE div style for DT
+                    #   DT::DTOutput("total_cost_table"),
+                    #   style = "font-size: 85%; width: 100%"
+                    # ),
                     
                     tags$br(),
                     
