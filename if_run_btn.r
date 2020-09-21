@@ -66,7 +66,7 @@ if (tail(Scenarios,1) == 1)
     #
     # Render grouped boxplots for Gain per Year
     output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year")
+      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
     })   
     
     
@@ -79,7 +79,7 @@ if (tail(Scenarios,1) == 1)
     #
     # Render grouped boxplots for Gain per Cost
     output$overviewTabxCost <- renderPlot({
-      plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost")
+            plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
     })  
     
   }) # endof update btn1
@@ -160,7 +160,7 @@ if (tail(Scenarios,1) == 1)
     #
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
     output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year")
+      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
     })   # end of renderPlot for Overview tab    
     
     #------------ Overview Gain per Cost ------------#
@@ -172,7 +172,7 @@ if (tail(Scenarios,1) == 1)
     #
     # Render grouped boxplots for Gain per Cost
     output$overviewTabxCost <- renderPlot({
-      plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost")
+            plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
     })  
     
   }) # endof update btn
@@ -254,7 +254,7 @@ if (tail(Scenarios,1) == 1)
     #
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
     output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year")
+      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
     })   # end of renderPlot for Overview tab    
     
     #------------ Overview Gain per Cost ------------#
@@ -266,7 +266,7 @@ if (tail(Scenarios,1) == 1)
     #
     # Render grouped boxplots for Gain per Cost
     output$overviewTabxCost <- renderPlot({
-      plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost")
+            plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
     })  
     
   }) # endof update btn
@@ -349,7 +349,7 @@ if (tail(Scenarios,1) == 1)
     #
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
     output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year")
+      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
     })   # end of renderPlot for Overview tab    
     
     #------------ Overview Gain per Cost ------------#
@@ -361,7 +361,7 @@ if (tail(Scenarios,1) == 1)
     #
     # Render grouped boxplots for Gain per Cost
     output$overviewTabxCost <- renderPlot({
-      plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost")
+            plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
     })  
 
   }) # endof update btn
@@ -446,7 +446,7 @@ if (tail(Scenarios,1) == 1)
     #
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
     output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year")
+      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
     })   # end of renderPlot for Overview tab
     
     #------------ Overview Gain per Cost ------------#
@@ -458,7 +458,7 @@ if (tail(Scenarios,1) == 1)
     #
     # Render grouped boxplots for Gain per Cost
     output$overviewTabxCost <- renderPlot({
-      plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost")
+            plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
     })  
     
   }) # endof update btn

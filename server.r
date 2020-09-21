@@ -147,13 +147,14 @@ server <- function(input, output, clientData, session) {
   }
   
   # function plots the results of all scenarios
-  plotScenarioGroup <- function(results_all = rv$results_all, ylabel = "Gain") {
+  plotScenarioGroup <- function(results_all = rv$results_all, ylabel = "Gain", gtitle = "Genetic Gain by Stage") {
     ggplot(as.data.frame(t(results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
       geom_boxplot()+
       xlab("Stage")+
       ylab(ylabel)+
       scale_fill_discrete(name="Scenario")+
-      ggtitle("Comparison between stages across all scenarios")
+      ggtitle(gtitle) + 
+      theme(plot.title = element_text(size = 14, face = "bold"))
   }
 
   # Store results from all runs in a reactive matrix
@@ -195,20 +196,23 @@ server <- function(input, output, clientData, session) {
   # ------------------------------------
   #*************************************
   
-  #*************************************
-  #-------------------------------------  
-  # ************* OBSERVERS ************
-  # ------------------------------------
-  #*************************************
-
-  
-  # Update H2 (7th col in yti DT) for every stage in sidebar DT, as soon as input data that affect H2 change
-  observe({
-    for (i in 1:nrow(yti$data))
-    {
-      yti$data[i,7] = updateH2(yti$data[i,])
-    }
-  })
+  # Render stages DT with default data entries
+  output$stages_table = DT::renderDT(yti$data, 
+                                     options = list(
+                                       searching = F, # no search box
+                                       paginate = F,  # no num of pages
+                                       lengthChange = F, # no show entries
+                                       scrollX = T # horizontal slider
+                                     ),
+                                     class = "cell-border, compact, hover", 
+                                     rownames = F, #TRUE,
+                                     colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', toString(withMathJax('$$h^2$$'))), # '$$h_2$$'),  # 'h2'),
+                                     filter = "none",
+                                     escape = FALSE,
+                                     autoHideNavigation = TRUE,
+                                     selection = "none",
+                                     editable = list(target = "cell", disable = list(columns = c(0, 6))),
+                                     server = TRUE) # server = F doesn't work with replaceData() cell editing  
   
   # Render a DT table with total costs (Years, Locs, Plots) calculated based on stages input
   output$cost_table = DT::renderDT(cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data)), 
@@ -221,24 +225,15 @@ server <- function(input, output, clientData, session) {
                                    rownames = F,
                                    colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
                                    server = F )
+  
+  
+  
+  #*************************************
+  #-------------------------------------  
+  # ************* OBSERVERS ************
+  # ------------------------------------
+  #*************************************
 
-  # Render stages DT with default data entries
-  output$stages_table = DT::renderDT(yti$data, 
-                                     options = list(
-                                       searching = F, # no search box
-                                       paginate = F,  # no num of pages
-                                       lengthChange = F, # no show entries
-                                       scrollX = T # horizontal slider
-                                     ),
-                                     class = "cell-border, compact, hover", 
-                                     rownames = F, #TRUE,
-                                     colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', toString(withMathJax('$$h_2$$'))), # '$$h_2$$'),  # 'h2'),
-                                     filter = "none",
-                                     escape = FALSE,
-                                     autoHideNavigation = TRUE,
-                                     selection = "none",
-                                     editable = list(target = "cell", disable = list(columns = c(0, 6))),
-                                     server = TRUE) # server = F doesn't work with replaceData() cell editing
   
   # Update editable DT stages_table through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_table')
@@ -260,7 +255,13 @@ server <- function(input, output, clientData, session) {
   #TV  yti$data <- yt # your default data
   #TV})
   
-  
+  # Update H2 (7th col in yti DT) for every stage in sidebar DT, as soon as input data that affect H2 change
+  observe({
+    for (i in 1:nrow(yti$data))
+    {
+      yti$data[i,7] = updateH2(yti$data[i,])
+    }
+  })
   
   # Observe Button Clicks for adding or removing rows (stages) from the DT
   observeEvent(input$add_btn, {
@@ -354,7 +355,7 @@ server <- function(input, output, clientData, session) {
     ),
     class = "cell-border, compact, hover", 
     rownames = F, #TRUE,
-    # colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', toString(withMathJax('$$h_2$$'))), # inserted manually
+    # colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', toString(withMathJax('$$h^2$$'))), # inserted manually
     filter = "none",
     escape = FALSE,
     autoHideNavigation = TRUE,
@@ -389,12 +390,12 @@ server <- function(input, output, clientData, session) {
     
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
     output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year")
+      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
     })   # end of renderPlot for Overview tab
     
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
     output$overviewTabxCost <- renderPlot({
-      plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost")
+      plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
     })   # end of renderPlot for Overview tab
     
     
@@ -405,7 +406,7 @@ server <- function(input, output, clientData, session) {
   # TV hide ALL tab 
   shiny::hideTab(inputId = "my_tabs", target = "ALL")
   # TV hide Gain per Cost plot with shinyjs package
-  hide("overviewTabxCost")
+  # hide("overviewTabxCost")
   
   
 } # endof server
