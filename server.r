@@ -272,8 +272,8 @@ server <- function(input, output, clientData, session) {
   })
   
   observeEvent(input$delete_btn, {
-    if (length(yti$data[,1])>2) # TV for >1 it crushes!
-      yti$data = yti$data[1:length(yti$data[,1])-1,]
+    if (length(yti$data[,1])>1) # TV for >1 need to stop R coercing a matrix or array to the lowest possible number of dimensions
+      yti$data = yti$data[1:length(yti$data[,1])-1,,drop=F]
   })
   
   # Execute runScenario() for the current settings
