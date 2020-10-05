@@ -1,3 +1,5 @@
+// Version 2, reports mean of potential parents
+
 // [[Rcpp::depends(RcppArmadillo)]]
 #include <RcppArmadillo.h>
 
@@ -35,7 +37,7 @@ arma::fmat runScenario(float varG, // Genetic variance
       arma::uvec rank = sort_index(p,"descend");
       rank = rank(arma::span(0,entries(s)-1));
       g = g(rank);
-      output(s-1,r) = mean(g);
+      output(s-1,r) = mean(g(arma::span(0,varieties-1)));
       
       // Phenotype
       e.set_size(entries(s));
@@ -54,18 +56,37 @@ arma::fmat runScenario(float varG, // Genetic variance
 }
 
 /*** R
+
 system.time({
-  example = runScenario(varG=1,
-                        varGxL=1,
-                        varGxY=1,
-                        entries=c(1000,100,10),
-                        years=c(1,1,1),
-                        locs=c(1,4,8),
-                        reps=c(1,2,3),
-                        error=c(1,1,1),
-                        varieties=1)
+  example1 = runScenario(varG=1,
+                         varGxL=1,
+                         varGxY=1,
+                         entries=c(1000,100,10),
+                         years=c(1,1,1),
+                         locs=c(1,4,8),
+                         reps=c(1,2,3),
+                         error=c(1,1,1),
+                         varieties=1)
 })
-boxplot(t(example),
+boxplot(t(example1),
+        main="Example 1",
         xlab="Stage",
         ylab="Mean Genetic Value")
+
+system.time({
+  example2 = runScenario(varG=1,
+                         varGxL=1,
+                         varGxY=1,
+                         entries=c(1000,100,10),
+                         years=c(1,1,2), # Second stage now uses 2 years
+                         locs=c(1,4,8),
+                         reps=c(1,2,3),
+                         error=c(1,1,1),
+                         varieties=1)
+})
+boxplot(t(example2),
+        main="Example 2",
+        xlab="Stage",
+        ylab="Mean Genetic Value")
+
 */
