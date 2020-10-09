@@ -58,22 +58,25 @@ arma::fmat runScenario(float varG, // Genetic variance
 }
 
 /*** R
-
+library(ggplot2)
 system.time({
   entries_range = seq(100, 1000, by = 100)
   sc_id = 1
   results_range = NULL
   for (i in entries_range) {
     result = runScenario(varG=1,
-                           varGxL=1,
-                           varGxY=1,
-                           entries=i,
-                           years=1,
-                           locs=1,
-                           reps=1,
-                           error=1,
-                           varieties=1)
-    results_range = cbind(results_range, rbind(Stage = 1, Value = result[1,], Scenario = sc_id))
+                         varGxL=1,
+                         varGxY=1,
+                         entries=c(i,i/2,i/100),
+                         years=c(1,1,2), # Second stage now uses 2 years
+                         locs=c(1,4,8),
+                         reps=c(1,2,3),
+                         error=c(1,1,1),
+                         varieties=1)
+    for(j in 1:nrow(result)) 
+    {
+      results_range = cbind(results_range, rbind(Stage = j, Value = result[j,], Scenario = i))
+    }
     sc_id = sc_id + 1
   }
 })
