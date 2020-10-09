@@ -17,9 +17,7 @@ server <- function(input, output, clientData, session) {
   
   # Define default matrix values
   stage = c(1,2,3)
-  entries_min = c(900,90,9)
-  entries_max = c(1000,100,10)
-  #PREV entries = c(1000,100,10)
+  entries = c(1000,100,10)
   years = c(1,1,2)
   locs = c(1,4,8)
   reps = c(1,2,3)
@@ -27,11 +25,10 @@ server <- function(input, output, clientData, session) {
   h2 = c(0.5,0.5,0.5) # this is a calculated value initialised here
   
   # per-session reactive values object to store all results of this user session
-  rv <- reactiveValues(results_all = NULL, results_allxTime = NULL, results_allxCost = NULL, results_range = NULL)
+  rv <- reactiveValues(results_all = NULL, results_allxTime = NULL, results_allxCost = NULL)
   # defines a common reactive list to store all scenario input info (stages DT + other) to replace reactDT
   scenariosInput <- reactiveValues(stagesDT = list(), varG = list(), varGxL = list(), varGxY = list(), varieties = list()) # initially will store stages_current and updated accordingly
-  # yt = cbind(stage,entries,years,locs,reps,error,h2)
-  yt = cbind(stage,entries_min,entries_max,years,locs,reps,error,h2)
+  yt = cbind(stage,entries,years,locs,reps,error,h2)
   # Using reactiveVales to add a server side set of variable observable and mutable at the same time
   yti <- reactiveValues(data = yt)
 
@@ -42,53 +39,31 @@ server <- function(input, output, clientData, session) {
   # ***************************************************** #
   
   # function calculates h2 for a given as input a row of a DT matrix and 3 variances (optional)
-  #PREV updateH2 <- function(stg = yti$data[1,], vG=input$varG, vGxY=input$varGxY, vGxL=input$varGxL){
-  #   h2 = round(vG/(vG + vGxY/stg[3] + vGxL/(stg[3]*stg[4]) + stg[6]/(stg[3]*stg[4]*stg[5])), 3)
-  #   return(h2)
-  # }
-  # Ommited the second element (entries_min) without affecting the calculation of h2
   updateH2 <- function(stg = yti$data[1,], vG=input$varG, vGxY=input$varGxY, vGxL=input$varGxL){
-    h2 = round(vG/(vG + vGxY/stg[4] + vGxL/(stg[4]*stg[5]) + stg[7]/(stg[4]*stg[5]*stg[6])), 3)
+    h2 = round(vG/(vG + vGxY/stg[3] + vGxL/(stg[3]*stg[4]) + stg[6]/(stg[3]*stg[4]*stg[5])), 3)
     return(h2)
   }
-  
+
   # function returns total number of years for a scenario
-  #PREV totalYears <- function(scenarioDT = yti$data, selfingYears = input$negen) {
-  #   ty = sum(scenarioDT[,3]) + selfingYears
-  #   return(ty)
-  # }
-  # Increased +1 to skip entries_max
   totalYears <- function(scenarioDT = yti$data, selfingYears = input$negen) {
-    ty = sum(scenarioDT[,4]) + selfingYears
+    ty = sum(scenarioDT[,3]) + selfingYears
     return(ty)
   }
-  
+
   # function returns the total number of locations for a scenario
-  #PREV totalLocs <- function(scenarioDT = yti$data) {
-  #   tl = sum(scenarioDT[,3]*scenarioDT[,4])
-  #   return(tl)
-  # }
-  # Increased +1 to skip entries_max
   totalLocs <- function(scenarioDT = yti$data) {
-    tl = sum(scenarioDT[,4]*scenarioDT[,5])
+    tl = sum(scenarioDT[,3]*scenarioDT[,4])
     return(tl)
   }
 
   # function calculates Total Plots given a stages matrix as input
-  #PREV totalPlots <- function(scenarioDT = yti$data) {
-  #   tp = 0
-  #   for (i in 1:nrow(scenarioDT))
-  #     tp = tp + prod(scenarioDT[i,2:5])
-  #   return(tp)
-  # }    
-  # Increased +1 to skip entries_min
   totalPlots <- function(scenarioDT = yti$data) {
     tp = 0
     for (i in 1:nrow(scenarioDT))
-      tp = tp + prod(scenarioDT[i,3:6])
+      tp = tp + prod(scenarioDT[i,2:5])
     return(tp)
-  }    
-  
+  }
+
   # function calculates total cost of locations
   totalLocsCost <-function(scenarioDT = yti$data, costPerLoc = input$costPerLoc) {
     tlc = totalLocs(scenarioDT) * costPerLoc
@@ -108,13 +83,8 @@ server <- function(input, output, clientData, session) {
   }
   
   # function returns total number of years passed until a particular stage is completed (default is stage 1)
-  #PREV stageTotalYears <- function(scenarioDT = yti$data, stage = 1, selfingYears = input$negen) {
-  #   scy = sum(scenarioDT[1:stage,3]) + selfingYears
-  #   return(scy)
-  # }
-  # Increased +1 to skip entries range
   stageTotalYears <- function(scenarioDT = yti$data, stage = 1, selfingYears = input$negen) {
-    scy = sum(scenarioDT[1:stage,4]) + selfingYears
+    scy = sum(scenarioDT[1:stage,3]) + selfingYears
     return(scy)
   }
   #
@@ -125,49 +95,28 @@ server <- function(input, output, clientData, session) {
   }
   
   # function returns total plots in a stage (default is stage 1)
-  #PREV stageTotalPlots <-function(scenarioDT = yti$data, stage = 1) {
-  #   # should be equal to the summary of products for up to that stage
-  #   stp = 0
-  #   for (i in 1:stage)
-  #   {
-  #     stp = stp + prod(scenarioDT[i,2:5])
-  #   }
-  #   #stp = sum(prod(scenarioDT[1:stage,1:4])) # + previous stages total plots
-  #   return(stp)
-  # }
-  # Increased +1 to skip entries range min
   stageTotalPlots <-function(scenarioDT = yti$data, stage = 1) {
     # should be equal to the summary of products for up to that stage
     stp = 0
     for (i in 1:stage)
     {
-      stp = stp + prod(scenarioDT[i,3:6])
+      stp = stp + prod(scenarioDT[i,2:5])
     }
     #stp = sum(prod(scenarioDT[1:stage,1:4])) # + previous stages total plots
     return(stp)
   }
-  
+
   # function returns total plots in a stage (default is stage 1)
-  #PREV stageTotalLocs <-function(scenarioDT = yti$data, stage = 1) {
-  #   stl = 0
-  #   for (i in 1:stage)
-  #   {
-  #     stl = stl + prod(scenarioDT[i,3:4])
-  #   }
-  #   # stl = sum(prod(scenarioDT[1:stage,1:4]))
-  #   return(stl)
-  # }
-  # Increased +1 to skip entries range
   stageTotalLocs <-function(scenarioDT = yti$data, stage = 1) {
     stl = 0
     for (i in 1:stage)
     {
-      stl = stl + prod(scenarioDT[i,4:5])
+      stl = stl + prod(scenarioDT[i,3:4])
     }
     # stl = sum(prod(scenarioDT[1:stage,1:4]))
     return(stl)
   }
-  
+
   # Return the gain over cost as this is calculated from plot and loc costs in the program
   gainCost <- function(scenarioDT = yti$data, result = result, stage = 1, costPerPlot = input$costPerPlot, costPerLoc = input$costPerLoc) {
     gc = result[stage,]  / (stageTotalPlots(scenarioDT, stage) * costPerPlot + stageTotalLocs(scenarioDT, stage) * costPerLoc)
@@ -240,37 +189,6 @@ server <- function(input, output, clientData, session) {
     results_all <- results_all[,results_all[3,] != scenarioID] 
     return(results_all)
   }
-  
-  # Run a range of multiple scenarios and return the results
-  runScenarioRange <- function(scenarioDT = yti$data, varG = input$varG ,varGxL = input$varGxL ,varGxY = input$varGxY, varieties = input$varieties, results_range = rv$results_range) {
-    
-    entries_low = scenarioDT[,2]
-    entries_high = scenarioDT[,3]
-    entries_mid = meanVector(min = entries_low, max = entries_high)
-
-    years = scenarioDT[,4]
-    locs = scenarioDT[,5]
-    reps = scenarioDT[,6]
-    error = scenarioDT[,7]
-    
-    result_low =  runScenario(varG,varGxL,varGxY,entries_low,years,locs,reps,error,varieties)
-    result_mid =  runScenario(varG,varGxL,varGxY,entries_mid,years,locs,reps,error,varieties)
-    result_high = runScenario(varG,varGxL,varGxY,entries_high,years,locs,reps,error,varieties)
-    print(result_low[1,1])
-    storeScenarioResult(result = result_low, results_all = results_range, scenarioID = 1)
-    print(results_range)
-    storeScenarioResult(result = result_mid, results_all = rv$results_range, scenarioID = 2)
-    storeScenarioResult(result = result_high, results_all = rv$results_range, scenarioID = 3)
-
-    return(results_range)
-  }
-  meanVector <- function(min = yti$data[,2], max = yti$data[,3]) {
-    mid = NULL
-    for (i in 1:length(min)) {
-      mid[i] = ceiling(mean(c(min[i],max[i])))
-    }
-    return(mid)
-  }
 
   #*************************************
   #-------------------------------------  
@@ -288,8 +206,7 @@ server <- function(input, output, clientData, session) {
                                      ),
                                      class = "cell-border, compact, hover", 
                                      rownames = F, #TRUE,
-                                     #PREV colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', toString(withMathJax('$$h^2$$'))), # '$$h_2$$'),  # 'h2'),
-                                     colnames = c('Stage', 'Min Entries', 'Max Entries', 'Years', 'Locs', 'Reps', 'Plot Error', toString(withMathJax('$$h^2$$'))), # '$$h_2$$'),  # 'h2'),
+                                     colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', toString(withMathJax('$$h^2$$'))), # '$$h_2$$'),  # 'h2'),
                                      filter = "none",
                                      escape = FALSE,
                                      autoHideNavigation = TRUE,
@@ -342,9 +259,7 @@ server <- function(input, output, clientData, session) {
   observe({
     for (i in 1:nrow(yti$data))
     {
-      #PREV yti$data[i,7] = updateH2(yti$data[i,])
-      # Increased +1 to skip entries range
-      yti$data[i,8] = updateH2(yti$data[i,])
+      yti$data[i,7] = updateH2(yti$data[i,])
     }
   })
   
@@ -353,9 +268,7 @@ server <- function(input, output, clientData, session) {
     #print(yti$data[1,3:6])
     # calc h2 for this stage
     new_h2 = input$varG / (input$varG + input$varGxY + input$varGxL + 1)
-    #PREV yti$data = rbind(yti$data, c(length(yti$data[,1])+1,2,1,1,1,1,round(new_h2, 3)))
-    # Increased +1 to skip entries range
-    yti$data = rbind(yti$data, c(length(yti$data[,1])+1,2,4,1,1,1,1,round(new_h2, 3)))
+    yti$data = rbind(yti$data, c(length(yti$data[,1])+1,2,1,1,1,1,round(new_h2, 3)))
   })
   
   observeEvent(input$delete_btn, {
@@ -392,27 +305,17 @@ server <- function(input, output, clientData, session) {
     varGxY = isolate(input$varGxY)
     
     stages = isolate(yti$data[,1]) # 
-    #PREV entries = isolate(yti$data[,2]) # c(1000,100,10) 
-    # years = isolate(yti$data[,3]) # c(1,1,1)
-    # locs = isolate(yti$data[,4]) # c(1,4,8)
-    # reps = isolate(yti$data[,5]) # c(1,2,3)
-    # error = isolate(yti$data[,6]) # c(1,1,1)
-    # h2 = isolate(yti$data[,7])
-    # Increased +1 to skip entries range
-    entries_min = isolate(yti$data[,2]) # c(900,90,9) 
-    entries_max = isolate(yti$data[,3]) # c(1000,100,10) 
-    years = isolate(yti$data[,4]) # c(1,1,1)
-    locs = isolate(yti$data[,5]) # c(1,4,8)
-    reps = isolate(yti$data[,6]) # c(1,2,3)
-    error = isolate(yti$data[,7]) # c(1,1,1)
-    h2 = isolate(yti$data[,8])
-    
+    entries = isolate(yti$data[,2]) # c(1000,100,10)
+    years = isolate(yti$data[,3]) # c(1,1,1)
+    locs = isolate(yti$data[,4]) # c(1,4,8)
+    reps = isolate(yti$data[,5]) # c(1,2,3)
+    error = isolate(yti$data[,6]) # c(1,1,1)
+    h2 = isolate(yti$data[,7])
     varieties = isolate(input$varieties)
     
     # store settings for summary plot TODO
-    #PREV stages_current = data.frame(stages, entries, years, locs, reps, error, h2)
-    stages_current = data.frame(stages, entries_min, entries_max, years, locs, reps, error, h2)
-    
+    stages_current = data.frame(stages, entries, years, locs, reps, error, h2)
+
     # Create a new tab in the UI every time Run is pressed
     # UI input elements of all Scenario tabs are rendered
     output$mytabs = renderUI({
@@ -421,24 +324,26 @@ server <- function(input, output, clientData, session) {
     
     print(paste("Start Run", tail(Scenarios,1))) # input$run_btn))
     
-    #PREV result = runScenario(varG,varGxL,varGxY,entries,years,locs,reps,error,varieties)
-    result = runScenarioRange()
-    
+    result = runScenario(varG,varGxL,varGxY,entries,years,locs,reps,error,varieties)
+
     # New Plot of ran result appearing in new tab
     # First save new plot in a variable before passing it to output
     nplot <- renderPlot({
-      #PREV plotScenario(result)
-      plotScenarioGroup(result)
+      plotScenario(result)
     })   # end of renderPlot
     
     # Store results from all runs in a reactive matrix
-    #PREV rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = tail(Scenarios,1))
-
+    rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = tail(Scenarios,1))
+    # for(i in 1:nrow(result))
+    # {
+    #   rv$results_all = cbind(rv$results_all, rbind(Stage = i, Value = result[i,], Scenario = tail(Scenarios,1))) # Scenario = scenarioID)) FAILS
+    # }
+    
     # Store all results of Gain per Year
-    #PREV rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = tail(Scenarios,1), scenarioDT =  yti$data)
+    rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = tail(Scenarios,1), scenarioDT =  yti$data)
 
     # Store all results of Gain per cost 
-    #PREV rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = tail(Scenarios,1), scenarioDT =  yti$data)
+    rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = tail(Scenarios,1), scenarioDT =  yti$data)
     
     
     # Global settings for all DTs in senario tabs
@@ -459,7 +364,7 @@ server <- function(input, output, clientData, session) {
     server = TRUE) # server = F doesn't work with replaceData() cell editing
     
     # Include content from R file locally as if it was pasted here to manage if-else
-    source('if_run_btn_range.r', local=TRUE) # OLD METHOD with if-else loop handling but with duplicated code for up to 5 scenarios WORKS!
+    source('if_run_btn.r', local=TRUE) # OLD METHOD with if-else loop handling but with duplicated code for up to 5 scenarios WORKS!
     # source('update_scenarios.r', local = TRUE) # alternative recursive method IN PROGRESS
     
     
@@ -479,19 +384,19 @@ server <- function(input, output, clientData, session) {
     # TODO
     
     # Render grouped boxplots for all scenario results without any processing
-    #PREV output$overviewTab <- renderPlot({
-    #   plotScenarioGroup(rv$results_all)
-    # })   # end of renderPlot for Overview tab
+    output$overviewTab <- renderPlot({
+      plotScenarioGroup(rv$results_all)
+    })   # end of renderPlot for Overview tab
     
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
-    #PREV output$overviewTabxTime <- renderPlot({
-    #   plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
-    # })   # end of renderPlot for Overview tab
+    output$overviewTabxTime <- renderPlot({
+      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
+    })   # end of renderPlot for Overview tab
     
     # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
-    #PREV output$overviewTabxCost <- renderPlot({
-    #   plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
-    # })   # end of renderPlot for Overview tab
+    output$overviewTabxCost <- renderPlot({
+      plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
+    })   # end of renderPlot for Overview tab
     
     
     source('all_in_one.r', local = TRUE) # alternative recursive method that uses divID -- IN PROGRESS    
