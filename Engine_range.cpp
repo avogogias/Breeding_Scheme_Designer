@@ -60,10 +60,10 @@ arma::fmat runScenario(float varG, // Genetic variance
 /*** R
 library(ggplot2)
 system.time({
-  entries_range = seq(100, 1000, by = 100)
-  sc_id = 1
+  entries_range = seq(100, 1000, by = (1000-100)/4)
   results_range = NULL
   for (i in entries_range) {
+    print(i)
     result = runScenario(varG=1,
                          varGxL=1,
                          varGxY=1,
@@ -77,14 +77,13 @@ system.time({
     {
       results_range = cbind(results_range, rbind(Stage = j, Value = result[j,], Scenario = i))
     }
-    sc_id = sc_id + 1
   }
 })
 ggplot(as.data.frame(t(results_range)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
   geom_boxplot()+
   xlab("Stage")+
   ylab("Gain")+
-  scale_fill_discrete(name="Scenario")+
+  scale_fill_discrete(name="Entries")+
   ggtitle("Range of entries") + 
   theme(plot.title = element_text(size = 14, face = "bold"))
 # boxplot(t(example1),

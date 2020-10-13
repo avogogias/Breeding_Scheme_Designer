@@ -242,34 +242,48 @@ server <- function(input, output, clientData, session) {
   }
   
   # Run a range of multiple scenarios and return the results
-  runScenarioRange <- function(scenarioDT = yti$data, varG = input$varG ,varGxL = input$varGxL ,varGxY = input$varGxY, varieties = input$varieties, results_range = rv$results_range) {
+  runScenarioRange <- function(scenarioDT = yti$data, min = yti$data[,2], max = yti$data[,3], varG = input$varG ,varGxL = input$varGxL ,varGxY = input$varGxY, varieties = input$varieties, results_range = rv$results_range) {
     
-    entries_low = scenarioDT[,2]
-    entries_high = scenarioDT[,3]
-    entries_mid = meanVector(min = entries_low, max = entries_high)
-
-    years = scenarioDT[,4]
-    locs = scenarioDT[,5]
-    reps = scenarioDT[,6]
-    error = scenarioDT[,7]
+    # entries_low = scenarioDT[,2]
+    # entries_high = scenarioDT[,3]
+    # entries_mid = meanVector(min = entries_low, max = entries_high)
+    entries_range = quartileVector(min, max) #seq(min, max, by = ceiling((max-min)/4))
+    for (i in 1:ncol(entries_range)) {
+      result = runScenario(varG, varGxL, varGxY, 
+                           entries = entries_range[,i],  # c(i,i/2,i/100),
+                           years = scenarioDT[,4], # Second stage now uses 2 years
+                           locs = scenarioDT[,5],
+                           reps = scenarioDT[,6],
+                           error = scenarioDT[,7],
+                           varieties)
+      for(j in 1:nrow(result)) # for each stage:
+      {
+        results_range = cbind(results_range, rbind(Stage = j, Value = result[j,], Scenario = i)) # max[j]-min[j]))
+      }
+    }
     
-    result_low =  runScenario(varG,varGxL,varGxY,entries_low,years,locs,reps,error,varieties)
-    result_mid =  runScenario(varG,varGxL,varGxY,entries_mid,years,locs,reps,error,varieties)
-    result_high = runScenario(varG,varGxL,varGxY,entries_high,years,locs,reps,error,varieties)
-    print(result_low[1,1])
-    storeScenarioResult(result = result_low, results_all = results_range, scenarioID = 1)
-    print(results_range)
-    storeScenarioResult(result = result_mid, results_all = rv$results_range, scenarioID = 2)
-    storeScenarioResult(result = result_high, results_all = rv$results_range, scenarioID = 3)
+    # storeScenarioResult(result = result_low, results_all = results_range, scenarioID = 1)
+    # print(results_range)
+    # storeScenarioResult(result = result_mid, results_all = rv$results_range, scenarioID = 2)
+    # storeScenarioResult(result = result_high, results_all = rv$results_range, scenarioID = 3)
 
     return(results_range)
   }
+  # function takes 2 vectors and returns a vector of same length with mean values of paired elements
   meanVector <- function(min = yti$data[,2], max = yti$data[,3]) {
     mid = NULL
     for (i in 1:length(min)) {
       mid[i] = ceiling(mean(c(min[i],max[i])))
     }
     return(mid)
+  }
+  # function takes 2 vectors and returns a matrix with a range of 5 between paired min max elements
+  quartileVector <- function(min = yti$data[,2], max = yti$data[,3]) {
+    qrt = NULL
+    for (i in 1:length(min)) {
+      qrt = rbind(qrt, seq(min[i], max[i], by = (max[i]-min[i])/4)) 
+    }
+    return(qrt)
   }
 
   #*************************************
