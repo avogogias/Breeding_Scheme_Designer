@@ -1,6 +1,7 @@
 www
 rsconnect
 *.Rproj
+server_range.r
 temp_app.R
 PYT20.rds
 not_working.r

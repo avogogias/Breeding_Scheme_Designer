@@ -1,7 +1,7 @@
 # Currently results_all updates only for scenarios 1-5
 # Common lines of code between Scenario IDs
 cnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2')
-
+#RANGE cnames = c('Stage', 'Min Entries', 'Max Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2')
 output[[paste0("cyPlot", tail(Scenarios,1))]] <- nplot
 
 
