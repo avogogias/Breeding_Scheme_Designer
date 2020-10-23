@@ -53,6 +53,11 @@ ui <- fluidPage(title = "Cycle Scenarios",
                     bsTooltip("negen", "GNumber of early generation years. This phase of the breeding program is modeled without selection.",
                               "right", "hover", NULL),
                     
+                    # Input: Specification of range within an interval ----
+                    sliderInput("range", "First Stage Entries:",
+                                min = 100, max = 5000,
+                                value = c(100,1000)),
+                    
                     tags$h4("Yield Trials"),
                     div( # CUSTOMISE div CSS style for DT
                       DT::DTOutput("stages_table"),
@@ -115,7 +120,8 @@ ui <- fluidPage(title = "Cycle Scenarios",
                     tabsetPanel(id = "my_tabs",
                                 tabPanel("ALL", tags$div(id = "placeholder")),
                                 tabPanel("Scenarios", uiOutput('mytabs')),
-                                tabPanel("Overview", plotOutput('overviewTab'), plotOutput('overviewTabxTime'), plotOutput('overviewTabxCost'))
+                                tabPanel("Overview", plotOutput('overviewTab'), plotOutput('overviewTabxTime'), plotOutput('overviewTabxCost')),
+                                tabPanel("Range", uiOutput('myrange'))
                     ) # endo of tabsetPanel
                   ), # endof mainPanel
                   fluid = T # layout is not fixed, default is T
