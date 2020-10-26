@@ -3,6 +3,7 @@ library(Rcpp)
 library(RcppArmadillo)
 library(ggplot2) 
 library(shinyjs)
+library(data.table)
 
 sourceCpp("Engine.cpp")
 
@@ -139,46 +140,7 @@ server <- function(input, output, clientData, session) {
     do.call(tabsetPanel, myTabs)
   }
 
-  # function plots the results of a scenario
-  plotScenario <- function(result = result) {
-    boxplot(t(result),
-            xlab="Stage",
-            ylab="Mean Genetic Value")
-  }
-  
-  # function plots the results of all scenarios
-  plotScenarioGroup <- function(results_all = rv$results_all, ylabel = "Gain", gtitle = "Genetic Gain by Stage") {
-    ggplot(as.data.frame(t(results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
-      geom_boxplot()+
-      xlab("Stage")+
-      ylab(ylabel)+
-      scale_fill_discrete(name="Scenario")+
-      ggtitle(gtitle) + 
-      theme(plot.title = element_text(size = 14, face = "bold"))
-  }
-  
-  # Plot of mean value with margins for standard deviation (copied from alphasimrshiny)
-  plotMeanPrnt = function(df){
-    print(df)
-    yMin = min(df$Mean)-1.01*max(df$SD)
-    yMax =max(df$Mean)+1.01*max(df$SD)
-    #TV df = filter(df, stage=="Parents")
-    gp = ggplot(df,aes(x=Stage,y=Mean,color=Scenario))+
-      geom_ribbon(aes(x=Stage,ymin=Mean-SD,ymax=Mean+SD,
-                      fill=Scenario),alpha=0.2,linetype=0)+
-      geom_line(size=1)+
-      guides(alpha=FALSE)+
-      theme_bw()+
-      theme(legend.justification = c(0.02, 0.96), 
-            legend.background = element_blank(),
-            legend.box.background = element_rect(colour = "black"),
-            legend.position = c(0.02, 0.96))+
-      scale_x_continuous("Year")+
-      scale_y_continuous("Genetic Value",
-                         limits=c(yMin,yMax))+
-      ggtitle("Parents")
-    return(gp)
-  }
+
 
   # Store results from all runs in a reactive matrix
   storeScenarioResult <- function(result = result, results_all = rv$results_all, scenarioID = tail(Scenarios,1) ) {
@@ -207,26 +169,29 @@ server <- function(input, output, clientData, session) {
     return(results_all)
   }
   
-  # TODO fix bug to store resultLite properly
+  # TV TODO fix bug to store resultLite properly : HINT refers to rr recursevely in two nested functions!!!!!!!!!!!!!!!!
   # Store results from all runs and ranges in a reactive matrix
-  storeScenarioResultRange <- function(scenarioDT = yti$data, it = it, entries = entries, varieties = input$varieties, result = resultLite, results_range = rv$results_range, scenarioID = tail(Scenarios,1)) {
-    print(entries)
-    for(i in 1:nrow(result)) # for every stage do:
-    {
-      results_range = cbind(results_range, rbind(Scenario = scenarioID,
-                                                 Iteration = it,
-                                                 Stage = i, # Input Start
-                                                 Entries = entries, 
-                                                 Years = scenarioDT[i,3], 
-                                                 Locs = scenarioDT[i,4],
-                                                 Reps = scenarioDT[i,5],
-                                                 Error = scenarioDT[i,6],
-                                                 Varieties = varieties,
-                                                 Mean = result[i,1],  # Output Start
-                                                 SD = result[i,2]))
-    } 
-    return(results_range)
-  }
+  # storeScenarioResultRange <- function(scenarioDT = yti$data, it = it, entries = entries, varieties = input$varieties, result = resultLite, scenarioID = tail(Scenarios,1)) {
+  #   print(entries)
+  #   rr = NULL
+  #   for(i in 1:nrow(result)) # for every stage do:
+  #   {
+  #     rr = cbind(rr, rbind(Scenario = scenarioID,
+  #                          Iteration = it,
+  #                          Stage = i, # Input Start
+  #                          Entries = entries, 
+  #                          Years = scenarioDT[i,3], 
+  #                          Locs = scenarioDT[i,4],
+  #                          Reps = scenarioDT[i,5],
+  #                          Error = scenarioDT[i,6],
+  #                          Varieties = varieties,
+  #                          Mean = result[i,1],  # Output Start
+  #                          SD = result[i,2]))
+  #   } 
+  #   print("STORE!!!")
+  #   #print(rr)
+  #   return(rr)
+  # }
   
   # Remove scenario result from storage. By default remove last scenario.
   removeScenarioResult <- function(scenarioID = tail(Scenarios,1), results_all = rv$results_all) {
@@ -235,21 +200,23 @@ server <- function(input, output, clientData, session) {
   }
 
   # Ignore entries in first stage and instead run for a range of entries. Store the results in rv$results_range
-  runScenarioRange <- function(scenarioDT = yti$data, min = input$range[1], max = input$range[2], 
+  runScenarioRange <- function(scenarioDT = yti$data, min = input$range[1], max = input$range[2], grain = input$grain,
                                varG = input$varG, 
                                varGxL = input$varGxL, 
                                varGxY = input$varGxY, 
-                               varieties = input$varieties, 
-                               results_range = rv$results_range) 
+                               varieties = input$varieties) 
+                               # results_range = rv$results_range) 
     {
+      stage = scenarioDT[,1]
       entries = scenarioDT[,2]
       years = scenarioDT[,3] 
       locs = scenarioDT[,4]
       reps = scenarioDT[,5]
       error = scenarioDT[,6]
       it = 0 # counter for the 5 iterations between range min max
-      entries_range = quartileVector(min, max) #seq(min, max, by = ceiling((max-min)/4))
-      print(entries_range)
+      entries_range = rangeGrain(min, max, grain) #seq(min, max, by = ceiling((max-min)/4))
+      print(entries_range, grain)
+      rr = NULL
       for (i in entries_range) {
         it = it + 1
         entries[1] = i # replace entry in stage 1 with entry from range slider
@@ -262,33 +229,80 @@ server <- function(input, output, clientData, session) {
                                  reps,
                                  error,
                                  varieties)
-        print(resultLite) # WORKS
+        #print(resultLite) # WORKS
+        # convert to a df
+        resultLite = as.data.frame(resultLite)
+        colnames(resultLite) <- c("mean","sd")
+        # Create df with I/O data and bind this to rr from previous iterations
+        rr<-rbind(rr, cbind(scenario = tail(Scenarios,1), it, stage, entries, years, locs, reps, error, resultLite))
+        
+        # Bind both dfs
         # TODO BUG as last iteration overights previous records? 
-        results_range = storeScenarioResultRange(scenarioDT = yti$data, it = it, entries = entries, varieties = varieties, result = resultLite, results_range = rv$results_range, scenarioID = tail(Scenarios,1))
-
-      }   
-      return(results_range)
-  }
-  # function takes 2 vectors and returns a vector of same length with mean values of paired elements
-  meanVector <- function(min = yti$data[,2], max = yti$data[,3]) {
-    mid = NULL
-    for (i in 1:length(min)) {
-      mid[i] = ceiling(mean(c(min[i],max[i])))
-    }
-    return(mid)
+        #rr = storeScenarioResultRange(scenarioDT = yti$data, it = it, entries = entries, varieties = varieties, result = resultLite, scenarioID = tail(Scenarios,1))
+        #print(resultLite)
+        }   
+      
+      return(rr)
   }
   # function takes 2 vectors and returns a matrix with a range of 5 between paired min max elements
-  quartileVector <- function(min = yti$data[,2], max = yti$data[,3]) {
+  rangeGrain <- function(min = input$range[1], max = input$range[2], grain = input$grain) {
     qrt = NULL
     for (i in 1:length(min)) {
       if (min[i] < max[i])
       {
-        qrt = c(qrt, seq(min[i], max[i], by = (max[i]-min[i])/4)) 
+        qrt = c(qrt, seq(min[i], max[i], by = (max[i]-min[i])/grain)) 
       }
       else qrt = c(qrt, min[i])
     }
     return(qrt)
   }  
+  
+  #********************************
+  #--------------------------------  
+  # ************ PLOTS ************
+  # -------------------------------
+  #********************************
+  
+  # function plots the results of a scenario
+  plotScenario <- function(result = result) {
+    boxplot(t(result),
+            xlab="Stage",
+            ylab="Mean Genetic Value")
+  }
+  
+  # function plots the results of all scenarios
+  plotScenarioGroup <- function(results_all = rv$results_all, ylabel = "Gain", gtitle = "Genetic Gain by Stage") {
+    ggplot(as.data.frame(t(results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
+      geom_boxplot()+
+      xlab("Stage")+
+      ylab(ylabel)+
+      scale_fill_discrete(name="Scenario")+
+      ggtitle(gtitle) + 
+      theme(plot.title = element_text(size = 14, face = "bold"))
+  }
+  
+  # Plot of mean value with margins for standard deviation (copied from alphasimrshiny)
+  plotMeanPrnt = function(df){
+    print(df)
+    yMin = min(df$mean)-1.01*max(df$sd)
+    yMax = max(df$mean)+1.01*max(df$sd)
+    #TV df = filter(df, stage=="Parents")
+    gp = ggplot(df,aes(x=stage,y=mean,group=it,color=it))+
+#      geom_ribbon(aes(x=stage,ymin=mean-sd,ymax=mean+sd,
+#                      fill=scenario),alpha=0.2,linetype=0)+
+      geom_line(size=1)+
+      guides(alpha=FALSE)+
+      theme_bw()+
+      theme(legend.justification = c(0.02, 0.96), 
+            legend.background = element_blank(),
+            legend.box.background = element_rect(colour = "black"),
+            legend.position = c(0.02, 0.96))+
+      scale_x_continuous("Stage")+
+      scale_y_continuous("Gain",
+                         limits=c(yMin,yMax))+
+      ggtitle("Parents")
+    return(gp)
+  }
   
   #*************************************
   #-------------------------------------  
@@ -425,12 +439,14 @@ server <- function(input, output, clientData, session) {
     print(paste("Start Run", tail(Scenarios,1))) # input$run_btn))
     
     result = runScenario(varG,varGxL,varGxY,entries,years,locs,reps,error,varieties)
-    rv$results_range = runScenarioRange()
+
+    # Store results for different ranges of first stage entries
+    rv$results_range = rbind(rv$results_range, runScenarioRange())
     
     # New Plot of ran result appearing in new tab
     # First save new plot in a variable before passing it to output
     nplot <- renderPlot({
-      plotMeanPrnt(as.data.frame(t(rv$results_range)))
+      plotMeanPrnt(rv$results_range)
       #TV plotScenario(resultLite) #PREV plotScenario(result)
     })   # end of renderPlot
     

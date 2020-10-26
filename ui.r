@@ -58,6 +58,8 @@ ui <- fluidPage(title = "Cycle Scenarios",
                                 min = 100, max = 5000,
                                 value = c(100,1000)),
                     
+                    numericInput("grain", "Range Grain", min = 2, max = 1000, value = 4, step = 1, width = '20%'),
+                    
                     tags$h4("Yield Trials"),
                     div( # CUSTOMISE div CSS style for DT
                       DT::DTOutput("stages_table"),
