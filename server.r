@@ -234,7 +234,7 @@ server <- function(input, output, clientData, session) {
         resultLite = as.data.frame(resultLite)
         colnames(resultLite) <- c("mean","sd")
         # Create df with I/O data and bind this to rr from previous iterations
-        rr<-rbind(rr, cbind(scenario = tail(Scenarios,1), it, stage, entries, years, locs, reps, error, resultLite))
+        rr<-rbind(rr, cbind(scenario = tail(Scenarios,1), fs_entries = i, it, stage, entries, years, locs, reps, error, resultLite))
         
         # Bind both dfs
         # TODO BUG as last iteration overights previous records? 
@@ -287,17 +287,17 @@ server <- function(input, output, clientData, session) {
     yMin = min(df$mean)-1.01*max(df$sd)
     yMax = max(df$mean)+1.01*max(df$sd)
     #TV df = filter(df, stage=="Parents")
-    gp = ggplot(df,aes(x=stage,y=mean,group=it,color=it))+
-#      geom_ribbon(aes(x=stage,ymin=mean-sd,ymax=mean+sd,
-#                      fill=scenario),alpha=0.2,linetype=0)+
+    gp = ggplot(df,aes(x=fs_entries,y=mean,group=stage,color=stage))+
+      geom_ribbon(aes(x=fs_entries,ymin=mean-sd,ymax=mean+sd,
+                      fill=stage),alpha=0.2,linetype=0)+
       geom_line(size=1)+
       guides(alpha=FALSE)+
-      theme_bw()+
-      theme(legend.justification = c(0.02, 0.96), 
-            legend.background = element_blank(),
-            legend.box.background = element_rect(colour = "black"),
-            legend.position = c(0.02, 0.96))+
-      scale_x_continuous("Stage")+
+      #theme_bw()+
+      #theme(legend.justification = c(0.02, 0.96), 
+      #      legend.background = element_blank(),
+      #      legend.box.background = element_rect(colour = "black"),
+      #      legend.position = c(0.02, 0.96))+
+      scale_x_continuous("First Stage Entries")+
       scale_y_continuous("Gain",
                          limits=c(yMin,yMax))+
       ggtitle("Parents")
@@ -443,11 +443,16 @@ server <- function(input, output, clientData, session) {
     # Store results for different ranges of first stage entries
     rv$results_range = rbind(rv$results_range, runScenarioRange())
     
+    # range plot appears in tab Range and includes all scenarios
+    output$rangePlot <- renderPlot({
+      plotMeanPrnt(rv$results_range)
+      #TV plotScenario(resultLite) #PREV plotScenario(result)
+    })   # end of renderPlot
+    
     # New Plot of ran result appearing in new tab
     # First save new plot in a variable before passing it to output
     nplot <- renderPlot({
-      plotMeanPrnt(rv$results_range)
-      #TV plotScenario(resultLite) #PREV plotScenario(result)
+      plotScenario(result)
     })   # end of renderPlot
     
     # Store results from all runs in a reactive matrix
