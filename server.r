@@ -215,7 +215,7 @@ server <- function(input, output, clientData, session) {
       error = scenarioDT[,6]
       it = 0 # counter for the 5 iterations between range min max
       entries_range = rangeGrain(min, max, grain) #seq(min, max, by = ceiling((max-min)/4))
-      print(entries_range, grain)
+
       rr = NULL
       for (i in entries_range) {
         it = it + 1
@@ -248,11 +248,11 @@ server <- function(input, output, clientData, session) {
   rangeGrain <- function(min = input$range[1], max = input$range[2], grain = input$grain) {
     qrt = NULL
     for (i in 1:length(min)) {
-      if (min[i] < max[i])
+      if (min[i] < max[i] && grain>1) #  && min[i]>entries[i+1]
       {
-        qrt = c(qrt, seq(min[i], max[i], by = (max[i]-min[i])/grain)) 
+        qrt = c(qrt, seq(min[i], max[i], by = (max[i]-min[i])/(grain-1))) 
       }
-      else qrt = c(qrt, min[i])
+      else qrt = c(qrt, max(min[i], max[1]))
     }
     return(qrt)
   }  
@@ -283,7 +283,9 @@ server <- function(input, output, clientData, session) {
   
   # Plot of mean value with margins for standard deviation (copied from alphasimrshiny)
   plotMeanPrnt = function(df){
+    df <- transform(df, stage = as.character(stage)) # use categorical colour instead of ordered
     print(df)
+    print(sapply(df, mode))
     yMin = min(df$mean)-1.01*max(df$sd)
     yMax = max(df$mean)+1.01*max(df$sd)
     #TV df = filter(df, stage=="Parents")
@@ -292,15 +294,15 @@ server <- function(input, output, clientData, session) {
                       fill=stage),alpha=0.2,linetype=0)+
       geom_line(size=1)+
       guides(alpha=FALSE)+
-      #theme_bw()+
-      #theme(legend.justification = c(0.02, 0.96), 
-      #      legend.background = element_blank(),
-      #      legend.box.background = element_rect(colour = "black"),
-      #      legend.position = c(0.02, 0.96))+
+      theme_bw()+
+      theme(legend.justification = c(0.02, 0.96), 
+            legend.background = element_blank(),
+            legend.box.background = element_rect(colour = "black"),
+            legend.position = c(0.02, 0.96))+
       scale_x_continuous("First Stage Entries")+
       scale_y_continuous("Gain",
                          limits=c(yMin,yMax))+
-      ggtitle("Parents")
+      ggtitle("Gain by First Stage Entries Range")
     return(gp)
   }
   
@@ -442,6 +444,7 @@ server <- function(input, output, clientData, session) {
 
     # Store results for different ranges of first stage entries
     rv$results_range = rbind(rv$results_range, runScenarioRange())
+    #print(rv$results_range)
     
     # range plot appears in tab Range and includes all scenarios
     output$rangePlot <- renderPlot({
