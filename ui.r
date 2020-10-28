@@ -123,7 +123,7 @@ ui <- fluidPage(title = "Cycle Scenarios",
                                 tabPanel("ALL", tags$div(id = "placeholder")),
                                 tabPanel("Scenarios", uiOutput('mytabs')),
                                 tabPanel("Overview", plotOutput('overviewTab'), plotOutput('overviewTabxTime'), plotOutput('overviewTabxCost')),
-                                tabPanel("Range", plotOutput('rangePlot'))
+                                tabPanel("Range", plotOutput('rangePlot'), plotOutput('rangePlotxStage'))
                     ) # endo of tabsetPanel
                   ), # endof mainPanel
                   fluid = T # layout is not fixed, default is T

@@ -250,7 +250,7 @@ server <- function(input, output, clientData, session) {
     for (i in 1:length(min)) {
       if (min[i] < max[i] && grain>1) #  && min[i]>entries[i+1]
       {
-        qrt = c(qrt, seq(min[i], max[i], by = (max[i]-min[i])/(grain-1))) 
+        qrt = c(qrt, round(seq(min[i], max[i], by = (max[i]-min[i])/(grain-1)))) 
       }
       else qrt = c(qrt, max(min[i], max[1]))
     }
@@ -288,23 +288,53 @@ server <- function(input, output, clientData, session) {
     print(sapply(df, mode))
     yMin = min(df$mean)-1.01*max(df$sd)
     yMax = max(df$mean)+1.01*max(df$sd)
-    #TV df = filter(df, stage=="Parents")
+
     gp = ggplot(df,aes(x=fs_entries,y=mean,group=stage,color=stage))+
       geom_ribbon(aes(x=fs_entries,ymin=mean-sd,ymax=mean+sd,
-                      fill=stage),alpha=0.2,linetype=0)+
+                      fill=stage),alpha=0.1,linetype=0)+
       geom_line(size=1)+
       guides(alpha=FALSE)+
-      theme_bw()+
-      theme(legend.justification = c(0.02, 0.96), 
-            legend.background = element_blank(),
-            legend.box.background = element_rect(colour = "black"),
-            legend.position = c(0.02, 0.96))+
+      scale_color_brewer(palette="Set1")+ #(palette="Spectral")+
+      scale_fill_brewer(palette="Set1")+ #(palette="Spectral")+ # palette="Set1")+
+      # theme_bw()+
+      # theme(legend.justification = c(0.02, 0.96), 
+      #       legend.background = element_blank(),
+      #       legend.box.background = element_rect(colour = "black"),
+      #       legend.position = c(0.02, 0.96))+
       scale_x_continuous("First Stage Entries")+
       scale_y_continuous("Gain",
                          limits=c(yMin,yMax))+
       ggtitle("Gain by First Stage Entries Range")
     return(gp)
   }
+  
+  # Plot of mean value with margins for standard deviation x stage (copied from alphasimrshiny)
+  plotMeanPrntxStage = function(df){
+    df <- transform(df, fs_entries = as.character(fs_entries)) # use categorical colour instead of ordered
+    #df <- transform(df, scenario = as.character(scenario)) # use categorical colour instead of ordered
+    #print(df)
+    #print(sapply(df, mode))
+    yMin = min(df$mean)-1.01*max(df$sd)
+    yMax = max(df$mean)+1.01*max(df$sd)
+    
+    gp = ggplot(df,aes(x=stage,y=mean,group=fs_entries,color=fs_entries))+
+      geom_ribbon(aes(x=stage,ymin=mean-sd,ymax=mean+sd,
+                      fill=fs_entries),alpha=0.1,linetype=0)+
+      geom_line(size=1)+
+      guides(alpha=FALSE)+
+      scale_color_brewer()+ #(palette="Set1")+ #(palette="Spectral")+
+      scale_fill_brewer()+ #(palette="Set1")+ #(palette="Spectral")+ # palette="Set1")+
+      # theme_bw()+
+      # theme(legend.justification = c(0.02, 0.96), 
+      #       legend.background = element_blank(),
+      #       legend.box.background = element_rect(colour = "black"),
+      #       legend.position = c(0.02, 0.96))+
+      scale_x_continuous("Stage")+
+      scale_y_continuous("Gain",
+                         limits=c(yMin,yMax))+
+      ggtitle("Gain by Stage")
+    return(gp)
+  }  
   
   #*************************************
   #-------------------------------------  
@@ -450,6 +480,10 @@ server <- function(input, output, clientData, session) {
     output$rangePlot <- renderPlot({
       plotMeanPrnt(rv$results_range)
       #TV plotScenario(resultLite) #PREV plotScenario(result)
+    })   # end of renderPlot  
+    
+    output$rangePlotxStage <- renderPlot({
+      plotMeanPrntxStage(rv$results_range)
     })   # end of renderPlot
     
     # New Plot of ran result appearing in new tab
