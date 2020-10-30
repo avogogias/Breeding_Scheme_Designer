@@ -47,16 +47,22 @@ ui <- fluidPage(title = "Cycle Scenarios",
                     bsTooltip("varGxY", "Genotype-by-year interaction variance.",
                               "right", "hover", NULL),
                     
-                    numericInput("negen", "Crossing/Selfing Years",
-                                 min = 0, max = 100, value = 4, step = 1, width = '80px'), 
+                    # numericInput("negen", "Crossing/Selfing Years",
+                    #             min = 0, max = 100, value = 4, step = 1, width = '80px'), 
+                    sliderInput("negen", "Crossing/Selfing Years",
+                                min = 0, max = 10, value = 4, width = '240px'), 
                     # Add tooltip with instructions/info
                     bsTooltip("negen", "GNumber of early generation years. This phase of the breeding program is modeled without selection.",
                               "right", "hover", NULL),
                     
                     # Input: Specification of range within an interval ----
-                    sliderInput("range", "First Stage Entries:",
+                    sliderInput("entries_range", "First Stage Entries:",
                                 min = 100, max = 5000,
                                 value = c(100,1000)),
+                    # Input: Specification of range within an interval ----
+                    sliderInput("reps_range", "First Stage Reps:",
+                                min = 1, max = 30,
+                                value = c(1,10)),
                     
                     numericInput("grain", "Samples in Range", min = 2, max = 1000, value = 5, step = 1, width = '20%'),
                     
@@ -123,7 +129,7 @@ ui <- fluidPage(title = "Cycle Scenarios",
                                 tabPanel("ALL", tags$div(id = "placeholder")),
                                 tabPanel("Scenarios", uiOutput('mytabs')),
                                 tabPanel("Overview", plotOutput('overviewTab'), plotOutput('overviewTabxTime'), plotOutput('overviewTabxCost')),
-                                tabPanel("Range", plotOutput('rangePlot'), plotOutput('rangePlotxStage'))
+                                tabPanel("Range", plotOutput('entriesRangePlot'), plotOutput('repsRangePlot'))
                     ) # endo of tabsetPanel
                   ), # endof mainPanel
                   fluid = T # layout is not fixed, default is T

@@ -200,7 +200,10 @@ server <- function(input, output, clientData, session) {
   }
 
   # Ignore entries in first stage and instead run for a range of entries. Store the results in rv$results_range
-  runScenarioRange <- function(scenarioDT = yti$data, min = input$range[1], max = input$range[2], grain = input$grain,
+  runScenarioRange <- function(min_entries = input$entries_range[1], max_entries = input$entries_range[2], 
+                               min_reps = input$reps_range[1], max_reps = input$reps_range[2],
+                               grain = input$grain,
+                               scenarioDT = yti$data, 
                                varG = input$varG, 
                                varGxL = input$varGxL, 
                                varGxY = input$varGxY, 
@@ -213,33 +216,34 @@ server <- function(input, output, clientData, session) {
       locs = scenarioDT[,4]
       reps = scenarioDT[,5]
       error = scenarioDT[,6]
-      it = 0 # counter for the 5 iterations between range min max
-      entries_range = rangeGrain(min, max, grain) #seq(min, max, by = ceiling((max-min)/4))
+      it = 0 # counter of iterations between range min max
+      range_entries = rangeGrain(min_entries, max_entries, grain)
+      range_reps = rangeGrain(min_reps, max_reps, grain)
+      #print(range_reps)
 
       rr = NULL
-      for (i in entries_range) {
-        it = it + 1
-        entries[1] = i # replace entry in stage 1 with entry from range slider
-        resultLite = runScenarioLite(varG, 
-                                 varGxL, 
-                                 varGxY, 
-                                 entries,  
-                                 years, 
-                                 locs,
-                                 reps,
-                                 error,
-                                 varieties)
-        #print(resultLite) # WORKS
-        # convert to a df
-        resultLite = as.data.frame(resultLite)
-        colnames(resultLite) <- c("mean","sd")
-        # Create df with I/O data and bind this to rr from previous iterations
-        rr<-rbind(rr, cbind(scenario = tail(Scenarios,1), fs_entries = i, it, stage, entries, years, locs, reps, error, resultLite))
-        
-        # Bind both dfs
-        # TODO BUG as last iteration overights previous records? 
-        #rr = storeScenarioResultRange(scenarioDT = yti$data, it = it, entries = entries, varieties = varieties, result = resultLite, scenarioID = tail(Scenarios,1))
-        #print(resultLite)
+      for (i in range_entries) 
+        {
+          for (j in range_reps)
+          {
+            it = it + 1
+            entries[1] = i # replace first stage entries with range_entries
+            reps[1] = j  # replace first stage reps with range_reps
+            resultLite = runScenarioLite(varG, 
+                                         varGxL, 
+                                         varGxY, 
+                                         entries,  
+                                         years, 
+                                         locs,
+                                         reps,
+                                         error,
+                                         varieties)
+            #print(resultLite) # WORKS
+            resultLite = as.data.frame(resultLite)             # convert to a df
+            colnames(resultLite) <- c("mean","sd")
+            # Create df with I/O data and bind this to rr from previous iterations
+            rr<-rbind(rr, cbind(scenario = tail(Scenarios,1), fs_entries = i, fs_reps = j, it, stage, entries, years, locs, reps, error, resultLite))
+          }
         }   
       
       return(rr)
@@ -282,7 +286,7 @@ server <- function(input, output, clientData, session) {
   }
   
   # Plot of mean value with margins for standard deviation (copied from alphasimrshiny)
-  plotMeanPrnt = function(df){
+  plotMeanGrid = function(df){
     df <- transform(df, stage = as.character(stage)) # use categorical colour instead of ordered
     print(df)
     print(sapply(df, mode))
@@ -477,14 +481,14 @@ server <- function(input, output, clientData, session) {
     #print(rv$results_range)
     
     # range plot appears in tab Range and includes all scenarios
-    output$rangePlot <- renderPlot({
-      plotMeanPrnt(rv$results_range)
+    output$entriesRangePlot <- renderPlot({
+      plotMeanGrid(rv$results_range)
       #TV plotScenario(resultLite) #PREV plotScenario(result)
     })   # end of renderPlot  
     
-    output$rangePlotxStage <- renderPlot({
-      plotMeanPrntxStage(rv$results_range)
-    })   # end of renderPlot
+    # output$rangePlotxStage <- renderPlot({
+    #   plotMeanPrntxStage(rv$results_range)
+    # })   # end of renderPlot
     
     # New Plot of ran result appearing in new tab
     # First save new plot in a variable before passing it to output
