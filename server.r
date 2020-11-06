@@ -13,6 +13,7 @@ server <- function(input, output, clientData, session) {
   # ***************************************************** #
   # ********************* VARIABLES ********************* #
   # ********************* --------- ********************* #
+  # ***************************************************** #
   
   # TV to use complementary to generated divID for identifying Scenarios ID
   Scenarios <<- c() #simple list of scenario ids, so will be [1,2,3] if three scenarios
@@ -25,12 +26,12 @@ server <- function(input, output, clientData, session) {
   reps = c(1,2,3)
   error = c(1,1,1)
   h2 = c(0.5,0.5,0.5) # this is a calculated value initialised here
+  yt = cbind(stage,entries,years,locs,reps,error,h2)
   
   # per-session reactive values object to store all results of this user session
   rv <- reactiveValues(results_all = NULL, results_allxTime = NULL, results_allxCost = NULL, results_range = NULL)
   # defines a common reactive list to store all scenario input info (stages DT + other) to replace reactDT
   scenariosInput <- reactiveValues(stagesDT = list(), varG = list(), varGxL = list(), varGxY = list(), varieties = list()) # initially will store stages_current and updated accordingly
-  yt = cbind(stage,entries,years,locs,reps,error,h2)
   # Using reactiveVales to add a server side set of variable observable and mutable at the same time
   yti <- reactiveValues(data = yt)
 
@@ -141,8 +142,6 @@ server <- function(input, output, clientData, session) {
     do.call(tabsetPanel, myTabs)
   }
 
-
-
   # Store results from all runs in a reactive matrix
   storeScenarioResult <- function(result = result, results_all = rv$results_all, scenarioID = tail(Scenarios,1) ) {
     for(i in 1:nrow(result)) 
@@ -170,30 +169,6 @@ server <- function(input, output, clientData, session) {
     return(results_all)
   }
   
-  # TV TODO fix bug to store resultLite properly : HINT refers to rr recursevely in two nested functions!!!!!!!!!!!!!!!!
-  # Store results from all runs and ranges in a reactive matrix
-  # storeScenarioResultRange <- function(scenarioDT = yti$data, it = it, entries = entries, varieties = input$varieties, result = resultLite, scenarioID = tail(Scenarios,1)) {
-  #   print(entries)
-  #   rr = NULL
-  #   for(i in 1:nrow(result)) # for every stage do:
-  #   {
-  #     rr = cbind(rr, rbind(Scenario = scenarioID,
-  #                          Iteration = it,
-  #                          Stage = i, # Input Start
-  #                          Entries = entries, 
-  #                          Years = scenarioDT[i,3], 
-  #                          Locs = scenarioDT[i,4],
-  #                          Reps = scenarioDT[i,5],
-  #                          Error = scenarioDT[i,6],
-  #                          Varieties = varieties,
-  #                          Mean = result[i,1],  # Output Start
-  #                          SD = result[i,2]))
-  #   } 
-  #   print("STORE!!!")
-  #   #print(rr)
-  #   return(rr)
-  # }
-  
   # Remove scenario result from storage. By default remove last scenario.
   removeScenarioResult <- function(scenarioID = tail(Scenarios,1), results_all = rv$results_all) {
     results_all <- results_all[,results_all[3,] != scenarioID] 
@@ -211,6 +186,7 @@ server <- function(input, output, clientData, session) {
                                varieties = input$varieties) 
                                # results_range = rv$results_range) 
     {
+      print(scenarioDT)
       stage = scenarioDT[,1]
       entries = scenarioDT[,2]
       years = scenarioDT[,3] 
@@ -289,6 +265,8 @@ server <- function(input, output, clientData, session) {
   plotMeanGrid = function(df = rv$results_range, myX = "fs_entries", myFilter = "fs_reps", myXl = "First Stage Entries", title = "Gain by First Stage Entries Range") { 
     df <- transform(df, stage = as.character(stage)) # use categorical colour instead of ordered
     df <- filter(df, as.numeric(unlist(df[myFilter])) %in% df[myFilter][1,]) # filter rows based on the first occurrence of fs_reps, which is the min
+    df <- filter(df, as.numeric(unlist(df["scenario"])) %in% df["scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
+    
     myX <- as.numeric(unlist(df[myX]))
     print(df)
     print(sapply(df, mode))
