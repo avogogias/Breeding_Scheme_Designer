@@ -213,5 +213,90 @@ arma::fmat runScenarioLite(float varG, // Genetic variance
 #   scale_fill_discrete(name="1st Stage Entries")+
 #   ggtitle("Range of entries") + 
 #   theme(plot.title = element_text(size = 14, face = "bold"))
+
+system.time({
+
+  library(ggplot2)
+  library(dplyr)
+  
+  runScenarioRange <- function(min_entries = input$entries_range[1], max_entries = input$entries_range[2], 
+                               min_reps = input$reps_range[1], max_reps = input$reps_range[2],
+                               grain = input$grain,
+                               scenarioDT = yti$data, 
+                               varG = input$varG, 
+                               varGxL = input$varGxL, 
+                               varGxY = input$varGxY, 
+                               varieties = input$varieties) 
+    # results_range = rv$results_range) 
+  {
+    print(scenarioDT)
+    stage = scenarioDT[,1]
+    entries = scenarioDT[,2]
+    years = scenarioDT[,3] 
+    locs = scenarioDT[,4]
+    reps = scenarioDT[,5]
+    error = scenarioDT[,6]
+    it = 0 # counter of iterations between range min max
+    range_entries = rangeGrain(min_entries, max_entries, grain)
+    range_reps = rangeGrain(min_reps, max_reps, grain)
+    #print(range_reps)
+    
+    rr = NULL
+    for (i in range_entries) 
+    {
+      for (j in range_reps)
+      {
+        it = it + 1
+        entries[1] = i # replace first stage entries with range_entries
+        reps[1] = j  # replace first stage reps with range_reps
+        resultLite = runScenarioLite(varG, 
+                                     varGxL, 
+                                     varGxY, 
+                                     entries,  
+                                     years, 
+                                     locs,
+                                     reps,
+                                     error,
+                                     varieties)
+        #print(resultLite) # WORKS
+        resultLite = as.data.frame(resultLite)             # convert to a df
+        colnames(resultLite) <- c("mean","sd")
+        # Create df with I/O data and bind this to rr from previous iterations
+        rr<-rbind(rr, cbind(scenario = tail(Scenarios,1), fs_entries = i, fs_reps = j, it, stage, entries, years, locs, reps, error, resultLite))
+      }
+    }   
+    return(rr)
+  }
+  # function takes 2 vectors and returns a matrix with a grid between paired min max elements
+  rangeGrain <- function(min = input$range[1], max = input$range[2], grain = input$grain) {
+    qrt = NULL
+    for (i in 1:length(min)) {
+      if (min[i] < max[i] && grain>1) #  && min[i]>entries[i+1]
+      {
+        qrt = c(qrt, round(seq(min[i], max[i], by = (max[i]-min[i])/(grain-1)))) 
+      }
+      else qrt = c(qrt, max(min[i], max[1]))
+    }
+    return(qrt)
+  }  
+  
+  stage = c(1,2,3)
+  entries = c(1000,100,10)
+  years = c(1,1,2)
+  locs = c(1,4,8)
+  reps = c(1,2,3)
+  error = c(1,1,1)
+  h2 = c(0.5,0.5,0.5) # this is a calculated value initialised here
+  yt = cbind(stage,entries,years,locs,reps,error,h2)  
+
+  df = runScenarioRange(scenarioDT = yt, min_entries = 100, max_entries = 1000, min_reps = 1, max_reps = 10, grain = 3, varG = 1, varGxY = 1, varGxL = 1, varieties = 1)
+  re = as.matrix(df)
+  
+  df <- transform(df, stage = as.character(stage))
+ })
+
+ggplot(data, aes(x=entries, y=reps, size = mean, color = stage))+
+  geom_point(alpha=0.7)
+
 */
 

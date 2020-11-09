@@ -297,7 +297,37 @@ server <- function(input, output, clientData, session) {
     return(gp)
   }
 
-
+  # 3D Surface Plot shows the effect of 2 variable ranges combined (entries and reps)
+  plotMeanGrid3D = function(df = isolate(rv$results_range), myX = "fs_entries", myFilter = "fs_reps", myXl = "First Stage Entries", title = "Gain by First Stage Entries Range") { 
+    df <- transform(df, stage = as.character(stage)) # use categorical colour instead of ordered
+    df <- filter(df, as.numeric(unlist(df[myFilter])) %in% df[myFilter][1,]) # filter rows not on the first occurrence (min) of myFilter
+    df <- filter(df, as.numeric(unlist(df["scenario"])) %in% df["scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
+    
+    myX <- as.numeric(unlist(df[myX]))
+    print(df)
+    print(sapply(df, mode))
+    print(myX)
+    yMin = min(df$mean)-1.01*max(df$sd)
+    yMax = max(df$mean)+1.01*max(df$sd)
+    
+    gp = ggplot(df,aes(x=myX,y=mean,group=stage,color=stage))+
+      geom_ribbon(aes(x=myX,ymin=mean-sd,ymax=mean+sd,
+                      fill=stage),alpha=0.1,linetype=0)+
+      geom_line(size=1)+
+      guides(alpha=FALSE)+
+      scale_color_brewer(palette="Set1")+ #(palette="Spectral")+
+      scale_fill_brewer(palette="Set1")+ #(palette="Spectral")+ # palette="Set1")+
+      # theme_bw()+
+      # theme(legend.justification = c(0.02, 0.96), 
+      #       legend.background = element_blank(),
+      #       legend.box.background = element_rect(colour = "black"),
+      #       legend.position = c(0.02, 0.96))+
+      scale_x_continuous(myXl)+
+      scale_y_continuous("Gain",
+                         limits=c(yMin,yMax))+
+      ggtitle(title)
+    return(gp)
+  }
   
   #*************************************
   #-------------------------------------  
@@ -447,22 +477,33 @@ server <- function(input, output, clientData, session) {
     rpReps <- renderPlot({
       plotMeanGrid(df = isolate(rv$results_range), myX = "fs_reps", myFilter = "fs_entries", myXl = "First Stage Reps", title = "Gain by First Stage Reps Range") 
     })
-    # print(paste0("rangePlotEntries", tail(Scenarios,1)))
+
     # Pass plots to output scenario tabs
-    output[[paste0("rangePlotEntries", tail(Scenarios,1))]] <-  output$entriesRangePlot <- rpEntries
-    output[[paste0("rangePlotReps", tail(Scenarios,1))]] <- output$repsRangePlot <-  rpReps
     output[[paste0("cyPlot", tail(Scenarios,1))]] <- renderPlot({
       plotScenario(result)
     })
+    output[[paste0("rangePlotEntries", tail(Scenarios,1))]] <-  output$entriesRangePlot <- rpEntries
+    output[[paste0("rangePlotReps", tail(Scenarios,1))]] <- output$repsRangePlot <-  rpReps
     
     # Store results from all runs in a reactive matrix
     rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = tail(Scenarios,1))
-
     # Store all results of Gain per Year
     rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = tail(Scenarios,1), scenarioDT =  yti$data)
-
     # Store all results of Gain per cost 
     rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = tail(Scenarios,1), scenarioDT =  yti$data)
+    
+    # Render grouped boxplots for all scenario results without any processing
+    output$overviewTab <- renderPlot({
+      plotScenarioGroup(rv$results_all)
+    })   # end of renderPlot for Overview tab
+    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
+    output$overviewTabxTime <- renderPlot({
+      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
+    })   # end of renderPlot for Overview tab
+    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
+    output$overviewTabxCost <- renderPlot({
+      plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
+    })   # end of renderPlot for Overview tab
     
     
     # Global settings for all DTs in senario tabs
@@ -471,16 +512,16 @@ server <- function(input, output, clientData, session) {
       paginate = F,  # no num of pages
       lengthChange = F, # no show entries
       scrollX = T # horizontal slider
-    ),
-    class = "cell-border, compact, hover", 
-    rownames = F, #TRUE,
-    # colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', toString(withMathJax('$$h^2$$'))), # inserted manually
-    filter = "none",
-    escape = FALSE,
-    autoHideNavigation = TRUE,
-    selection = "none",
-    editable = list(target = "cell", disable = list(columns = c(0, 6))),
-    server = TRUE) # server = F doesn't work with replaceData() cell editing
+      ),
+      class = "cell-border, compact, hover", 
+      rownames = F, #TRUE,
+      # colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', toString(withMathJax('$$h^2$$'))), # inserted manually
+      filter = "none",
+      escape = FALSE,
+      autoHideNavigation = TRUE,
+      selection = "none",
+      editable = list(target = "cell", disable = list(columns = c(0, 6))),
+      server = TRUE) # server = F doesn't work with replaceData() cell editing
     
     # Include content from R file locally as if it was pasted here to manage if-else
     source('if_run_btn.r', local=TRUE) # OLD METHOD with if-else loop handling but with duplicated code for up to 5 scenarios WORKS!
@@ -497,21 +538,7 @@ server <- function(input, output, clientData, session) {
     #                            "out" = result)
     #               )
     
-    
-    # Render grouped boxplots for all scenario results without any processing
-    output$overviewTab <- renderPlot({
-      plotScenarioGroup(rv$results_all)
-    })   # end of renderPlot for Overview tab
-    
-    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
-    output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
-    })   # end of renderPlot for Overview tab
-    
-    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
-    output$overviewTabxCost <- renderPlot({
-      plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
-    })   # end of renderPlot for Overview tab
+
     
   # NOT USED FOR NOW
   #  source('all_in_one.r', local = TRUE) # alternative recursive method that uses divID -- IN PROGRESS    
