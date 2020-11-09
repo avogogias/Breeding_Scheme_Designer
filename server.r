@@ -136,7 +136,11 @@ server <- function(input, output, clientData, session) {
                # update scenario button
                actionButton(paste0("update_btn", i), "Update"),
                # cost table for this scenario
-               DT::DTOutput(paste0('costDT', i))
+               DT::DTOutput(paste0('costDT', i)),
+               # range plot overwrites first stage entries
+               plotOutput(paste0('rangePlotEntries', i)),
+               # range plot overwrites first stage reps
+               plotOutput(paste0('rangePlotReps', i))
       )
     }) 
     do.call(tabsetPanel, myTabs)
@@ -262,9 +266,9 @@ server <- function(input, output, clientData, session) {
   }
   
   # Plot of mean value with margins for standard deviation (copied from alphasimrshiny)
-  plotMeanGrid = function(df = rv$results_range, myX = "fs_entries", myFilter = "fs_reps", myXl = "First Stage Entries", title = "Gain by First Stage Entries Range") { 
+  plotMeanGrid = function(df = isolate(rv$results_range), myX = "fs_entries", myFilter = "fs_reps", myXl = "First Stage Entries", title = "Gain by First Stage Entries Range") { 
     df <- transform(df, stage = as.character(stage)) # use categorical colour instead of ordered
-    df <- filter(df, as.numeric(unlist(df[myFilter])) %in% df[myFilter][1,]) # filter rows based on the first occurrence of fs_reps, which is the min
+    df <- filter(df, as.numeric(unlist(df[myFilter])) %in% df[myFilter][1,]) # filter rows not on the first occurrence (min) of myFilter
     df <- filter(df, as.numeric(unlist(df["scenario"])) %in% df["scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
     
     myX <- as.numeric(unlist(df[myX]))
@@ -435,21 +439,21 @@ server <- function(input, output, clientData, session) {
     rv$results_range = rbind(rv$results_range, runScenarioRange())
     #print(rv$results_range)
     
-    # range plot appears in tab Range and includes all scenarios
-    output$entriesRangePlot <- renderPlot({
-      plotMeanGrid(df = rv$results_range)
-      #TV plotScenario(resultLite) #PREV plotScenario(result)
-    })   # end of renderPlot  
-
-    output$repsRangePlot <- renderPlot({
-      plotMeanGrid(df = rv$results_range, myX = "fs_reps", myFilter = "fs_entries", myXl = "First Stage Reps", title = "Gain by First Stage Reps Range") 
-    })
-      
-    # New Plot of ran result appearing in new tab
     # First save new plot in a variable before passing it to output
-    nplot <- renderPlot({
+    rpEntries <- renderPlot({
+      plotMeanGrid(df = isolate(rv$results_range))
+    })
+    # First save new plot in a variable before passing it to output
+    rpReps <- renderPlot({
+      plotMeanGrid(df = isolate(rv$results_range), myX = "fs_reps", myFilter = "fs_entries", myXl = "First Stage Reps", title = "Gain by First Stage Reps Range") 
+    })
+    # print(paste0("rangePlotEntries", tail(Scenarios,1)))
+    # Pass plots to output scenario tabs
+    output[[paste0("rangePlotEntries", tail(Scenarios,1))]] <-  output$entriesRangePlot <- rpEntries
+    output[[paste0("rangePlotReps", tail(Scenarios,1))]] <- output$repsRangePlot <-  rpReps
+    output[[paste0("cyPlot", tail(Scenarios,1))]] <- renderPlot({
       plotScenario(result)
-    })   # end of renderPlot
+    })
     
     # Store results from all runs in a reactive matrix
     rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = tail(Scenarios,1))
@@ -494,10 +498,6 @@ server <- function(input, output, clientData, session) {
     #               )
     
     
-    ## Try to load input data using a for loop instead of if-else
-    # for (i in 1:tail(Scenarios,1))
-    # TODO
-    
     # Render grouped boxplots for all scenario results without any processing
     output$overviewTab <- renderPlot({
       plotScenarioGroup(rv$results_all)
@@ -513,8 +513,8 @@ server <- function(input, output, clientData, session) {
       plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
     })   # end of renderPlot for Overview tab
     
-    
-    source('all_in_one.r', local = TRUE) # alternative recursive method that uses divID -- IN PROGRESS    
+  # NOT USED FOR NOW
+  #  source('all_in_one.r', local = TRUE) # alternative recursive method that uses divID -- IN PROGRESS    
     
   }) # end of run button
   
