@@ -289,13 +289,13 @@ system.time({
   h2 = c(0.5,0.5,0.5) # this is a calculated value initialised here
   yt = cbind(stage,entries,years,locs,reps,error,h2)  
 
-  df = runScenarioRange(scenarioDT = yt, min_entries = 100, max_entries = 1000, min_reps = 1, max_reps = 10, grain = 3, varG = 1, varGxY = 1, varGxL = 1, varieties = 1)
+  df = runScenarioRange(scenarioDT = yt, min_entries = 100, max_entries = 1000, min_reps = 1, max_reps = 10, grain = 5, varG = 1, varGxY = 1, varGxL = 1, varieties = 1)
   re = as.matrix(df)
   
   df <- transform(df, stage = as.character(stage))
  })
 
-ggplot(data, aes(x=entries, y=reps, size = mean, color = stage))+
+ggplot(df, aes(x=entries, y=reps, size = mean, color = stage))+
   geom_point(alpha=0.7)
 
 */

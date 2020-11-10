@@ -329,6 +329,12 @@ server <- function(input, output, clientData, session) {
     return(gp)
   }
   
+  plotMeanGridBubble <- function(df = isolate(rv$results_range)) {
+    df <- transform(df, stage = as.character(stage))
+    ggplot(df, aes(x=entries, y=reps, size = mean, color = stage))+
+      geom_point(alpha=0.7)
+  }
+  
   #*************************************
   #-------------------------------------  
   # ************* RENDERERS ************
@@ -482,8 +488,12 @@ server <- function(input, output, clientData, session) {
     output[[paste0("cyPlot", tail(Scenarios,1))]] <- renderPlot({
       plotScenario(result)
     })
-    output[[paste0("rangePlotEntries", tail(Scenarios,1))]] <-  output$entriesRangePlot <- rpEntries
-    output[[paste0("rangePlotReps", tail(Scenarios,1))]] <- output$repsRangePlot <-  rpReps
+    output[[paste0("rangePlotEntries", tail(Scenarios,1))]] <-  rpEntries
+    output[[paste0("rangePlotReps", tail(Scenarios,1))]] <- rpReps
+    
+    output$rangePlotEntriesReps <- renderPlot({
+      plotMeanGridBubble()
+    }) 
     
     # Store results from all runs in a reactive matrix
     rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = tail(Scenarios,1))
