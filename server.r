@@ -137,10 +137,14 @@ server <- function(input, output, clientData, session) {
                actionButton(paste0("update_btn", i), "Update"),
                # cost table for this scenario
                DT::DTOutput(paste0('costDT', i)),
+               # Start section with plots of ranges
+               tags$h3("Plots for ranges of entries/reps at first stage"),
                # range plot overwrites first stage entries
                plotOutput(paste0('rangePlotEntries', i)),
                # range plot overwrites first stage reps
-               plotOutput(paste0('rangePlotReps', i))
+               plotOutput(paste0('rangePlotReps', i)),
+               # bubble range plot for both entries and reps ranges in first stage
+               plotOutput(paste0('rangePlotEntriesReps', i))
       )
     }) 
     do.call(tabsetPanel, myTabs)
@@ -331,8 +335,15 @@ server <- function(input, output, clientData, session) {
   
   plotMeanGridBubble <- function(df = isolate(rv$results_range)) {
     df <- transform(df, stage = as.character(stage))
-    ggplot(df, aes(x=entries, y=reps, size = mean, color = stage))+
-      geom_point(alpha=0.7)
+    df <- filter(df, as.numeric(unlist(df["scenario"])) %in% df["scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
+    
+    gp = ggplot(df, aes(x=entries, y=reps, size = mean, color = stage))+
+     #geom_errorbar(aes(x=entries, ymin = reps+mean-sd, ymax = reps+mean+sd, size=0.5, width = 0.2, alpha = 0.7)) + 
+      geom_point(alpha=0.7)+
+      ggtitle("Gain for both Entries and Reps Ranges")
+    
+    return(gp)
+    # TODO add error margins in each bubble for SD
   }
   
   #*************************************
@@ -483,6 +494,10 @@ server <- function(input, output, clientData, session) {
     rpReps <- renderPlot({
       plotMeanGrid(df = isolate(rv$results_range), myX = "fs_reps", myFilter = "fs_entries", myXl = "First Stage Reps", title = "Gain by First Stage Reps Range") 
     })
+    # Save bubble plot in variable
+    rpEntriesReps <- renderPlot({
+      plotMeanGridBubble()
+    }) 
 
     # Pass plots to output scenario tabs
     output[[paste0("cyPlot", tail(Scenarios,1))]] <- renderPlot({
@@ -490,10 +505,7 @@ server <- function(input, output, clientData, session) {
     })
     output[[paste0("rangePlotEntries", tail(Scenarios,1))]] <-  rpEntries
     output[[paste0("rangePlotReps", tail(Scenarios,1))]] <- rpReps
-    
-    output$rangePlotEntriesReps <- renderPlot({
-      plotMeanGridBubble()
-    }) 
+    output[[paste0("rangePlotEntriesReps", tail(Scenarios,1))]] <- rpEntriesReps
     
     # Store results from all runs in a reactive matrix
     rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = tail(Scenarios,1))
