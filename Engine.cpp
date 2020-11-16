@@ -218,53 +218,66 @@ arma::fmat runScenarioLite(float varG, // Genetic variance
 # 
 #   library(ggplot2)
 #   library(dplyr)
-#   
-#   runScenarioRange <- function(min_entries = input$entries_range[1], max_entries = input$entries_range[2], 
+# 
+#   runScenarioRange <- function(min_entries = input$entries_range[1], max_entries = input$entries_range[2],
+#                                min_years = input$years_range[1], max_years = input$years_range[2],
+#                                min_locs = input$locs_range[1], max_locs = input$locs_range[2],
 #                                min_reps = input$reps_range[1], max_reps = input$reps_range[2],
 #                                grain = input$grain,
-#                                scenarioDT = yti$data, 
-#                                varG = input$varG, 
-#                                varGxL = input$varGxL, 
-#                                varGxY = input$varGxY, 
-#                                varieties = input$varieties) 
-#     # results_range = rv$results_range) 
+#                                scenarioDT = yti$data,
+#                                varG = input$varG,
+#                                varGxL = input$varGxL,
+#                                varGxY = input$varGxY,
+#                                varieties = input$varieties)
+#     # results_range = rv$results_range)
 #   {
 #     print(scenarioDT)
 #     stage = scenarioDT[,1]
 #     entries = scenarioDT[,2]
-#     years = scenarioDT[,3] 
+#     years = scenarioDT[,3]
 #     locs = scenarioDT[,4]
 #     reps = scenarioDT[,5]
 #     error = scenarioDT[,6]
 #     it = 0 # counter of iterations between range min max
 #     range_entries = rangeGrain(min_entries, max_entries, grain)
+#     range_years = rangeGrain(min_years, max_years, grain)
+#     range_locs = rangeGrain(min_locs, max_locs, grain)
 #     range_reps = rangeGrain(min_reps, max_reps, grain)
 #     #print(range_reps)
-#     
+# 
 #     rr = NULL
-#     for (i in range_entries) 
+#     for (i in range_entries)
 #     {
 #       for (j in range_reps)
 #       {
-#         it = it + 1
-#         entries[1] = i # replace first stage entries with range_entries
-#         reps[1] = j  # replace first stage reps with range_reps
-#         resultLite = runScenarioLite(varG, 
-#                                      varGxL, 
-#                                      varGxY, 
-#                                      entries,  
-#                                      years, 
-#                                      locs,
-#                                      reps,
-#                                      error,
-#                                      varieties)
-#         #print(resultLite) # WORKS
-#         resultLite = as.data.frame(resultLite)             # convert to a df
-#         colnames(resultLite) <- c("mean","sd")
-#         # Create df with I/O data and bind this to rr from previous iterations
-#         rr<-rbind(rr, cbind(scenario = tail(Scenarios,1), fs_entries = i, fs_reps = j, it, stage, entries, years, locs, reps, error, resultLite))
+#         for (k in range_years)
+#         {
+#           for (l in range_locs)
+#           {
+#             it = it + 1
+#             entries[1] = i # replace first stage entries with range_entries
+#             reps[1] = j  # replace first stage reps with range_reps
+#             years[1] = k
+#             locs[1] = l
+#             resultLite = runScenarioLite(varG,
+#                                          varGxL,
+#                                          varGxY,
+#                                          entries,
+#                                          years,
+#                                          locs,
+#                                          reps,
+#                                          error,
+#                                          varieties)
+#             #print(resultLite) # WORKS
+#             resultLite = as.data.frame(resultLite)             # convert to a df
+#             colnames(resultLite) <- c("mean","sd")
+#             # Create df with I/O data and bind this to rr from previous iterations
+#             rr<-rbind(rr, cbind(scenario = tail(Scenarios,1), fs_entries = i, fs_reps = j, fs_years = k, fs_locs = l, it, stage, entries, years, locs, reps, error, resultLite))
+#             
+#           }
+#         }
 #       }
-#     }   
+#     }
 #     return(rr)
 #   }
 #   # function takes 2 vectors and returns a matrix with a grid between paired min max elements
@@ -273,13 +286,13 @@ arma::fmat runScenarioLite(float varG, // Genetic variance
 #     for (i in 1:length(min)) {
 #       if (min[i] < max[i] && grain>1) #  && min[i]>entries[i+1]
 #       {
-#         qrt = c(qrt, round(seq(min[i], max[i], by = (max[i]-min[i])/(grain-1)))) 
+#         qrt = c(qrt, round(seq(min[i], max[i], by = (max[i]-min[i])/(grain-1))))
 #       }
 #       else qrt = c(qrt, max(min[i], max[1]))
 #     }
 #     return(qrt)
-#   }  
-#   
+#   }
+# 
 #   stage = c(1,2,3)
 #   entries = c(1000,100,10)
 #   years = c(1,1,2)
@@ -287,16 +300,25 @@ arma::fmat runScenarioLite(float varG, // Genetic variance
 #   reps = c(1,2,3)
 #   error = c(1,1,1)
 #   h2 = c(0.5,0.5,0.5) # this is a calculated value initialised here
-#   yt = cbind(stage,entries,years,locs,reps,error,h2)  
+#   yt = cbind(stage,entries,years,locs,reps,error,h2)
 # 
-#   df = runScenarioRange(scenarioDT = yt, min_entries = 100, max_entries = 1000, min_reps = 1, max_reps = 10, grain = 5, varG = 1, varGxY = 1, varGxL = 1, varieties = 1)
+#   df = runScenarioRange(scenarioDT = yt, min_entries = 100, max_entries = 1000,  min_years = 1, max_years = 5, min_locs = 1, max_locs = 5, min_reps = 1, max_reps = 10, grain = 5, varG = 1, varGxY = 1, varGxL = 1, varieties = 1)
 #   re = as.matrix(df)
-#   
+# 
 #   df <- transform(df, stage = as.character(stage))
+#   df <- filter(df, as.numeric(unlist(df["fs_years"])) %in% df["fs_years"][1,]) # filter rows not on the first occurrence (min) of myFilter
+#   df <- filter(df, as.numeric(unlist(df["fs_locs"])) %in% df["fs_locs"][1,]) # filter rows not on the first occurrence (min) of myFilter
+#   df <- filter(df, as.numeric(unlist(df["scenario"])) %in% df["scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
+#   
 #  })
 # 
-# ggplot(df, aes(x=entries, y=reps, size = mean, color = stage))+
-#   geom_point(alpha=0.7)
+# ggplot(df, aes(x=entries, y=reps, color = stage))+
+#   #geom_errorbar(aes(x=entries, ymin = reps+mean-sd, ymax = reps+mean+sd, size=0.5, width = 0.2, alpha = 0.7)) +
+#   geom_point(aes(size = mean, alpha=1))+
+#   geom_point(aes(size = mean+sd, stroke = 1, alpha = 1/20))+ # SD margins shown as homocentric bubbles with lower opacity
+#   scale_x_continuous("First Stage Entries")+
+#   scale_y_continuous("First Stage Reps")+
+#   ggtitle("Gain for both Entries and Reps Ranges")
 
 */
 

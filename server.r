@@ -185,6 +185,8 @@ server <- function(input, output, clientData, session) {
 
   # Ignore entries in first stage and instead run for a range of entries. Store the results in rv$results_range
   runScenarioRange <- function(min_entries = input$entries_range[1], max_entries = input$entries_range[2], 
+                               min_years = input$years_range[1], max_years = input$years_range[2],
+                               min_locs = input$locs_range[1], max_locs = input$locs_range[2],
                                min_reps = input$reps_range[1], max_reps = input$reps_range[2],
                                grain = input$grain,
                                scenarioDT = yti$data, 
@@ -203,33 +205,45 @@ server <- function(input, output, clientData, session) {
       error = scenarioDT[,6]
       it = 0 # counter of iterations between range min max
       range_entries = rangeGrain(min_entries, max_entries, grain)
+      range_years = rangeGrain(min_years, max_years, grain)
+      range_locs = rangeGrain(min_locs, max_locs, grain)
       range_reps = rangeGrain(min_reps, max_reps, grain)
       #print(range_reps)
 
       rr = NULL
-      for (i in range_entries) 
+      for (i in range_entries)
+      {
+        for (k in range_years)
         {
-          for (j in range_reps)
+          for (l in range_locs)
           {
-            it = it + 1
-            entries[1] = i # replace first stage entries with range_entries
-            reps[1] = j  # replace first stage reps with range_reps
-            resultLite = runScenarioLite(varG, 
-                                         varGxL, 
-                                         varGxY, 
-                                         entries,  
-                                         years, 
-                                         locs,
-                                         reps,
-                                         error,
-                                         varieties)
-            #print(resultLite) # WORKS
-            resultLite = as.data.frame(resultLite)             # convert to a df
-            colnames(resultLite) <- c("mean","sd")
-            # Create df with I/O data and bind this to rr from previous iterations
-            rr<-rbind(rr, cbind(scenario = tail(Scenarios,1), fs_entries = i, fs_reps = j, it, stage, entries, years, locs, reps, error, resultLite))
+            for (j in range_reps)
+            {
+              it = it + 1
+              entries[1] = i # replace first stage entries with range_entries
+              years[1] = k
+              locs[1] = l
+              reps[1] = j  # replace first stage reps with range_reps
+
+              resultLite = runScenarioLite(varG,
+                                           varGxL,
+                                           varGxY,
+                                           entries,
+                                           years,
+                                           locs,
+                                           reps,
+                                           error,
+                                           varieties)
+              #print(resultLite) # WORKS
+              resultLite = as.data.frame(resultLite)             # convert to a df
+              colnames(resultLite) <- c("mean","sd")
+              # Create df with I/O data and bind this to rr from previous iterations
+              rr<-rbind(rr, cbind(scenario = tail(Scenarios,1), fs_entries = i, fs_years = k, fs_locs = l, fs_reps = j, it, stage, entries, years, locs, reps, error, resultLite))
+              
+            }
           }
-        }   
+        }
+      }
       return(rr)
   }
   # function takes 2 vectors and returns a matrix with a grid between paired min max elements
@@ -270,9 +284,13 @@ server <- function(input, output, clientData, session) {
   }
   
   # Plot of mean value with margins for standard deviation (copied from alphasimrshiny)
-  plotMeanGrid = function(df = isolate(rv$results_range), myX = "fs_entries", myFilter = "fs_reps", myXl = "First Stage Entries", title = "Gain by First Stage Entries Range") { 
+  plotMeanGrid = function(df = isolate(rv$results_range), myX = "fs_entries", myFilter = c("fs_years", "fs_locs", "fs_reps"), myXl = "First Stage Entries", title = "Gain by First Stage Entries Range") { 
     df <- transform(df, stage = as.character(stage)) # use categorical colour instead of ordered
-    df <- filter(df, as.numeric(unlist(df[myFilter])) %in% df[myFilter][1,]) # filter rows not on the first occurrence (min) of myFilter
+    # df <- filter(df, as.numeric(unlist(df[myFilter])) %in% df[myFilter][1,]) # filter rows not on the first occurrence (min) of myFilter
+    for (i in myFilter)
+    {
+      df <- filter(df, as.numeric(unlist(df[i])) %in% df[i][1,]) # filter rows not on the first occurrence (min) of myFilter
+    }
     df <- filter(df, as.numeric(unlist(df["scenario"])) %in% df["scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
     
     myX <- as.numeric(unlist(df[myX]))
@@ -301,49 +319,26 @@ server <- function(input, output, clientData, session) {
     return(gp)
   }
 
-  # 3D Surface Plot shows the effect of 2 variable ranges combined (entries and reps)
-  plotMeanGrid3D = function(df = isolate(rv$results_range), myX = "fs_entries", myFilter = "fs_reps", myXl = "First Stage Entries", title = "Gain by First Stage Entries Range") { 
-    df <- transform(df, stage = as.character(stage)) # use categorical colour instead of ordered
-    df <- filter(df, as.numeric(unlist(df[myFilter])) %in% df[myFilter][1,]) # filter rows not on the first occurrence (min) of myFilter
-    df <- filter(df, as.numeric(unlist(df["scenario"])) %in% df["scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
-    
-    myX <- as.numeric(unlist(df[myX]))
-    print(df)
-    print(sapply(df, mode))
-    print(myX)
-    yMin = min(df$mean)-1.01*max(df$sd)
-    yMax = max(df$mean)+1.01*max(df$sd)
-    
-    gp = ggplot(df,aes(x=myX,y=mean,group=stage,color=stage))+
-      geom_ribbon(aes(x=myX,ymin=mean-sd,ymax=mean+sd,
-                      fill=stage),alpha=0.1,linetype=0)+
-      geom_line(size=1)+
-      guides(alpha=FALSE)+
-      scale_color_brewer(palette="Set1")+ #(palette="Spectral")+
-      scale_fill_brewer(palette="Set1")+ #(palette="Spectral")+ # palette="Set1")+
-      # theme_bw()+
-      # theme(legend.justification = c(0.02, 0.96), 
-      #       legend.background = element_blank(),
-      #       legend.box.background = element_rect(colour = "black"),
-      #       legend.position = c(0.02, 0.96))+
-      scale_x_continuous(myXl)+
-      scale_y_continuous("Gain",
-                         limits=c(yMin,yMax))+
-      ggtitle(title)
-    return(gp)
-  }
+  # TODO: a 3D Surface Plot shows the effect of 2 variable ranges combined (entries and reps)
+  # ----
   
+  # Bubble plot instead of a 3D plot shows peaks of gain encoded with size in a grid of x = entries and y = reps
   plotMeanGridBubble <- function(df = isolate(rv$results_range)) {
     df <- transform(df, stage = as.character(stage))
+    df <- filter(df, as.numeric(unlist(df["fs_years"])) %in% df["fs_years"][1,]) # filter rows not on the first occurrence (min) of fs_years
+    df <- filter(df, as.numeric(unlist(df["fs_locs"])) %in% df["fs_locs"][1,])
     df <- filter(df, as.numeric(unlist(df["scenario"])) %in% df["scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
     
-    gp = ggplot(df, aes(x=entries, y=reps, size = mean, color = stage))+
+    gp = ggplot(df, aes(x=entries, y=reps, color = stage))+
      #geom_errorbar(aes(x=entries, ymin = reps+mean-sd, ymax = reps+mean+sd, size=0.5, width = 0.2, alpha = 0.7)) + 
-      geom_point(alpha=0.7)+
+      geom_point(aes(size = mean, alpha=1))+
+      geom_point(aes(size = mean+sd, stroke = 1, alpha = 1/20))+ # SD margins shown as homocentric bubbles with lower opacity
+      scale_x_continuous("First Stage Entries")+
+      scale_y_continuous("First Stage Reps")+
+      
       ggtitle("Gain for both Entries and Reps Ranges")
     
     return(gp)
-    # TODO add error margins in each bubble for SD
   }
   
   #*************************************
@@ -492,7 +487,7 @@ server <- function(input, output, clientData, session) {
     })
     # First save new plot in a variable before passing it to output
     rpReps <- renderPlot({
-      plotMeanGrid(df = isolate(rv$results_range), myX = "fs_reps", myFilter = "fs_entries", myXl = "First Stage Reps", title = "Gain by First Stage Reps Range") 
+      plotMeanGrid(df = isolate(rv$results_range), myX = "fs_reps", myFilter = c("fs_years", "fs_locs", "fs_entries"), myXl = "First Stage Reps", title = "Gain by First Stage Reps Range") 
     })
     # Save bubble plot in variable
     rpEntriesReps <- renderPlot({

@@ -47,24 +47,14 @@ ui <- fluidPage(title = "Cycle Scenarios",
                     bsTooltip("varGxY", "Genotype-by-year interaction variance.",
                               "right", "hover", NULL),
                     
-                    # numericInput("negen", "Crossing/Selfing Years",
-                    #             min = 0, max = 100, value = 4, step = 1, width = '80px'), 
-                    sliderInput("negen", "Crossing/Selfing Years",
-                                min = 0, max = 10, value = 4, width = '240px'), 
+                    numericInput("negen", "Crossing/Selfing Years",
+                                min = 0, max = 100, value = 4, step = 1, width = '80px'),
+                    # sliderInput("negen", "Crossing/Selfing Years",
+                    #             min = 0, max = 10, value = 4, width = '240px'), 
                     # Add tooltip with instructions/info
                     bsTooltip("negen", "GNumber of early generation years. This phase of the breeding program is modeled without selection.",
                               "right", "hover", NULL),
-                    
-                    # Input: Specification of range within an interval ----
-                    sliderInput("entries_range", "First Stage Entries:",
-                                min = 100, max = 5000,
-                                value = c(100,1000)),
-                    # Input: Specification of range within an interval ----
-                    sliderInput("reps_range", "First Stage Reps:",
-                                min = 1, max = 30,
-                                value = c(1,10)),
-                    
-                    numericInput("grain", "Samples in Range", min = 2, max = 1000, value = 5, step = 1, width = '20%'),
+                  
                     
                     tags$h4("Yield Trials"),
                     div( # CUSTOMISE div CSS style for DT
@@ -80,13 +70,36 @@ ui <- fluidPage(title = "Cycle Scenarios",
                     actionButton("add_btn", "Add"), # Add stage
                     actionButton("delete_btn", "Delete"), # Delete last stage
                     
-                    
                     numericInput("varieties", "Varieties",
                                  min = 1, max = 10, value = 1, step = 1, width = '80px'), 
                     # Add tooltip with instructions/info
                     bsTooltip("varieties", "The final number of selected entries. Must be smaller than or equal to the number of entries in the last stage.",
                               "right", "hover", NULL),
                     
+                    tags$h4("Ranges:"),
+                    
+                    # Input: Specification of range within an interval ----
+                    sliderInput("entries_range", "First Stage Entries:",
+                                min = 100, max = 5000,
+                                value = c(100,1000)),
+                    # Input: Specification of range within an interval ----
+                    sliderInput("years_range", "First Stage Years:",
+                                min = 1, max = 10,
+                                value = c(1,5)),
+                    # Input: Specification of range within an interval ----
+                    sliderInput("locs_range", "First Stage Locs:",
+                                min = 1, max = 10,
+                                value = c(1,5)),
+                    # Input: Specification of range within an interval ----
+                    sliderInput("reps_range", "First Stage Reps:",
+                                min = 1, max = 30,
+                                value = c(1,10)),
+                    
+                    
+                    numericInput("grain", "Samples in Range", min = 2, max = 1000, value = 5, step = 1, width = '20%'),
+                    
+
+                    tags$h4("Costs:"),
                     # Make cost input divs appear in one line
                     bootstrapPage(
                       # Set Plot Cost 
