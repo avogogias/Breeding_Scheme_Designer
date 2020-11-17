@@ -141,10 +141,24 @@ server <- function(input, output, clientData, session) {
                tags$h3("Plots for ranges of entries/reps at first stage"),
                # range plot overwrites first stage entries
                plotOutput(paste0('rangePlotEntries', i)),
+               # range plot overwrites first stage years
+               plotOutput(paste0('rangePlotYears', i)),
+               # range plot overwrites first stage locs
+               plotOutput(paste0('rangePlotLocs', i)),
                # range plot overwrites first stage reps
                plotOutput(paste0('rangePlotReps', i)),
-               # bubble range plot for both entries and reps ranges in first stage
-               plotOutput(paste0('rangePlotEntriesReps', i))
+               # bubble range plot for x6 pairs of entries/years/locs/reps ranges in first stage
+               plotOutput(paste0('rangePlotEntriesReps', i)),
+               # bubble range plot 
+               plotOutput(paste0('rangePlotEntriesYears', i)),
+               # bubble range plot 
+               plotOutput(paste0('rangePlotEntriesLocs', i)),
+               # bubble range plot 
+               plotOutput(paste0('rangePlotYearsLocs', i)),
+               # bubble range plot 
+               plotOutput(paste0('rangePlotYearsReps', i)),
+               # bubble range plot 
+               plotOutput(paste0('rangePlotLocsReps', i))
       )
     }) 
     do.call(tabsetPanel, myTabs)
@@ -323,20 +337,24 @@ server <- function(input, output, clientData, session) {
   # ----
   
   # Bubble plot instead of a 3D plot shows peaks of gain encoded with size in a grid of x = entries and y = reps
-  plotMeanGridBubble <- function(df = isolate(rv$results_range)) {
+  plotMeanGridBubble <- function(df = isolate(rv$results_range), myFilter = c("fs_years", "fs_locs"), myX = "entries", myY = "reps", myXl = "First Stage Entries", myYl = "First Stage Reps", title = "Gain for both Entries and Reps Ranges") {
     df <- transform(df, stage = as.character(stage))
-    df <- filter(df, as.numeric(unlist(df["fs_years"])) %in% df["fs_years"][1,]) # filter rows not on the first occurrence (min) of fs_years
-    df <- filter(df, as.numeric(unlist(df["fs_locs"])) %in% df["fs_locs"][1,])
+    # df <- filter(df, as.numeric(unlist(df["fs_years"])) %in% df["fs_years"][1,]) # filter rows not on the first occurrence (min) of fs_years
+    # df <- filter(df, as.numeric(unlist(df["fs_locs"])) %in% df["fs_locs"][1,])
+    for (i in myFilter)
+    {
+      df <- filter(df, as.numeric(unlist(df[i])) %in% df[i][1,]) # filter rows not on the first occurrence (min) of myFilter
+    }
     df <- filter(df, as.numeric(unlist(df["scenario"])) %in% df["scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
     
     gp = ggplot(df, aes(x=entries, y=reps, color = stage))+
-     #geom_errorbar(aes(x=entries, ymin = reps+mean-sd, ymax = reps+mean+sd, size=0.5, width = 0.2, alpha = 0.7)) + 
+      # gp = ggplot(df, aes(x=entries, y=reps, color = stage))+
       geom_point(aes(size = mean, alpha=1))+
       geom_point(aes(size = mean+sd, stroke = 1, alpha = 1/20))+ # SD margins shown as homocentric bubbles with lower opacity
-      scale_x_continuous("First Stage Entries")+
-      scale_y_continuous("First Stage Reps")+
+      scale_x_continuous(myXl)+
+      scale_y_continuous(myYl)+
       
-      ggtitle("Gain for both Entries and Reps Ranges")
+      ggtitle(title)
     
     return(gp)
   }
@@ -481,16 +499,44 @@ server <- function(input, output, clientData, session) {
     rv$results_range = rbind(rv$results_range, runScenarioRange())
     #print(rv$results_range)
     
-    # First save new plot in a variable before passing it to output
+    # First save new plot in a variable before passing it to output x4
     rpEntries <- renderPlot({
       plotMeanGrid(df = isolate(rv$results_range))
     })
-    # First save new plot in a variable before passing it to output
+    # 
+    rpYears <- renderPlot({
+      plotMeanGrid(df = isolate(rv$results_range), myX = "fs_years", myFilter = c("fs_reps", "fs_locs", "fs_entries"), myXl = "First Stage Years", title = "Gain by First Stage Years Range") 
+    })
+    #
+    rpLocs <- renderPlot({
+      plotMeanGrid(df = isolate(rv$results_range), myX = "fs_locs", myFilter = c("fs_years", "fs_reps", "fs_entries"), myXl = "First Stage Locs", title = "Gain by First Stage Locs Range") 
+    })
+    # 
     rpReps <- renderPlot({
       plotMeanGrid(df = isolate(rv$results_range), myX = "fs_reps", myFilter = c("fs_years", "fs_locs", "fs_entries"), myXl = "First Stage Reps", title = "Gain by First Stage Reps Range") 
     })
-    # Save bubble plot in variable
+    # Save bubble plot in variable x6
+    rpEntriesYears <- renderPlot({
+      plotMeanGridBubble()
+    }) 
+    #
+    rpEntriesLocs <- renderPlot({
+      plotMeanGridBubble()
+    }) 
+    #
     rpEntriesReps <- renderPlot({
+      plotMeanGridBubble()
+    }) 
+    #
+    rpYearsLocs <- renderPlot({
+      plotMeanGridBubble()
+    }) 
+    #
+    rpYearsReps <- renderPlot({
+      plotMeanGridBubble()
+    }) 
+    #
+    rpLocsReps <- renderPlot({
       plotMeanGridBubble()
     }) 
 
@@ -499,8 +545,15 @@ server <- function(input, output, clientData, session) {
       plotScenario(result)
     })
     output[[paste0("rangePlotEntries", tail(Scenarios,1))]] <-  rpEntries
+    output[[paste0("rangePlotYears", tail(Scenarios,1))]] <-  rpYears
+    output[[paste0("rangePlotLocs", tail(Scenarios,1))]] <-  rpLocs
     output[[paste0("rangePlotReps", tail(Scenarios,1))]] <- rpReps
+    output[[paste0("rangePlotEntriesYears", tail(Scenarios,1))]] <- rpEntriesYears
+    output[[paste0("rangePlotEntriesLocs", tail(Scenarios,1))]] <- rpEntriesLocs
     output[[paste0("rangePlotEntriesReps", tail(Scenarios,1))]] <- rpEntriesReps
+    output[[paste0("rangePlotYearsLocs", tail(Scenarios,1))]] <- rpYearsLocs
+    output[[paste0("rangePlotYearsReps", tail(Scenarios,1))]] <- rpYearsReps
+    output[[paste0("rangePlotLocsReps", tail(Scenarios,1))]] <- rpLocsReps
     
     # Store results from all runs in a reactive matrix
     rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = tail(Scenarios,1))
