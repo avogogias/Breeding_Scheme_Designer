@@ -337,7 +337,8 @@ server <- function(input, output, clientData, session) {
   # ----
   
   # Bubble plot instead of a 3D plot shows peaks of gain encoded with size in a grid of x = entries and y = reps
-  plotMeanGridBubble <- function(df = isolate(rv$results_range), myFilter = c("fs_years", "fs_locs"), myX = "entries", myY = "reps", myXl = "First Stage Entries", myYl = "First Stage Reps", title = "Gain for both Entries and Reps Ranges") {
+  # see ggplot bug in https://stackoverflow.com/questions/34097133/passing-data-and-column-names-to-ggplot-via-another-function
+  plotMeanGridBubble <- function(df = isolate(rv$results_range), myFilter = c("fs_years", "fs_locs"), myX = entries, myY = reps, myXl = "First Stage Entries", myYl = "First Stage Reps", title = "Gain for both Entries and Reps Ranges") {
     df <- transform(df, stage = as.character(stage))
     # df <- filter(df, as.numeric(unlist(df["fs_years"])) %in% df["fs_years"][1,]) # filter rows not on the first occurrence (min) of fs_years
     # df <- filter(df, as.numeric(unlist(df["fs_locs"])) %in% df["fs_locs"][1,])
@@ -347,7 +348,8 @@ server <- function(input, output, clientData, session) {
     }
     df <- filter(df, as.numeric(unlist(df["scenario"])) %in% df["scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
     
-    gp = ggplot(df, aes(x=entries, y=reps, color = stage))+
+    arg <- match.call()
+    gp = ggplot(df, aes(x = eval(arg$myX), y = eval(arg$myY), color = stage))+ #,environment=environment())+
       # gp = ggplot(df, aes(x=entries, y=reps, color = stage))+
       geom_point(aes(size = mean, alpha=1))+
       geom_point(aes(size = mean+sd, stroke = 1, alpha = 1/20))+ # SD margins shown as homocentric bubbles with lower opacity
@@ -515,29 +517,31 @@ server <- function(input, output, clientData, session) {
     rpReps <- renderPlot({
       plotMeanGrid(df = isolate(rv$results_range), myX = "fs_reps", myFilter = c("fs_years", "fs_locs", "fs_entries"), myXl = "First Stage Reps", title = "Gain by First Stage Reps Range") 
     })
+    # *******************************
     # Save bubble plot in variable x6
+    # *******************************
     rpEntriesYears <- renderPlot({
-      plotMeanGridBubble()
+      plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_locs"), myX = entries, myY = years, myXl = "First Stage Entries", myYl = "First Stage Years", title = "Gain for ranges of Entries and Years")
     }) 
     #
     rpEntriesLocs <- renderPlot({
-      plotMeanGridBubble()
+      plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_years"), myX = entries, myY = locs, myXl = "First Stage Entries", myYl = "First Stage Locs", title = "Gain for ranges of Entries and Locs")
     }) 
     #
     rpEntriesReps <- renderPlot({
-      plotMeanGridBubble()
+      plotMeanGridBubble( myX = entries, myY = reps)
     }) 
     #
     rpYearsLocs <- renderPlot({
-      plotMeanGridBubble()
+      plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_entries"), myX = years, myY = locs, myXl = "First Stage Years", myYl = "First Stage Locs", title = "Gain for ranges of Locs and Years")
     }) 
     #
     rpYearsReps <- renderPlot({
-      plotMeanGridBubble()
+      plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_locs", "fs_entries"), myX = years, myY = reps, myXl = "First Stage Years", myYl = "First Stage Reps", title = "Gain for ranges of Reps and Years")
     }) 
     #
     rpLocsReps <- renderPlot({
-      plotMeanGridBubble()
+      plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_years", "fs_entries"), myX = locs, myY = reps, myXl = "First Stage Locs", myYl = "First Stage Reps", title = "Gain for ranges of Locs and Reps")
     }) 
 
     # Pass plots to output scenario tabs
