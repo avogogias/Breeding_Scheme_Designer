@@ -224,15 +224,20 @@ server <- function(input, output, clientData, session) {
       range_reps = rangeGrain(min_reps, max_reps, grain)
       #print(range_reps)
 
+      
+      withProgress(message = 'Calculating results', value = 0, {
       rr = NULL
       for (i in range_entries)
       {
+        # incProgress(1/length(range_entries), detail = paste("Doing part", i))
         for (k in range_years)
         {
           for (l in range_locs)
           {
             for (j in range_reps)
             {
+              incProgress(1/(length(range_entries)*length(range_years)*length(range_locs)*length(range_reps)), detail = paste("Iteration", it, "of", length(range_entries)*length(range_years)*length(range_locs)*length(range_reps)))
+              
               it = it + 1
               entries[1] = i # replace first stage entries with range_entries
               years[1] = k
@@ -258,6 +263,7 @@ server <- function(input, output, clientData, session) {
           }
         }
       }
+      })
       return(rr)
   }
   # function takes 2 vectors and returns a matrix with a grid between paired min max elements
