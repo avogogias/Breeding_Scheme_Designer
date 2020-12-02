@@ -213,11 +213,12 @@ arma::fmat runScenarioLite(float varG, // Genetic variance
 #   scale_fill_discrete(name="1st Stage Entries")+
 #   ggtitle("Range of entries") + 
 #   theme(plot.title = element_text(size = 14, face = "bold"))
-
+# 
 # system.time({
 # 
 #   library(ggplot2)
 #   library(dplyr)
+#   library(plotly)
 # 
 #   runScenarioRange <- function(min_entries = input$entries_range[1], max_entries = input$entries_range[2],
 #                                min_years = input$years_range[1], max_years = input$years_range[2],
@@ -273,7 +274,7 @@ arma::fmat runScenarioLite(float varG, // Genetic variance
 #             colnames(resultLite) <- c("mean","sd")
 #             # Create df with I/O data and bind this to rr from previous iterations
 #             rr<-rbind(rr, cbind(scenario = tail(Scenarios,1), fs_entries = i, fs_reps = j, fs_years = k, fs_locs = l, it, stage, entries, years, locs, reps, error, resultLite))
-#             
+# 
 #           }
 #         }
 #       }
@@ -309,16 +310,28 @@ arma::fmat runScenarioLite(float varG, // Genetic variance
 #   df <- filter(df, as.numeric(unlist(df["fs_years"])) %in% df["fs_years"][1,]) # filter rows not on the first occurrence (min) of myFilter
 #   df <- filter(df, as.numeric(unlist(df["fs_locs"])) %in% df["fs_locs"][1,]) # filter rows not on the first occurrence (min) of myFilter
 #   df <- filter(df, as.numeric(unlist(df["scenario"])) %in% df["scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
-#   
+#   df <- filter(df, as.numeric(unlist(df["stage"])) %in% df["stage"][1,]) # filter rows which do not belong to the first stage
+#   df <- df %>%
+#     mutate(text = paste0("x: ", entries, "\n", "y: ", reps, "\n", "Value: ",round(mean,2), "\n", "What else?"))
 #  })
 # 
-# ggplot(df, aes(x=entries, y=reps, color = stage))+
-#   #geom_errorbar(aes(x=entries, ymin = reps+mean-sd, ymax = reps+mean+sd, size=0.5, width = 0.2, alpha = 0.7)) +
-#   geom_point(aes(size = mean, alpha=1))+
-#   geom_point(aes(size = mean+sd, stroke = 1, alpha = 1/20))+ # SD margins shown as homocentric bubbles with lower opacity
+# # Bubble Plot
+# # ggplot(df, aes(x=entries, y=reps, color = stage))+
+# #   #geom_errorbar(aes(x=entries, ymin = reps+mean-sd, ymax = reps+mean+sd, size=0.5, width = 0.2, alpha = 0.7)) +
+# #   geom_point(aes(size = mean, alpha=1))+
+# #   geom_point(aes(size = mean+sd, stroke = 1, alpha = 1/20))+ # SD margins shown as homocentric bubbles with lower opacity
+# #   scale_x_continuous("First Stage Entries")+
+# #   scale_y_continuous("First Stage Reps")+
+# #   ggtitle("Gain for both Entries and Reps Ranges")
+# 
+# # Heatmap
+# fig <- ggplot(df, aes(x=entries, y=reps))+
+#   geom_tile(aes(fill = mean)) +
 #   scale_x_continuous("First Stage Entries")+
 #   scale_y_continuous("First Stage Reps")+
 #   ggtitle("Gain for both Entries and Reps Ranges")
+# 
+# ggplotly(fig, tooltip="text")
 
 */
 

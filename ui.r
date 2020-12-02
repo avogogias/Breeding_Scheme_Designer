@@ -1,13 +1,13 @@
 library(shinyBS)
 library(shinyjs)
 
-ui <- fluidPage(title = "Cycle Scenarios",
+ui <- fluidPage(title = "Breeding Scheme Designer",
                 
                 # theme = "bootstrap.css", # CSS theme file could be added here
                 withMathJax(), # display mathematical equations using LaTeX format
                 useShinyjs(), # hide() or toggle() using shinyjs package
                 
-                titlePanel("Cycle Scenarios"),            
+                titlePanel("Breeding Scheme Designer"),            
                 
                 sidebarLayout(
                   

@@ -5,6 +5,7 @@ library(ggplot2)
 library(shinyjs)
 library(data.table)
 library(dplyr)
+library(plotly)
 
 sourceCpp("Engine.cpp")
 
@@ -138,7 +139,7 @@ server <- function(input, output, clientData, session) {
                # cost table for this scenario
                DT::DTOutput(paste0('costDT', i)),
                # Start section with plots of ranges
-               tags$h3("Plots for ranges of entries/reps at first stage"),
+               tags$h3("Plots for ranges of parameters at first stage"),
                # range plot overwrites first stage entries
                plotOutput(paste0('rangePlotEntries', i)),
                # range plot overwrites first stage years
@@ -147,18 +148,19 @@ server <- function(input, output, clientData, session) {
                plotOutput(paste0('rangePlotLocs', i)),
                # range plot overwrites first stage reps
                plotOutput(paste0('rangePlotReps', i)),
-               # bubble range plot for x6 pairs of entries/years/locs/reps ranges in first stage
-               plotOutput(paste0('rangePlotEntriesReps', i)),
-               # bubble range plot 
-               plotOutput(paste0('rangePlotEntriesYears', i)),
-               # bubble range plot 
-               plotOutput(paste0('rangePlotEntriesLocs', i)),
-               # bubble range plot 
-               plotOutput(paste0('rangePlotYearsLocs', i)),
-               # bubble range plot 
-               plotOutput(paste0('rangePlotYearsReps', i)),
-               # bubble range plot 
-               plotOutput(paste0('rangePlotLocsReps', i))
+               # bubble / plotly-heatmap range plot for x6 pairs of entries/years/locs/reps ranges in first stage
+               # Replace plotlyOutput with plotOutput if used with bubble / ggplot2 heatmaps
+               plotlyOutput(paste0('rangePlotEntriesYears', i)),
+               #  
+               plotlyOutput(paste0('rangePlotEntriesLocs', i)),
+               #  
+               plotlyOutput(paste0('rangePlotEntriesReps', i)),
+               # 
+               plotlyOutput(paste0('rangePlotYearsLocs', i)),
+               #  
+               plotlyOutput(paste0('rangePlotYearsReps', i)),
+               #  
+               plotlyOutput(paste0('rangePlotLocsReps', i))
       )
     }) 
     do.call(tabsetPanel, myTabs)
@@ -224,18 +226,18 @@ server <- function(input, output, clientData, session) {
       range_reps = rangeGrain(min_reps, max_reps, grain)
       #print(range_reps)
 
-      
+      # Show Progress Bar
       withProgress(message = 'Calculating results', value = 0, {
       rr = NULL
       for (i in range_entries)
       {
-        # incProgress(1/length(range_entries), detail = paste("Doing part", i))
         for (k in range_years)
         {
           for (l in range_locs)
           {
             for (j in range_reps)
             {
+              # update progress bar after a single iteration of the nested loop
               incProgress(1/(length(range_entries)*length(range_years)*length(range_locs)*length(range_reps)), detail = paste("Iteration", it, "of", length(range_entries)*length(range_years)*length(range_locs)*length(range_reps)))
               
               it = it + 1
@@ -304,7 +306,7 @@ server <- function(input, output, clientData, session) {
   }
   
   # Plot of mean value with margins for standard deviation (copied from alphasimrshiny)
-  plotMeanGrid = function(df = isolate(rv$results_range), myX = "fs_entries", myFilter = c("fs_years", "fs_locs", "fs_reps"), myXl = "First Stage Entries", title = "Gain by First Stage Entries Range") { 
+  plotMeanGrid = function(df = isolate(rv$results_range), myX = "fs_entries", myFilter = c("fs_years", "fs_locs", "fs_reps"), myXl = "First Stage Entries", title = "Gain by First Stage Entries") { 
     df <- transform(df, stage = as.character(stage)) # use categorical colour instead of ordered
     # df <- filter(df, as.numeric(unlist(df[myFilter])) %in% df[myFilter][1,]) # filter rows not on the first occurrence (min) of myFilter
     for (i in myFilter)
@@ -344,7 +346,7 @@ server <- function(input, output, clientData, session) {
   
   # Bubble plot instead of a 3D plot shows peaks of gain encoded with size in a grid of x = entries and y = reps
   # see ggplot bug in https://stackoverflow.com/questions/34097133/passing-data-and-column-names-to-ggplot-via-another-function
-  plotMeanGridBubble <- function(df = isolate(rv$results_range), myFilter = c("fs_years", "fs_locs"), myX = entries, myY = reps, myXl = "First Stage Entries", myYl = "First Stage Reps", title = "Gain for both Entries and Reps Ranges") {
+  plotMeanGridBubble <- function(df = isolate(rv$results_range), myFilter = c("fs_years", "fs_locs"), myX = entries, myY = reps, myXl = "First Stage Entries", myYl = "First Stage Reps", title = "Gain by Entries by Reps") {
     df <- transform(df, stage = as.character(stage))
     # df <- filter(df, as.numeric(unlist(df["fs_years"])) %in% df["fs_years"][1,]) # filter rows not on the first occurrence (min) of fs_years
     # df <- filter(df, as.numeric(unlist(df["fs_locs"])) %in% df["fs_locs"][1,])
@@ -366,6 +368,37 @@ server <- function(input, output, clientData, session) {
     
     return(gp)
   }
+  
+  
+  # Heatmap plot for ranges in grid
+  plotMeanGridHeatmap <- function(df = isolate(rv$results_range), myFilter = c("fs_years", "fs_locs"), myX = entries, myY = reps, myXl = "First Stage Entries", myYl = "First Stage Reps", title = "Gain by Entries by Reps") {
+    # df <- transform(df, stage = as.character(stage))
+    for (i in myFilter)
+    {
+      df <- filter(df, as.numeric(unlist(df[i])) %in% df[i][1,]) # filter rows not on the first occurrence (min) of myFilter
+    }
+    df <- filter(df, as.numeric(unlist(df["scenario"])) %in% df["scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
+    df <- filter(df, as.numeric(unlist(df["stage"])) %in% df["stage"][1,]) # filter rows which do not belong to the first stage
+    
+    arg <- match.call()
+    
+    # Create extra column "text" for plotly tooltip
+    df <- df %>%
+      mutate(text = paste0("x: ", eval(arg$myX), "\n", "y: ", eval(arg$myY), "\n", "Value: ",round(mean,2)))
+    
+    # Heatmap
+    gp = ggplot(df, aes(x = eval(arg$myX), y = eval(arg$myY)))+ #,environment=environment())+
+      geom_tile(aes(fill = mean)) +
+      scale_fill_gradient(low="white", high="blue") +
+      # scale_fill_distiller(palette = "RdPu") +
+      # theme_ipsum()
+      scale_x_continuous(myXl)+
+      scale_y_continuous(myYl)+
+      ggtitle(title)
+    gp <- ggplotly(gp, tooltip="text")
+    return(gp)
+  }
+  
   
   #*************************************
   #-------------------------------------  
@@ -513,41 +546,52 @@ server <- function(input, output, clientData, session) {
     })
     # 
     rpYears <- renderPlot({
-      plotMeanGrid(df = isolate(rv$results_range), myX = "fs_years", myFilter = c("fs_reps", "fs_locs", "fs_entries"), myXl = "First Stage Years", title = "Gain by First Stage Years Range") 
+      plotMeanGrid(df = isolate(rv$results_range), myX = "fs_years", myFilter = c("fs_reps", "fs_locs", "fs_entries"), myXl = "First Stage Years", title = "Gain by First Stage Years") 
     })
     #
     rpLocs <- renderPlot({
-      plotMeanGrid(df = isolate(rv$results_range), myX = "fs_locs", myFilter = c("fs_years", "fs_reps", "fs_entries"), myXl = "First Stage Locs", title = "Gain by First Stage Locs Range") 
+      plotMeanGrid(df = isolate(rv$results_range), myX = "fs_locs", myFilter = c("fs_years", "fs_reps", "fs_entries"), myXl = "First Stage Locs", title = "Gain by First Stage Locs") 
     })
     # 
     rpReps <- renderPlot({
-      plotMeanGrid(df = isolate(rv$results_range), myX = "fs_reps", myFilter = c("fs_years", "fs_locs", "fs_entries"), myXl = "First Stage Reps", title = "Gain by First Stage Reps Range") 
+      plotMeanGrid(df = isolate(rv$results_range), myX = "fs_reps", myFilter = c("fs_years", "fs_locs", "fs_entries"), myXl = "First Stage Reps", title = "Gain by First Stage Reps") 
     })
     # *******************************
     # Save bubble plot in variable x6
     # *******************************
-    rpEntriesYears <- renderPlot({
-      plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_locs"), myX = entries, myY = years, myXl = "First Stage Entries", myYl = "First Stage Years", title = "Gain for ranges of Entries and Years")
+    rpEntriesYears <- renderPlotly({# renderPlot({
+      # plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_locs"), myX = entries, myY = years, myXl = "First Stage Entries", myYl = "First Stage Years", title = "Gain by Entries by Years")
+      
+      plotMeanGridHeatmap(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_locs"), myX = entries, myY = years, myXl = "First Stage Entries", myYl = "First Stage Years", title = "Gain by Entries by Years")
     }) 
     #
-    rpEntriesLocs <- renderPlot({
-      plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_years"), myX = entries, myY = locs, myXl = "First Stage Entries", myYl = "First Stage Locs", title = "Gain for ranges of Entries and Locs")
+    rpEntriesLocs <- renderPlotly({# renderPlot({
+      # plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_years"), myX = entries, myY = locs, myXl = "First Stage Entries", myYl = "First Stage Locs", title = "Gain by Entries by Locs")
+      plotMeanGridHeatmap(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_years"), myX = entries, myY = locs, myXl = "First Stage Entries", myYl = "First Stage Locs", title = "Gain by Entries by Locs")
+      
     }) 
     #
-    rpEntriesReps <- renderPlot({
-      plotMeanGridBubble( myX = entries, myY = reps)
+    rpEntriesReps <- renderPlotly({# renderPlot({
+      # plotMeanGridBubble( myX = entries, myY = reps)
+      plotMeanGridHeatmap( myX = entries, myY = reps)
     }) 
     #
-    rpYearsLocs <- renderPlot({
-      plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_entries"), myX = years, myY = locs, myXl = "First Stage Years", myYl = "First Stage Locs", title = "Gain for ranges of Locs and Years")
+    rpYearsLocs <- renderPlotly({# renderPlot({
+      #plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_entries"), myX = years, myY = locs, myXl = "First Stage Years", myYl = "First Stage Locs", title = "Gain by Locs by Years")
+      plotMeanGridHeatmap(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_entries"), myX = years, myY = locs, myXl = "First Stage Years", myYl = "First Stage Locs", title = "Gain by Locs by Years")
+      
     }) 
     #
-    rpYearsReps <- renderPlot({
-      plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_locs", "fs_entries"), myX = years, myY = reps, myXl = "First Stage Years", myYl = "First Stage Reps", title = "Gain for ranges of Reps and Years")
+    rpYearsReps <- renderPlotly({# renderPlot({
+      #plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_locs", "fs_entries"), myX = years, myY = reps, myXl = "First Stage Years", myYl = "First Stage Reps", title = "Gain by Reps by Years")
+      plotMeanGridHeatmap(df = isolate(rv$results_range), myFilter = c("fs_locs", "fs_entries"), myX = years, myY = reps, myXl = "First Stage Years", myYl = "First Stage Reps", title = "Gain by Reps by Years")
+    
     }) 
     #
-    rpLocsReps <- renderPlot({
-      plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_years", "fs_entries"), myX = locs, myY = reps, myXl = "First Stage Locs", myYl = "First Stage Reps", title = "Gain for ranges of Locs and Reps")
+    rpLocsReps <- renderPlotly({# renderPlot({
+      #plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_years", "fs_entries"), myX = locs, myY = reps, myXl = "First Stage Locs", myYl = "First Stage Reps", title = "Gain by Locs by Reps")
+      plotMeanGridHeatmap(df = isolate(rv$results_range), myFilter = c("fs_years", "fs_entries"), myX = locs, myY = reps, myXl = "First Stage Locs", myYl = "First Stage Reps", title = "Gain by Locs by Reps")
+      
     }) 
 
     # Pass plots to output scenario tabs
