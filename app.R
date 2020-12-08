@@ -1,3 +1,5 @@
+if (interactive()) {
+
 library(shiny)
 # library(DT)
 # library(shinyBS)
@@ -13,3 +15,5 @@ source('server.r')
 
 # Run the application 
 shinyApp(ui = ui, server = server)
+
+}

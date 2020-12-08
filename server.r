@@ -129,6 +129,7 @@ server <- function(input, output, clientData, session) {
   
   # function creates a new Tab in the UI for a given ScenarioID
   createTab <- function(scenarioID = 1) {
+    shinyjs::useShinyjs()
     myTabs = lapply(1: scenarioID, function(i){
       tabPanel(paste0('Scenario', i),
                plotOutput(paste0('cyPlot', i)),
@@ -140,30 +141,58 @@ server <- function(input, output, clientData, session) {
                DT::DTOutput(paste0('costDT', i)),
                # Start section with plots of ranges
                tags$h3("Plots for ranges of parameters at first stage"),
+               # Drop down lists to select plots to view for each Scenario Tab
+               selectInput(inputId = paste0('rangePlots', i), label =  "Show Range Plots:",
+                           choices =  c("Entries" = paste0('rangePlotEntries', i),
+                                        "Years" = paste0('rangePlotYears', i),
+                                        "Locs" = paste0('rangePlotLocs', i),
+                                        "Reps" = paste0('rangePlotReps', i),
+                                        "Entries by Years" = paste0('rangePlotEntriesYears', i),
+                                        "Entries by Locs" = paste0('rangePlotEntriesLocs', i),
+                                        "Entries by Reps" = paste0('rangePlotEntriesReps', i),
+                                        "Years by Locs" = paste0('rangePlotYearsLocs', i),
+                                        "Years by Reps" = paste0('rangePlotYearsReps', i),
+                                        "Locs by Reps" = paste0('rangePlotLocsReps', i)),
+                           selected = NULL,
+                           multiple = TRUE,
+                           selectize = TRUE
+               ),
+               textOutput(paste0('plotMe', i)),
+               
                # range plot overwrites first stage entries
-               plotOutput(paste0('rangePlotEntries', i)),
+               hidden(plotOutput(paste0('rangePlotEntries', i))),
                # range plot overwrites first stage years
-               plotOutput(paste0('rangePlotYears', i)),
+               hidden(plotOutput(paste0('rangePlotYears', i))),
                # range plot overwrites first stage locs
-               plotOutput(paste0('rangePlotLocs', i)),
+               hidden(plotOutput(paste0('rangePlotLocs', i))),
                # range plot overwrites first stage reps
-               plotOutput(paste0('rangePlotReps', i)),
+               hidden(plotOutput(paste0('rangePlotReps', i))),
+               
                # bubble / plotly-heatmap range plot for x6 pairs of entries/years/locs/reps ranges in first stage
-               # Replace plotlyOutput with plotOutput if used with bubble / ggplot2 heatmaps
-               plotlyOutput(paste0('rangePlotEntriesYears', i)),
+               # Enable switching between plotlyOutput and plotOutput for bubble plots and heatmaps
+               # TODO
+               
+               # hide plots and only show when selected in drop box
+               hidden(plotlyOutput(paste0('rangePlotEntriesYears', i))),
                #  
-               plotlyOutput(paste0('rangePlotEntriesLocs', i)),
+               hidden(plotlyOutput(paste0('rangePlotEntriesLocs', i))),
                #  
-               plotlyOutput(paste0('rangePlotEntriesReps', i)),
+               hidden(plotlyOutput(paste0('rangePlotEntriesReps', i))),
                # 
-               plotlyOutput(paste0('rangePlotYearsLocs', i)),
+               hidden(plotlyOutput(paste0('rangePlotYearsLocs', i))),
                #  
-               plotlyOutput(paste0('rangePlotYearsReps', i)),
+               hidden(plotlyOutput(paste0('rangePlotYearsReps', i))),
                #  
-               plotlyOutput(paste0('rangePlotLocsReps', i))
+               hidden(plotlyOutput(paste0('rangePlotLocsReps', i)))
+               #
       )
     }) 
     do.call(tabsetPanel, myTabs)
+  }
+ 
+  # function updates Tab in the UI for a given ScenarioID and selectInput inputID with a list of plots (called by drop down list observer)
+  updateTab <- function(scenarioID = 1, inputID = "Entries by Reps") {
+    # TODO
   }
 
   # Store results from all runs in a reactive matrix
@@ -384,7 +413,7 @@ server <- function(input, output, clientData, session) {
     
     # Create extra column "text" for plotly tooltip
     df <- df %>%
-      mutate(text = paste0("x: ", eval(arg$myX), "\n", "y: ", eval(arg$myY), "\n", "Value: ",round(mean,2)))
+      mutate(text = "tip!")# paste0("x: ", eval(arg$myX), "\n", "y: ", eval(arg$myY), "\n", "Value: ",round(mean,2)))
     
     # Heatmap
     gp = ggplot(df, aes(x = eval(arg$myX), y = eval(arg$myY)))+ #,environment=environment())+
@@ -608,6 +637,28 @@ server <- function(input, output, clientData, session) {
     output[[paste0("rangePlotYearsLocs", tail(Scenarios,1))]] <- rpYearsLocs
     output[[paste0("rangePlotYearsReps", tail(Scenarios,1))]] <- rpYearsReps
     output[[paste0("rangePlotLocsReps", tail(Scenarios,1))]] <- rpLocsReps
+
+    #  Update drop list for showing range plots for each Scenario           TODO make separate function
+    lapply(1: tail(Scenarios,1), function(i){
+      output[[paste0('plotMe', i)]] <- renderText({
+        paste("You chose", input[[paste0('rangePlots', i)]])   #  WORKS!!!
+      })
+      # ONLY RENDERS LATEST PARAMS SELECTION -- NOT WORKING!!!
+      # output[[paste0('rangePlotEntriesYears', i)]] <- rpEntriesYears
+
+      #shinyjs::toggle("rangePlotEntriesYears1") # Test hide show
+      
+      # Show/hide range plot on demand
+      # toggle(input[[paste0('rangePlots', i)]])   # NOT SHOWING HIDDEN!!!
+      
+      # Listener for each scenario selectInput 
+      observeEvent(input[[paste0('rangePlots', i)]], {
+        print(paste("Show/Hide plot: ", input[[paste0('rangePlots', i)]]))
+        # TODO : write function that handles showing/hiding based on selectInput status
+        toggle(input[[paste0('rangePlots', i)]]) # WORKS FOR 1 PLOT + NEEDS SELECTING x2 to HIDE AGAIN
+      })
+      
+    })
     
     # Store results from all runs in a reactive matrix
     rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = tail(Scenarios,1))
@@ -669,10 +720,32 @@ server <- function(input, output, clientData, session) {
     
   }) # end of run button
   
+  # TODO : toggle show/hide rangePlots based on selection input
+  # if (!is.null(Scenarios))
+  # {
+  #   lapply(1: tail(Scenarios,1), function(i){
+  #     # output[[paste0('plotMe', i)]] <- renderText({
+  #     #   paste("You chose", input[[paste0('rangePlots', i)]])   #  WORKS!!!
+  #     # })
+  #     observeEvent(input[[paste0('rangePlots', i)]], {
+  #       # hide("plot")
+  #       toggle(input[[paste0('rangePlots', i)]]) #if you want to alternate between hiding and showing
+  #     })
+  #   })
+  # }
+
+  
+  
+
+  
   # TV hide ALL tab 
   shiny::hideTab(inputId = "my_tabs", target = "ALL")
   # TV hide Gain per Cost plot with shinyjs package
   # hide("overviewTabxCost")
   
+  # if (length(Scenarios) > 0)
+  # {
+  #   show("rangePlotEntriesReps1") # input[[paste0('rangePlots', i)]])   # NOT SHOWING HIDDEN!!!
+  # }
   
 } # endof server

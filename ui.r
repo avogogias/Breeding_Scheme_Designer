@@ -96,7 +96,7 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                                 value = c(1,10)),
                     
                     
-                    numericInput("grain", "Samples in Range", min = 2, max = 1000, value = 5, step = 1, width = '20%'),
+                    sliderInput("grain", "Samples in Range", min = 2, max = 5, value = 2, step = 1, width = '30%'),
                     
 
                     tags$h4("Costs:"),
