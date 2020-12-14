@@ -1,4 +1,4 @@
-if (interactive()) {
+#if (interactive()) {
 
 library(shiny)
 # library(DT)
@@ -16,4 +16,6 @@ source('server.r')
 # Run the application 
 shinyApp(ui = ui, server = server)
 
-}
+# shinyWidgets::shinyWidgetsGallery()
+
+#} # endof interactive()

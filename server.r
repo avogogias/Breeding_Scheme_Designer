@@ -154,7 +154,7 @@ server <- function(input, output, clientData, session) {
                                         "Years by Reps" = paste0('rangePlotYearsReps', i),
                                         "Locs by Reps" = paste0('rangePlotLocsReps', i)),
                            selected = NULL,
-                           multiple = TRUE,
+                           multiple = FALSE,
                            selectize = TRUE
                ),
                textOutput(paste0('plotMe', i)),
@@ -175,7 +175,7 @@ server <- function(input, output, clientData, session) {
                # hide plots and only show when selected in drop box
                hidden(plotlyOutput(paste0('rangePlotEntriesYears', i))),
                #  
-               hidden(plotlyOutput(paste0('rangePlotEntriesLocs', i))),
+               plotlyOutput(paste0('rangePlotEntriesLocs', i)),
                #  
                hidden(plotlyOutput(paste0('rangePlotEntriesReps', i))),
                # 
@@ -191,8 +191,37 @@ server <- function(input, output, clientData, session) {
   }
  
   # function updates Tab in the UI for a given ScenarioID and selectInput inputID with a list of plots (called by drop down list observer)
-  updateTab <- function(scenarioID = 1, inputID = "Entries by Reps") {
+  showPlot <- function(selectedID = input$rangePlots1, scenarioID = 1) {   # (scenarioID = 1, inputID = "Entries by Reps") {
     # TODO
+    
+    # toggle(selectedID)
+    
+    choices =  c(paste0('rangePlotEntries', scenarioID),
+                 paste0('rangePlotYears', scenarioID),
+                 paste0('rangePlotLocs', scenarioID),
+                 paste0('rangePlotReps', scenarioID),
+                 paste0('rangePlotEntriesYears', scenarioID),
+                 paste0('rangePlotEntriesLocs', scenarioID),
+                 paste0('rangePlotEntriesReps', scenarioID),
+                 paste0('rangePlotYearsLocs', scenarioID),
+                 paste0('rangePlotYearsReps', scenarioID),
+                 paste0('rangePlotLocsReps', scenarioID))
+    
+    for (i in choices)
+    {
+      if (i == selectedID) 
+      {
+        print(paste("SELECTED ", i)) # 
+        toggle(i) #show(i)
+      }
+      else
+      {
+        print(paste("NOT SELECTED ", i)) 
+        #toggle(i)
+        hide(i)
+      }
+    }
+    
   }
 
   # Store results from all runs in a reactive matrix
@@ -640,23 +669,23 @@ server <- function(input, output, clientData, session) {
 
     #  Update drop list for showing range plots for each Scenario           TODO make separate function
     lapply(1: tail(Scenarios,1), function(i){
+      # Show selection as text label
       output[[paste0('plotMe', i)]] <- renderText({
         paste("You chose", input[[paste0('rangePlots', i)]])   #  WORKS!!!
       })
-      # ONLY RENDERS LATEST PARAMS SELECTION -- NOT WORKING!!!
-      # output[[paste0('rangePlotEntriesYears', i)]] <- rpEntriesYears
-
-      #shinyjs::toggle("rangePlotEntriesYears1") # Test hide show
-      
-      # Show/hide range plot on demand
-      # toggle(input[[paste0('rangePlots', i)]])   # NOT SHOWING HIDDEN!!!
       
       # Listener for each scenario selectInput 
       observeEvent(input[[paste0('rangePlots', i)]], {
         print(paste("Show/Hide plot: ", input[[paste0('rangePlots', i)]]))
-        # TODO : write function that handles showing/hiding based on selectInput status
-        toggle(input[[paste0('rangePlots', i)]]) # WORKS FOR 1 PLOT + NEEDS SELECTING x2 to HIDE AGAIN
+        showPlot(input[[paste0('rangePlots', i)]], i) # TODO : write function that handles showing/hiding based on selectInput status
+        # toggle(input[[paste0('rangePlots', i)]]) # WORKS FOR 1 PLOT + NEEDS SELECTING x2 to HIDE AGAIN
       })
+      
+      # ONLY RENDERS LATEST PARAMS SELECTION -- NOT WORKING!!!
+      # output[[paste0('rangePlotEntriesYears', i)]] <- rpEntriesYears
+      
+      # Show/hide range plot on demand
+      # toggle(input[[paste0('rangePlots', i)]])   # NOT SHOWING HIDDEN!!!
       
     })
     
@@ -720,7 +749,7 @@ server <- function(input, output, clientData, session) {
     
   }) # end of run button
   
-  # TODO : toggle show/hide rangePlots based on selection input
+  # DOES NOT WORK CREATING Observer later as code is executed only once when there are no scenarios!!
   # if (!is.null(Scenarios))
   # {
   #   lapply(1: tail(Scenarios,1), function(i){
@@ -735,7 +764,8 @@ server <- function(input, output, clientData, session) {
   # }
 
   
-  
+
+
 
   
   # TV hide ALL tab 
