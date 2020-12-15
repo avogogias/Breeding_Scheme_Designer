@@ -675,11 +675,16 @@ server <- function(input, output, clientData, session) {
       })
       
       # Listener for each scenario selectInput 
-      observeEvent(input[[paste0('rangePlots', i)]], {
-        print(paste("Show/Hide plot: ", input[[paste0('rangePlots', i)]]))
-        showPlot(input[[paste0('rangePlots', i)]], i) # TODO : write function that handles showing/hiding based on selectInput status
-        # toggle(input[[paste0('rangePlots', i)]]) # WORKS FOR 1 PLOT + NEEDS SELECTING x2 to HIDE AGAIN
-      })
+      if (i == tail(Scenarios,1))
+      {
+        print(paste("lapply ", i))
+        observeEvent(input[[paste0('rangePlots', i)]], {
+          print(paste("Show/Hide plot: ", input[[paste0('rangePlots', i)]]))
+          showPlot(input[[paste0('rangePlots', i)]], i) # TODO : write function that handles showing/hiding based on selectInput status
+          # toggle(input[[paste0('rangePlots', i)]]) # WORKS FOR 1 PLOT + NEEDS SELECTING x2 to HIDE AGAIN
+        })
+      }
+
       
       # ONLY RENDERS LATEST PARAMS SELECTION -- NOT WORKING!!!
       # output[[paste0('rangePlotEntriesYears', i)]] <- rpEntriesYears
