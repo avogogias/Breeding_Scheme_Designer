@@ -129,7 +129,6 @@ server <- function(input, output, clientData, session) {
   
   # function creates a new Tab in the UI for a given ScenarioID
   createTab <- function(scenarioID = 1) {
-    shinyjs::useShinyjs()
     myTabs = lapply(1: scenarioID, function(i){
       tabPanel(paste0('Scenario', i),
                plotOutput(paste0('cyPlot', i)),
@@ -187,7 +186,7 @@ server <- function(input, output, clientData, session) {
                #
       )
     }) 
-    do.call(tabsetPanel, myTabs)
+    do.call("tabsetPanel", c(myTabs, id = "sc_tabs"))
   }
  
   # function updates Tab in the UI for a given ScenarioID and selectInput inputID with a list of plots (called by drop down list observer)
@@ -586,6 +585,9 @@ server <- function(input, output, clientData, session) {
     output$mytabs = renderUI({
       createTab(scenarioID = tail(Scenarios,1))
     })
+    
+    # Focus on new tab
+    updateTabsetPanel(session = session, inputId = "sc_tabs", selected = paste0('Scenario', tail(Scenarios,1)))
     
     print(paste("Start Run", tail(Scenarios,1))) # input$run_btn))
     
