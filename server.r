@@ -160,30 +160,30 @@ server <- function(input, output, clientData, session) {
                textOutput(paste0('plotMe', i)),
                
                # range plot overwrites first stage entries
-               hidden(plotOutput(paste0('rangePlotEntries', i))),
+               plotOutput(paste0('rangePlotEntries', i)),
                # range plot overwrites first stage years
-               hidden(plotOutput(paste0('rangePlotYears', i))),
+               plotOutput(paste0('rangePlotYears', i)),
                # range plot overwrites first stage locs
-               hidden(plotOutput(paste0('rangePlotLocs', i))),
+               plotOutput(paste0('rangePlotLocs', i)),
                # range plot overwrites first stage reps
-               hidden(plotOutput(paste0('rangePlotReps', i))),
+               plotOutput(paste0('rangePlotReps', i)),
                
                # bubble / plotly-heatmap range plot for x6 pairs of entries/years/locs/reps ranges in first stage
                # Enable switching between plotlyOutput and plotOutput for bubble plots and heatmaps
                # TODO
                
                # hide plots and only show when selected in drop box
-               hidden(plotlyOutput(paste0('rangePlotEntriesYears', i))),
+               plotlyOutput(paste0('rangePlotEntriesYears', i)),
                #  
                plotlyOutput(paste0('rangePlotEntriesLocs', i)),
                #  
-               hidden(plotlyOutput(paste0('rangePlotEntriesReps', i))),
+               plotlyOutput(paste0('rangePlotEntriesReps', i)),
                # 
-               hidden(plotlyOutput(paste0('rangePlotYearsLocs', i))),
+               plotlyOutput(paste0('rangePlotYearsLocs', i)),
                #  
-               hidden(plotlyOutput(paste0('rangePlotYearsReps', i))),
+               plotlyOutput(paste0('rangePlotYearsReps', i)),
                #  
-               hidden(plotlyOutput(paste0('rangePlotLocsReps', i)))
+               plotlyOutput(paste0('rangePlotLocsReps', i))
                #
       )
     }) 
@@ -192,9 +192,6 @@ server <- function(input, output, clientData, session) {
  
   # function updates Tab in the UI for a given ScenarioID and selectInput inputID with a list of plots (called by drop down list observer)
   showPlot <- function(selectedID = input$rangePlots1, scenarioID = 1) {   # (scenarioID = 1, inputID = "Entries by Reps") {
-    # TODO
-    
-    # toggle(selectedID)
     
     choices =  c(paste0('rangePlotEntries', scenarioID),
                  paste0('rangePlotYears', scenarioID),
@@ -209,19 +206,19 @@ server <- function(input, output, clientData, session) {
     
     for (i in choices)
     {
+      hide(i)
       if (i == selectedID) 
       {
         print(paste("SELECTED ", i)) # 
         toggle(i) #show(i)
       }
-      else
-      {
-        print(paste("NOT SELECTED ", i)) 
-        #toggle(i)
-        hide(i)
-      }
+      # else
+      # {
+      #   print(paste("NOT SELECTED ", i)) 
+      #   #toggle(i)
+      #   hide(i)
+      # }
     }
-    
   }
 
   # Store results from all runs in a reactive matrix
@@ -667,6 +664,8 @@ server <- function(input, output, clientData, session) {
     output[[paste0("rangePlotYearsReps", tail(Scenarios,1))]] <- rpYearsReps
     output[[paste0("rangePlotLocsReps", tail(Scenarios,1))]] <- rpLocsReps
 
+    #showPlot(input[[paste0('rangePlots', i)]], i)
+    
     #  Update drop list for showing range plots for each Scenario           TODO make separate function
     lapply(1: tail(Scenarios,1), function(i){
       # Show selection as text label
@@ -734,9 +733,11 @@ server <- function(input, output, clientData, session) {
     
     # Include content from R file locally as if it was pasted here to manage if-else
     source('if_run_btn.r', local=TRUE) # OLD METHOD with if-else loop handling but with duplicated code for up to 5 scenarios WORKS!
+    #
+    # NOT USED FOR NOW
     # source('update_scenarios.r', local = TRUE) # alternative recursive method IN PROGRESS
-    
-    
+    # source('all_in_one.r', local = TRUE) # alternative recursive method that uses divID -- IN PROGRESS 
+    #
     # # Attempt to enrich v object with I/O data for every scenario - NOT USED
     # v$data = list(v$data, list("id" = tail(Scenarios,1), 
     #                            "in" = list("varG" = varG,
@@ -746,31 +747,10 @@ server <- function(input, output, clientData, session) {
     #                                        "varieties" = varieties), 
     #                            "out" = result)
     #               )
-    
-
-    
-  # NOT USED FOR NOW
-  #  source('all_in_one.r', local = TRUE) # alternative recursive method that uses divID -- IN PROGRESS    
+   
     
   }) # end of run button
   
-  # DOES NOT WORK CREATING Observer later as code is executed only once when there are no scenarios!!
-  # if (!is.null(Scenarios))
-  # {
-  #   lapply(1: tail(Scenarios,1), function(i){
-  #     # output[[paste0('plotMe', i)]] <- renderText({
-  #     #   paste("You chose", input[[paste0('rangePlots', i)]])   #  WORKS!!!
-  #     # })
-  #     observeEvent(input[[paste0('rangePlots', i)]], {
-  #       # hide("plot")
-  #       toggle(input[[paste0('rangePlots', i)]]) #if you want to alternate between hiding and showing
-  #     })
-  #   })
-  # }
-
-  
-
-
 
   
   # TV hide ALL tab 
