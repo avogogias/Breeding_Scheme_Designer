@@ -202,7 +202,8 @@ server <- function(input, output, clientData, session) {
                  paste0('rangePlotYearsLocs', scenarioID),
                  paste0('rangePlotYearsReps', scenarioID),
                  paste0('rangePlotLocsReps', scenarioID))
-    
+
+    print("HIDE ALL")
     for (i in choices)
     {
       hide(i)
@@ -370,9 +371,11 @@ server <- function(input, output, clientData, session) {
     df <- filter(df, as.numeric(unlist(df["scenario"])) %in% df["scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
     
     myX <- as.numeric(unlist(df[myX]))
-    print(df)
-    print(sapply(df, mode))
-    print(myX)
+    #print(df)
+    #print(sapply(df, mode))
+    #print(myX)
+    print("plotMeanGrid() called")
+    
     yMin = min(df$mean)-1.01*max(df$sd)
     yMax = max(df$mean)+1.01*max(df$sd)
 
@@ -435,6 +438,7 @@ server <- function(input, output, clientData, session) {
     df <- filter(df, as.numeric(unlist(df["stage"])) %in% df["stage"][1,]) # filter rows which do not belong to the first stage
     
     arg <- match.call()
+    print("plotMeanGridHeatmap() called")
     
     # Create extra column "text" for plotly tooltip
     df <- df %>%
@@ -590,67 +594,84 @@ server <- function(input, output, clientData, session) {
     updateTabsetPanel(session = session, inputId = "sc_tabs", selected = paste0('Scenario', tail(Scenarios,1)))
     
     print(paste("Start Run", tail(Scenarios,1))) # input$run_btn))
-    
+    # Run C++ code
     result = runScenario(varG,varGxL,varGxY,entries,years,locs,reps,error,varieties)
 
     # Store results for different ranges of first stage entries
     rv$results_range = rbind(rv$results_range, runScenarioRange())
     #print(rv$results_range)
     
+    # Show 2nd Progress Bar
+    withProgress(message = 'Ploting results', value = 0, {
+    
     # First save new plot in a variable before passing it to output x4
     rpEntries <- renderPlot({
       plotMeanGrid(df = isolate(rv$results_range))
     })
     # 
+    incProgress(1/10, detail = paste("Plot of Entries"))
+    #
     rpYears <- renderPlot({
       plotMeanGrid(df = isolate(rv$results_range), myX = "fs_years", myFilter = c("fs_reps", "fs_locs", "fs_entries"), myXl = "First Stage Years", title = "Gain by First Stage Years") 
     })
+    #
+    incProgress(1/10, detail = paste("Plot of Years"))
     #
     rpLocs <- renderPlot({
       plotMeanGrid(df = isolate(rv$results_range), myX = "fs_locs", myFilter = c("fs_years", "fs_reps", "fs_entries"), myXl = "First Stage Locs", title = "Gain by First Stage Locs") 
     })
     # 
+    incProgress(1/10, detail = paste("Plot of Locs"))
+    #
     rpReps <- renderPlot({
       plotMeanGrid(df = isolate(rv$results_range), myX = "fs_reps", myFilter = c("fs_years", "fs_locs", "fs_entries"), myXl = "First Stage Reps", title = "Gain by First Stage Reps") 
     })
+    #
+    incProgress(1/10, detail = paste("Plot of Reps"))
+    #
     # *******************************
     # Save bubble plot in variable x6
     # *******************************
     rpEntriesYears <- renderPlotly({# renderPlot({
       # plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_locs"), myX = entries, myY = years, myXl = "First Stage Entries", myYl = "First Stage Years", title = "Gain by Entries by Years")
-      
       plotMeanGridHeatmap(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_locs"), myX = entries, myY = years, myXl = "First Stage Entries", myYl = "First Stage Years", title = "Gain by Entries by Years")
     }) 
+    #
+    incProgress(1/10, detail = paste("Plot of Entries by Years"))
     #
     rpEntriesLocs <- renderPlotly({# renderPlot({
       # plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_years"), myX = entries, myY = locs, myXl = "First Stage Entries", myYl = "First Stage Locs", title = "Gain by Entries by Locs")
       plotMeanGridHeatmap(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_years"), myX = entries, myY = locs, myXl = "First Stage Entries", myYl = "First Stage Locs", title = "Gain by Entries by Locs")
-      
     }) 
+    #
+    incProgress(1/10, detail = paste("Plot of Entries by Locs"))
     #
     rpEntriesReps <- renderPlotly({# renderPlot({
       # plotMeanGridBubble( myX = entries, myY = reps)
       plotMeanGridHeatmap( myX = entries, myY = reps)
     }) 
     #
+    incProgress(1/10, detail = paste("Plot of Entries by Reps"))
+    #
     rpYearsLocs <- renderPlotly({# renderPlot({
       #plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_entries"), myX = years, myY = locs, myXl = "First Stage Years", myYl = "First Stage Locs", title = "Gain by Locs by Years")
       plotMeanGridHeatmap(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_entries"), myX = years, myY = locs, myXl = "First Stage Years", myYl = "First Stage Locs", title = "Gain by Locs by Years")
-      
     }) 
+    #
+    incProgress(1/10, detail = paste("Plot of Years by Locs"))
     #
     rpYearsReps <- renderPlotly({# renderPlot({
       #plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_locs", "fs_entries"), myX = years, myY = reps, myXl = "First Stage Years", myYl = "First Stage Reps", title = "Gain by Reps by Years")
       plotMeanGridHeatmap(df = isolate(rv$results_range), myFilter = c("fs_locs", "fs_entries"), myX = years, myY = reps, myXl = "First Stage Years", myYl = "First Stage Reps", title = "Gain by Reps by Years")
-    
     }) 
+    #
+    incProgress(1/10, detail = paste("Plot of Years by Reps"))
     #
     rpLocsReps <- renderPlotly({# renderPlot({
       #plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_years", "fs_entries"), myX = locs, myY = reps, myXl = "First Stage Locs", myYl = "First Stage Reps", title = "Gain by Locs by Reps")
       plotMeanGridHeatmap(df = isolate(rv$results_range), myFilter = c("fs_years", "fs_entries"), myX = locs, myY = reps, myXl = "First Stage Locs", myYl = "First Stage Reps", title = "Gain by Locs by Reps")
-      
     }) 
-
+    
     # Pass plots to output scenario tabs
     output[[paste0("cyPlot", tail(Scenarios,1))]] <- renderPlot({
       plotScenario(result)
@@ -665,8 +686,6 @@ server <- function(input, output, clientData, session) {
     output[[paste0("rangePlotYearsLocs", tail(Scenarios,1))]] <- rpYearsLocs
     output[[paste0("rangePlotYearsReps", tail(Scenarios,1))]] <- rpYearsReps
     output[[paste0("rangePlotLocsReps", tail(Scenarios,1))]] <- rpLocsReps
-
-    #showPlot(input[[paste0('rangePlots', i)]], i)
     
     #  Update drop list for showing range plots for each Scenario           TODO make separate function
     lapply(1: tail(Scenarios,1), function(i){
@@ -674,7 +693,7 @@ server <- function(input, output, clientData, session) {
       output[[paste0('plotMe', i)]] <- renderText({
         paste("You chose", input[[paste0('rangePlots', i)]])   #  WORKS!!!
       })
-      
+      #
       # Listener for each scenario selectInput 
       if (i == tail(Scenarios,1))
       {
@@ -682,18 +701,15 @@ server <- function(input, output, clientData, session) {
         observeEvent(input[[paste0('rangePlots', i)]], {
           print(paste("Show/Hide plot: ", input[[paste0('rangePlots', i)]]))
           showPlot(input[[paste0('rangePlots', i)]], i) # TODO : write function that handles showing/hiding based on selectInput status
-          # toggle(input[[paste0('rangePlots', i)]]) # WORKS FOR 1 PLOT + NEEDS SELECTING x2 to HIDE AGAIN
         })
       }
-
-      
-      # ONLY RENDERS LATEST PARAMS SELECTION -- NOT WORKING!!!
-      # output[[paste0('rangePlotEntriesYears', i)]] <- rpEntriesYears
-      
-      # Show/hide range plot on demand
-      # toggle(input[[paste0('rangePlots', i)]])   # NOT SHOWING HIDDEN!!!
-      
+      # else      # hide previous scenario plots
+      #  showPlot(input[[paste0('rangePlots', i)]], i) # TODO : write function that handles showing/hiding based on selectInput status
     })
+    
+    Sys.sleep(5)
+    incProgress(1/10, detail = paste("Plot of Locs by Reps"))
+    }) # endof 2nd progress bar
     
     # Store results from all runs in a reactive matrix
     rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = tail(Scenarios,1))
