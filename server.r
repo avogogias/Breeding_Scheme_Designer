@@ -581,7 +581,7 @@ server <- function(input, output, clientData, session) {
     h2 = isolate(yti$data[,7])
     varieties = isolate(input$varieties)
     
-    # store settings for summary plot TODO
+    # store settings for summary plot TODO : append column with mean genetic gain for each stage
     stages_current = data.frame(stages, entries, years, locs, reps, error, h2)
 
     # Create a new tab in the UI every time Run is pressed
@@ -601,7 +601,11 @@ server <- function(input, output, clientData, session) {
     rv$results_range = rbind(rv$results_range, runScenarioRange())
     #print(rv$results_range)
     
-    # Show 2nd Progress Bar
+    # Store Mean Genetic Gain for each stage in summary table
+    stages_current$mean <- round(apply(result, 1, mean), 2)
+    print(stages_current$mean)
+    
+    # Show 2nd Progress Bar for Plotting
     withProgress(message = 'Ploting results', value = 0, {
       
       # First save new plot in a variable before passing it to output x4

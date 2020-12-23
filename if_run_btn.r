@@ -7,12 +7,12 @@ sumset_DT = list( options = list(
 ),
 class = "cell-border, compact, hover", 
 rownames = F, #TRUE,
-colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2'),
+colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Gain'),
 filter = "none",
 escape = FALSE,
 autoHideNavigation = TRUE,
 selection = "none",
-editable = list(target = "cell", disable = list(columns = c(0, 6))),
+editable = list(target = "cell", disable = list(columns = c(0, 6, 7))),
 server = TRUE) # server = F doesn't work with replaceData() cell editing
 
 # Currently results_all updates only for scenarios 1-5
@@ -58,6 +58,10 @@ if (tail(Scenarios,1) == 1)
     output$cyPlot1 <- renderPlot({
       plotScenario(result)
     })   # end of renderPlot
+    
+    # Update Mean Genetic Gain for each stage in summary table
+    stages_current$mean <- round(apply(result, 1, mean), 2)
+    reactDT1$data[,8] <- stages_current$mean
 
     # Update results_all entries
     # First remove previous run entries
@@ -147,10 +151,13 @@ if (tail(Scenarios,1) == 1)
                           isolate(reactDT2$data[,6]),isolate(input$varieties))
 
     output$cyPlot2 <- renderPlot({
-
       plotScenario(result)
     })   # end of renderPlot
 
+    # Update Mean Genetic Gain for each stage in summary table
+    stages_current$mean <- round(apply(result, 1, mean), 2)
+    reactDT2$data[,8] <- stages_current$mean
+    
     # Update results_all entries
     # First remove previous run entries
     rv$results_all = removeScenarioResult(2)
@@ -239,10 +246,12 @@ if (tail(Scenarios,1) == 1)
                           isolate(reactDT3$data[,4]),isolate(reactDT3$data[,5]),
                           isolate(reactDT3$data[,6]),isolate(input$varieties))
     output$cyPlot3 <- renderPlot({
-
       plotScenario(result)
     })   # end of renderPlot
 
+    # Update Mean Genetic Gain for each stage in summary table
+    stages_current$mean <- round(apply(result, 1, mean), 2)
+    reactDT3$data[,8] <- stages_current$mean
 
     # Update results_all entries
     # First remove previous run entries
@@ -332,11 +341,12 @@ if (tail(Scenarios,1) == 1)
                           isolate(reactDT4$data[,4]),isolate(reactDT4$data[,5]),
                           isolate(reactDT4$data[,6]),isolate(input$varieties))
     output$cyPlot4 <- renderPlot({
-
       plotScenario(result)
     })   # end of renderPlot
 
-
+    # Update Mean Genetic Gain for each stage in summary table
+    stages_current$mean <- round(apply(result, 1, mean), 2)
+    reactDT4$data[,8] <- stages_current$mean
 
     # Update results_all entries
     # First remove previous run entries
@@ -428,11 +438,12 @@ if (tail(Scenarios,1) == 1)
                           isolate(reactDT5$data[,4]),isolate(reactDT5$data[,5]),
                           isolate(reactDT5$data[,6]),isolate(input$varieties))
     output$cyPlot5 <- renderPlot({
-
       plotScenario(result)
     })   # end of renderPlot
 
-
+    # Update Mean Genetic Gain for each stage in summary table
+    stages_current$mean <- round(apply(result, 1, mean), 2)
+    reactDT5$data[,8] <- stages_current$mean
 
     # Update results_all entries
     # First remove previous run entries
@@ -523,11 +534,12 @@ if (tail(Scenarios,1) == 1)
                          isolate(reactDT6$data[,4]),isolate(reactDT6$data[,5]),
                          isolate(reactDT6$data[,6]),isolate(input$varieties))
     output$cyPlot6 <- renderPlot({
-      
       plotScenario(result)
     })   # end of renderPlot
     
-    
+    # Update Mean Genetic Gain for each stage in summary table
+    stages_current$mean <- round(apply(result, 1, mean), 2)
+    reactDT6$data[,8] <- stages_current$mean    
     
     # Update results_all entries
     # First remove previous run entries
@@ -617,11 +629,12 @@ if (tail(Scenarios,1) == 1)
                          isolate(reactDT7$data[,4]),isolate(reactDT7$data[,5]),
                          isolate(reactDT7$data[,6]),isolate(input$varieties))
     output$cyPlot7 <- renderPlot({
-      
       plotScenario(result)
     })   # end of renderPlot
     
-    
+    # Update Mean Genetic Gain for each stage in summary table
+    stages_current$mean <- round(apply(result, 1, mean), 2)
+    reactDT7$data[,8] <- stages_current$mean 
     
     # Update results_all entries
     # First remove previous run entries
@@ -711,11 +724,12 @@ if (tail(Scenarios,1) == 1)
                          isolate(reactDT8$data[,4]),isolate(reactDT8$data[,5]),
                          isolate(reactDT8$data[,6]),isolate(input$varieties))
     output$cyPlot8 <- renderPlot({
-      
       plotScenario(result)
     })   # end of renderPlot
     
-    
+    # Update Mean Genetic Gain for each stage in summary table
+    stages_current$mean <- round(apply(result, 1, mean), 2)
+    reactDT8$data[,8] <- stages_current$mean   
     
     # Update results_all entries
     # First remove previous run entries
@@ -805,11 +819,12 @@ if (tail(Scenarios,1) == 1)
                          isolate(reactDT9$data[,4]),isolate(reactDT9$data[,5]),
                          isolate(reactDT9$data[,6]),isolate(input$varieties))
     output$cyPlot9 <- renderPlot({
-      
       plotScenario(result)
     })   # end of renderPlot
     
-    
+    # Update Mean Genetic Gain for each stage in summary table
+    stages_current$mean <- round(apply(result, 1, mean), 2)
+    reactDT9$data[,8] <- stages_current$mean 
     
     # Update results_all entries
     # First remove previous run entries
@@ -899,11 +914,12 @@ if (tail(Scenarios,1) == 1)
                          isolate(reactDT10$data[,4]),isolate(reactDT10$data[,5]),
                          isolate(reactDT10$data[,6]),isolate(input$varieties))
     output$cyPlot10 <- renderPlot({
-      
       plotScenario(result)
     })   # end of renderPlot
     
-    
+    # Update Mean Genetic Gain for each stage in summary table
+    stages_current$mean <- round(apply(result, 1, mean), 2)
+    reactDT10$data[,8] <- stages_current$mean
     
     # Update results_all entries
     # First remove previous run entries
