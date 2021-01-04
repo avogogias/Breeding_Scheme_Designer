@@ -1,11 +1,13 @@
 library(shinyBS)
 library(shinyjs)
+library(shinyalert)
 
 ui <- fluidPage(title = "Breeding Scheme Designer",
                 
                 # theme = "bootstrap.css", # CSS theme file could be added here
                 withMathJax(), # display mathematical equations using LaTeX format
                 useShinyjs(), # hide() or toggle() using shinyjs package
+                useShinyalert(), # create pop-up alert messages 
                 
                 titlePanel("Breeding Scheme Designer"),            
                 

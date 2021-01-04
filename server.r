@@ -270,6 +270,7 @@ server <- function(input, output, clientData, session) {
       print(scenarioDT)
       stage = scenarioDT[,1]
       entries = scenarioDT[,2]
+      min_entries = checkMinEntries(entries, min_entries) # entries at second stage must be less than the first
       years = scenarioDT[,3] 
       locs = scenarioDT[,4]
       reps = scenarioDT[,5]
@@ -334,7 +335,26 @@ server <- function(input, output, clientData, session) {
       else qrt = c(qrt, max(min[i], max[1]))
     }
     return(qrt)
-  }  
+  } 
+  # function corrects min_entries if found smaller than entries of second stage
+  checkMinEntries <- function(entries, min_entries) {
+    if (min_entries < entries[2])
+      min_entries <- entries[2]
+    return(min_entries)
+  }
+  # function that creates a pop-up message and halts execution if entries vector is not in descending order
+  checkEntries <- function(scenarioDT = yti$data) {
+    entries = scenarioDT[,2]
+    if (is.unsorted(rev(entries)))
+    {
+      # TODO pop-up message and handle exception
+      shinyalert("Oops!", "Something went wrong.", type = "error")
+      Sys.sleep(5)
+      # stop()
+    } else
+      shinyalert("OK", "All looking good.", type = "success")
+
+  }
   
   #********************************
   #--------------------------------  
@@ -584,6 +604,9 @@ server <- function(input, output, clientData, session) {
     # store settings for summary plot TODO : append column with mean genetic gain for each stage
     stages_current = data.frame(stages, entries, years, locs, reps, error, h2)
 
+    # validate stage entries input
+    checkEntries()
+    
     # Create a new tab in the UI every time Run is pressed
     # UI input elements of all Scenario tabs are rendered
     output$mytabs = renderUI({
