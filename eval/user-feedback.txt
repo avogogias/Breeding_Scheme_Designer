@@ -14,4 +14,16 @@ User Needs:
 	Can we make our tool more efficient for you? If so, how?
 	What do you want to achieve by using this tool?
 	
+UX:
+	Did you find the tool easy to use?
+	What features would you like to see in our tool?
+	What are the parts of the tool you would improve?
 	
+Testing a New Product:
+	Would/Did you find this feature useful?
+	
+Quantitative Data Collection:
+	On a scale from 1 to 10, how likely are you to use our tool in your everyday workflow?
+	How do you rate your satisfaction with the Breeding Scheme Designer?
+	To what extend would you agree with the following statement: <strongly agree/disagree>
+	To what extent would you agree with the following statement: my question or problem has been resolved and I found the entire process to be quite easy. (this is used to calculate the Customer Effort Score as well).
