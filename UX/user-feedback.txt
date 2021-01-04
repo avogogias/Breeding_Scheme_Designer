@@ -1,0 +1,17 @@
+Possible questions to ask for user feedback after presenting the tool:
+
+Productu Improvements:
+	Which is/are the feature(s) you love most?
+	Which is/ are the feature(s) you don’t like/ don’t find useful?
+	Can you name a feature you would like to see in the future?
+	Is there anything you would change about our product? If so, what is that?
+
+User Needs:
+	What are the challenges you hope this tool will help you solve?
+	How long have you been using the tool?
+	When did you start to see results?
+	What is the main reason you needed a tool like this?
+	Can we make our tool more efficient for you? If so, how?
+	What do you want to achieve by using this tool?
+	
+	
