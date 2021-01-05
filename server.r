@@ -343,7 +343,8 @@ server <- function(input, output, clientData, session) {
     return(min_entries)
   }
   # function that creates a pop-up message and halts execution if entries vector is not in descending order
-  checkEntries <- function(scenarioDT = yti$data) {
+  #checkEntries
+  validInput <- function(scenarioDT = yti$data) {
     entries = scenarioDT[,2]
     if (is.unsorted(rev(entries)))
     {
@@ -567,31 +568,10 @@ server <- function(input, output, clientData, session) {
   # Execute runScenario() for the current settings
   observeEvent(input$run_btn, {
     
-    print(length(Scenarios))
-    # Increment Scenarios counter list e.g. [1, 2, 3] for 3 scenarios, used in place of input$run_btn
-    if (length(Scenarios) == 0){
-      Scenarios <<- c(1)                # if no Scenario defines so far, make the first one "1"
-    }
-    else{
-      Scenarios <<- c(Scenarios,  tail(Scenarios,1)+1)   # if a Scenario is added, just add a number to the last number in the "Scenarios" vector
-    }
-    
-    # Handle auto/user-defined IDs for scenarios
-    # divID <- if (input$divID == "") gsub("\\.", "", format(Sys.time(), "%H%M%OS3")) 
-    # else input$divID
-    divID <- gsub("\\.", "", format(Sys.time(), "%H%M%OS3")) # always auto-generated ID for each scenario
-    dtID <- paste0(divID, "DT")
-    rm_btnID <- paste0(divID, "rmv")
-    up_btnID <- paste0(divID, "upd")
-    boxID <- paste0(divID, "box")
-    stagesID <- paste0(divID, "stg")
-    # scenarioID <- paste0(divID, "scn") # Alternative to Scenarios ID vector
-    
-    
+    # store input in easier to use local variables 
     varG = isolate(input$varG)
     varGxL = isolate(input$varGxL)
     varGxY = isolate(input$varGxY)
-    
     stages = isolate(yti$data[,1]) # 
     entries = isolate(yti$data[,2]) # c(1000,100,10)
     years = isolate(yti$data[,3]) # c(1,1,1)
@@ -605,8 +585,37 @@ server <- function(input, output, clientData, session) {
     stages_current = data.frame(stages, entries, years, locs, reps, error, h2)
 
     # validate stage entries input
-    checkEntries()
+    # checkEntries()
+    try(
+      if (is.unsorted(rev(entries))) # (!validInput())
+      {
+        # TODO pop-up message and handle exception
+        shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
+        stop("Invalid input: entries should not increase in later stages.")
+      }
+      else
+      {
     
+        print(length(Scenarios))
+        # Increment Scenarios counter list e.g. [1, 2, 3] for 3 scenarios, used in place of input$run_btn
+        if (length(Scenarios) == 0){
+          Scenarios <<- c(1)                # if no Scenario defines so far, make the first one "1"
+        }
+        else{
+          Scenarios <<- c(Scenarios,  tail(Scenarios,1)+1)   # if a Scenario is added, just add a number to the last number in the "Scenarios" vector
+        }
+        
+        # Handle auto/user-defined IDs for scenarios
+        # divID <- if (input$divID == "") gsub("\\.", "", format(Sys.time(), "%H%M%OS3")) 
+        # else input$divID
+        divID <- gsub("\\.", "", format(Sys.time(), "%H%M%OS3")) # always auto-generated ID for each scenario
+        dtID <- paste0(divID, "DT")
+        rm_btnID <- paste0(divID, "rmv")
+        up_btnID <- paste0(divID, "upd")
+        boxID <- paste0(divID, "box")
+        stagesID <- paste0(divID, "stg")
+        # scenarioID <- paste0(divID, "scn") # Alternative to Scenarios ID vector    
+        
     # Create a new tab in the UI every time Run is pressed
     # UI input elements of all Scenario tabs are rendered
     output$mytabs = renderUI({
@@ -784,7 +793,7 @@ server <- function(input, output, clientData, session) {
     #                            "out" = result)
     #               )
    
-    
+    }) #endof try()
   }) # end of run button
   
 
