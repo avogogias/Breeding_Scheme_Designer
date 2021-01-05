@@ -338,24 +338,31 @@ server <- function(input, output, clientData, session) {
   } 
   # function corrects min_entries if found smaller than entries of second stage
   checkMinEntries <- function(entries, min_entries) {
-    if (min_entries < entries[2])
-      min_entries <- entries[2]
+    if (length(entries)>1)
+    {
+      if (min_entries < entries[2])
+        min_entries <- entries[2]
+    }
     return(min_entries)
   }
   # function that creates a pop-up message and halts execution if entries vector is not in descending order
-  #checkEntries
   validInput <- function(scenarioDT = yti$data) {
     entries = scenarioDT[,2]
     if (is.unsorted(rev(entries)))
-    {
-      # TODO pop-up message and handle exception
-      shinyalert("Oops!", "Something went wrong.", type = "error")
-      Sys.sleep(5)
-      # stop()
-    } else
-      shinyalert("OK", "All looking good.", type = "success")
-
+      return(FALSE)
+    return(TRUE)
   }
+  # function that returns vector of the incremental mean gain per stage calculated from runScenario() result matrix
+  meanGain <- function(result = result) {
+    # first calculate aggregated mean gain for each stage
+    result <- round(apply(result, 1, mean), 2)
+    # replace accumulative gain with incremental gain per stage
+    if (length(gain)>1)
+    gain <- result
+    if (length(gain)>1)
+      for (i in 2:length(gain)) {result[i] <- round(gain[i]-gain[i-1], 2)} 
+    return(result)
+  } 
   
   #********************************
   #--------------------------------  
@@ -587,7 +594,7 @@ server <- function(input, output, clientData, session) {
     # validate stage entries input
     # checkEntries()
     try(
-      if (is.unsorted(rev(entries))) # (!validInput())
+      if (!validInput()) # (is.unsorted(rev(entries))) # 
       {
         # TODO pop-up message and handle exception
         shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
@@ -595,7 +602,6 @@ server <- function(input, output, clientData, session) {
       }
       else
       {
-    
         print(length(Scenarios))
         # Increment Scenarios counter list e.g. [1, 2, 3] for 3 scenarios, used in place of input$run_btn
         if (length(Scenarios) == 0){
@@ -616,182 +622,181 @@ server <- function(input, output, clientData, session) {
         stagesID <- paste0(divID, "stg")
         # scenarioID <- paste0(divID, "scn") # Alternative to Scenarios ID vector    
         
-    # Create a new tab in the UI every time Run is pressed
-    # UI input elements of all Scenario tabs are rendered
-    output$mytabs = renderUI({
-      createTab(scenarioID = tail(Scenarios,1))
-    })
-    
-    # Focus on new tab
-    updateTabsetPanel(session = session, inputId = "sc_tabs", selected = paste0('Scenario', tail(Scenarios,1)))
-    
-    print(paste("Start Run", tail(Scenarios,1))) # input$run_btn))
-    # Run C++ code
-    result = runScenario(varG,varGxL,varGxY,entries,years,locs,reps,error,varieties)
-
-    # Store results for different ranges of first stage entries
-    rv$results_range = rbind(rv$results_range, runScenarioRange())
-    #print(rv$results_range)
-    
-    # Store Mean Genetic Gain for each stage in summary table
-    stages_current$mean <- round(apply(result, 1, mean), 2)
-    print(stages_current$mean)
-    
-    # Show 2nd Progress Bar for Plotting
-    withProgress(message = 'Ploting results', value = 0, {
+      # Create a new tab in the UI every time Run is pressed
+      # UI input elements of all Scenario tabs are rendered
+      output$mytabs = renderUI({
+        createTab(scenarioID = tail(Scenarios,1))
+      })
       
-      # First save new plot in a variable before passing it to output x4
-      rpEntries <- renderPlot({
-        plotMeanGrid(df = isolate(rv$results_range))
-      })
-      # 
-      incProgress(1/10, detail = paste("Plot of Entries"))
-      #
-      rpYears <- renderPlot({
-        plotMeanGrid(df = isolate(rv$results_range), myX = "fs_years", myFilter = c("fs_reps", "fs_locs", "fs_entries"), myXl = "First Stage Years", title = "Gain by First Stage Years") 
-      })
-      #
-      incProgress(1/10, detail = paste("Plot of Years"))
-      #
-      rpLocs <- renderPlot({
-        plotMeanGrid(df = isolate(rv$results_range), myX = "fs_locs", myFilter = c("fs_years", "fs_reps", "fs_entries"), myXl = "First Stage Locs", title = "Gain by First Stage Locs") 
-      })
-      # 
-      incProgress(1/10, detail = paste("Plot of Locs"))
-      #
-      rpReps <- renderPlot({
-        plotMeanGrid(df = isolate(rv$results_range), myX = "fs_reps", myFilter = c("fs_years", "fs_locs", "fs_entries"), myXl = "First Stage Reps", title = "Gain by First Stage Reps") 
-      })
-      #
-      incProgress(1/10, detail = paste("Plot of Reps"))
-      #
-      # *******************************
-      # Save bubble plot in variable x6
-      # *******************************
-      rpEntriesYears <- renderPlotly({# renderPlot({
-        # plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_locs"), myX = entries, myY = years, myXl = "First Stage Entries", myYl = "First Stage Years", title = "Gain by Entries by Years")
-        plotMeanGridHeatmap(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_locs"), myX = entries, myY = years, myXl = "First Stage Entries", myYl = "First Stage Years", title = "Gain by Entries by Years")
-      }) 
-      #
-      incProgress(1/10, detail = paste("Plot of Entries by Years"))
-      #
-      rpEntriesLocs <- renderPlotly({# renderPlot({
-        # plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_years"), myX = entries, myY = locs, myXl = "First Stage Entries", myYl = "First Stage Locs", title = "Gain by Entries by Locs")
-        plotMeanGridHeatmap(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_years"), myX = entries, myY = locs, myXl = "First Stage Entries", myYl = "First Stage Locs", title = "Gain by Entries by Locs")
-      }) 
-      #
-      incProgress(1/10, detail = paste("Plot of Entries by Locs"))
-      #
-      rpEntriesReps <- renderPlotly({# renderPlot({
-        # plotMeanGridBubble( myX = entries, myY = reps)
-        plotMeanGridHeatmap( myX = entries, myY = reps)
-      }) 
-      #
-      incProgress(1/10, detail = paste("Plot of Entries by Reps"))
-      #
-      rpYearsLocs <- renderPlotly({# renderPlot({
-        #plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_entries"), myX = years, myY = locs, myXl = "First Stage Years", myYl = "First Stage Locs", title = "Gain by Locs by Years")
-        plotMeanGridHeatmap(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_entries"), myX = years, myY = locs, myXl = "First Stage Years", myYl = "First Stage Locs", title = "Gain by Locs by Years")
-      }) 
-      #
-      incProgress(1/10, detail = paste("Plot of Years by Locs"))
-      #
-      rpYearsReps <- renderPlotly({# renderPlot({
-        #plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_locs", "fs_entries"), myX = years, myY = reps, myXl = "First Stage Years", myYl = "First Stage Reps", title = "Gain by Reps by Years")
-        plotMeanGridHeatmap(df = isolate(rv$results_range), myFilter = c("fs_locs", "fs_entries"), myX = years, myY = reps, myXl = "First Stage Years", myYl = "First Stage Reps", title = "Gain by Reps by Years")
-      }) 
-      #
-      incProgress(1/10, detail = paste("Plot of Years by Reps"))
-      #
-      rpLocsReps <- renderPlotly({# renderPlot({
-        #plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_years", "fs_entries"), myX = locs, myY = reps, myXl = "First Stage Locs", myYl = "First Stage Reps", title = "Gain by Locs by Reps")
-        plotMeanGridHeatmap(df = isolate(rv$results_range), myFilter = c("fs_years", "fs_entries"), myX = locs, myY = reps, myXl = "First Stage Locs", myYl = "First Stage Reps", title = "Gain by Locs by Reps")
-      }) 
+      # Focus on new tab
+      updateTabsetPanel(session = session, inputId = "sc_tabs", selected = paste0('Scenario', tail(Scenarios,1)))
       
-      # Pass plots to output scenario tabs
-      output[[paste0("cyPlot", tail(Scenarios,1))]] <- renderPlot({
-        plotScenario(result)
-      })
-      output[[paste0("rangePlotEntries", tail(Scenarios,1))]] <-  rpEntries
-      output[[paste0("rangePlotYears", tail(Scenarios,1))]] <-  rpYears
-      output[[paste0("rangePlotLocs", tail(Scenarios,1))]] <-  rpLocs
-      output[[paste0("rangePlotReps", tail(Scenarios,1))]] <- rpReps
-      output[[paste0("rangePlotEntriesYears", tail(Scenarios,1))]] <- rpEntriesYears
-      output[[paste0("rangePlotEntriesLocs", tail(Scenarios,1))]] <- rpEntriesLocs
-      output[[paste0("rangePlotEntriesReps", tail(Scenarios,1))]] <- rpEntriesReps
-      output[[paste0("rangePlotYearsLocs", tail(Scenarios,1))]] <- rpYearsLocs
-      output[[paste0("rangePlotYearsReps", tail(Scenarios,1))]] <- rpYearsReps
-      output[[paste0("rangePlotLocsReps", tail(Scenarios,1))]] <- rpLocsReps
-      #
-      #Sys.sleep(5)
-      incProgress(1/10, detail = paste("Plot of Locs by Reps"))
-    }) # endof 2nd progress bar
-    
-      #  Update drop list for showing range plots for each Scenario           TODO make separate function
-    # lapply(1: tail(Scenarios,1), function(i){
-    #   # Show selection as text label
-    #   output[[paste0('plotMe', i)]] <- renderText({
-    #     paste("You chose", input[[paste0('rangePlots', i)]])   #  WORKS!!!
-    #   })
-    #   # Listener for each scenario selectInput 
-    #   if (i == tail(Scenarios,1))
-    #   {
-    #     print(paste("lapply ", i))
-    #     observeEvent(input[[paste0('rangePlots', i)]], {
-    #       print(paste("Show/Hide plot: ", input[[paste0('rangePlots', i)]]))
-    #       showPlot(input[[paste0('rangePlots', i)]], i) # TODO : write function that handles showing/hiding based on selectInput status
-    #     })
-    #   }
-    #   # else      # hide previous scenario plots
-    #   #  showPlot(input[[paste0('rangePlots', i)]], i) # TODO : write function that handles showing/hiding based on selectInput status
-    # })
-    
-    # Add observer for selectInput drop down list
-    i <- tail(Scenarios,1)
-    observeEvent(input[[paste0('rangePlots', i)]], {
-      # print(paste("Show/Hide plot: ", input[[paste0('rangePlots', i)]]))
-      showPlot(input[[paste0('rangePlots', i)]], i) # TODO : write function that handles showing/hiding based on selectInput status
-    })
-    
-    # Store results from all runs in a reactive matrix
-    rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = tail(Scenarios,1))
-    # Store all results of Gain per Year
-    rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = tail(Scenarios,1), scenarioDT =  yti$data)
-    # Store all results of Gain per cost 
-    rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = tail(Scenarios,1), scenarioDT =  yti$data)
-    
-    # Render grouped boxplots for all scenario results for Overview tab
-    output$overviewTab <- renderPlot({
-      plotScenarioGroup(rv$results_all)
-    })    
-    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
-    output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
-    })  
-    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
-    output$overviewTabxCost <- renderPlot({
-      plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
-    })   
-    
-    
+      print(paste("Start Run", tail(Scenarios,1))) # input$run_btn))
+      # Run C++ code
+      result = runScenario(varG,varGxL,varGxY,entries,years,locs,reps,error,varieties)
+  
+      # Store results for different ranges of first stage entries
+      rv$results_range = rbind(rv$results_range, runScenarioRange())
+      #print(rv$results_range)
+      
+      # Calculate and Store Mean Genetic Gain for each stage in summary table
+      stages_current$mean <- meanGain(result)
 
-    
-    # Include content from R file locally as if it was pasted here to manage if-else
-    source('if_run_btn.r', local=TRUE) # OLD METHOD with if-else loop handling but with duplicated code for up to 5 scenarios WORKS!
-    #
-    # NOT USED FOR NOW
-    # source('update_scenarios.r', local = TRUE) # alternative recursive method IN PROGRESS
-    # source('all_in_one.r', local = TRUE) # alternative recursive method that uses divID -- IN PROGRESS 
-    #
-    # # Attempt to enrich v object with I/O data for every scenario - NOT USED
-    # v$data = list(v$data, list("id" = tail(Scenarios,1), 
-    #                            "in" = list("varG" = varG,
-    #                                        "varGxY" = varGxY,
-    #                                        "varGxL" = varGxL,
-    #                                        "stages_current" = stages_current,
-    #                                        "varieties" = varieties), 
-    #                            "out" = result)
-    #               )
+      # Show 2nd Progress Bar for Plotting
+      withProgress(message = 'Ploting results', value = 0, {
+        
+        # First save new plot in a variable before passing it to output x4
+        rpEntries <- renderPlot({
+          plotMeanGrid(df = isolate(rv$results_range))
+        })
+        # 
+        incProgress(1/10, detail = paste("Plot of Entries"))
+        #
+        rpYears <- renderPlot({
+          plotMeanGrid(df = isolate(rv$results_range), myX = "fs_years", myFilter = c("fs_reps", "fs_locs", "fs_entries"), myXl = "First Stage Years", title = "Gain by First Stage Years") 
+        })
+        #
+        incProgress(1/10, detail = paste("Plot of Years"))
+        #
+        rpLocs <- renderPlot({
+          plotMeanGrid(df = isolate(rv$results_range), myX = "fs_locs", myFilter = c("fs_years", "fs_reps", "fs_entries"), myXl = "First Stage Locs", title = "Gain by First Stage Locs") 
+        })
+        # 
+        incProgress(1/10, detail = paste("Plot of Locs"))
+        #
+        rpReps <- renderPlot({
+          plotMeanGrid(df = isolate(rv$results_range), myX = "fs_reps", myFilter = c("fs_years", "fs_locs", "fs_entries"), myXl = "First Stage Reps", title = "Gain by First Stage Reps") 
+        })
+        #
+        incProgress(1/10, detail = paste("Plot of Reps"))
+        #
+        # *******************************
+        # Save bubble plot in variable x6
+        # *******************************
+        rpEntriesYears <- renderPlotly({# renderPlot({
+          # plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_locs"), myX = entries, myY = years, myXl = "First Stage Entries", myYl = "First Stage Years", title = "Gain by Entries by Years")
+          plotMeanGridHeatmap(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_locs"), myX = entries, myY = years, myXl = "First Stage Entries", myYl = "First Stage Years", title = "Gain by Entries by Years")
+        }) 
+        #
+        incProgress(1/10, detail = paste("Plot of Entries by Years"))
+        #
+        rpEntriesLocs <- renderPlotly({# renderPlot({
+          # plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_years"), myX = entries, myY = locs, myXl = "First Stage Entries", myYl = "First Stage Locs", title = "Gain by Entries by Locs")
+          plotMeanGridHeatmap(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_years"), myX = entries, myY = locs, myXl = "First Stage Entries", myYl = "First Stage Locs", title = "Gain by Entries by Locs")
+        }) 
+        #
+        incProgress(1/10, detail = paste("Plot of Entries by Locs"))
+        #
+        rpEntriesReps <- renderPlotly({# renderPlot({
+          # plotMeanGridBubble( myX = entries, myY = reps)
+          plotMeanGridHeatmap( myX = entries, myY = reps)
+        }) 
+        #
+        incProgress(1/10, detail = paste("Plot of Entries by Reps"))
+        #
+        rpYearsLocs <- renderPlotly({# renderPlot({
+          #plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_entries"), myX = years, myY = locs, myXl = "First Stage Years", myYl = "First Stage Locs", title = "Gain by Locs by Years")
+          plotMeanGridHeatmap(df = isolate(rv$results_range), myFilter = c("fs_reps", "fs_entries"), myX = years, myY = locs, myXl = "First Stage Years", myYl = "First Stage Locs", title = "Gain by Locs by Years")
+        }) 
+        #
+        incProgress(1/10, detail = paste("Plot of Years by Locs"))
+        #
+        rpYearsReps <- renderPlotly({# renderPlot({
+          #plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_locs", "fs_entries"), myX = years, myY = reps, myXl = "First Stage Years", myYl = "First Stage Reps", title = "Gain by Reps by Years")
+          plotMeanGridHeatmap(df = isolate(rv$results_range), myFilter = c("fs_locs", "fs_entries"), myX = years, myY = reps, myXl = "First Stage Years", myYl = "First Stage Reps", title = "Gain by Reps by Years")
+        }) 
+        #
+        incProgress(1/10, detail = paste("Plot of Years by Reps"))
+        #
+        rpLocsReps <- renderPlotly({# renderPlot({
+          #plotMeanGridBubble(df = isolate(rv$results_range), myFilter = c("fs_years", "fs_entries"), myX = locs, myY = reps, myXl = "First Stage Locs", myYl = "First Stage Reps", title = "Gain by Locs by Reps")
+          plotMeanGridHeatmap(df = isolate(rv$results_range), myFilter = c("fs_years", "fs_entries"), myX = locs, myY = reps, myXl = "First Stage Locs", myYl = "First Stage Reps", title = "Gain by Locs by Reps")
+        }) 
+        
+        # Pass plots to output scenario tabs
+        output[[paste0("cyPlot", tail(Scenarios,1))]] <- renderPlot({
+          plotScenario(result)
+        })
+        output[[paste0("rangePlotEntries", tail(Scenarios,1))]] <-  rpEntries
+        output[[paste0("rangePlotYears", tail(Scenarios,1))]] <-  rpYears
+        output[[paste0("rangePlotLocs", tail(Scenarios,1))]] <-  rpLocs
+        output[[paste0("rangePlotReps", tail(Scenarios,1))]] <- rpReps
+        output[[paste0("rangePlotEntriesYears", tail(Scenarios,1))]] <- rpEntriesYears
+        output[[paste0("rangePlotEntriesLocs", tail(Scenarios,1))]] <- rpEntriesLocs
+        output[[paste0("rangePlotEntriesReps", tail(Scenarios,1))]] <- rpEntriesReps
+        output[[paste0("rangePlotYearsLocs", tail(Scenarios,1))]] <- rpYearsLocs
+        output[[paste0("rangePlotYearsReps", tail(Scenarios,1))]] <- rpYearsReps
+        output[[paste0("rangePlotLocsReps", tail(Scenarios,1))]] <- rpLocsReps
+        #
+        #Sys.sleep(5)
+        incProgress(1/10, detail = paste("Plot of Locs by Reps"))
+      }) # endof 2nd progress bar
+      
+        #  Update drop list for showing range plots for each Scenario           TODO make separate function
+      # lapply(1: tail(Scenarios,1), function(i){
+      #   # Show selection as text label
+      #   output[[paste0('plotMe', i)]] <- renderText({
+      #     paste("You chose", input[[paste0('rangePlots', i)]])   #  WORKS!!!
+      #   })
+      #   # Listener for each scenario selectInput 
+      #   if (i == tail(Scenarios,1))
+      #   {
+      #     print(paste("lapply ", i))
+      #     observeEvent(input[[paste0('rangePlots', i)]], {
+      #       print(paste("Show/Hide plot: ", input[[paste0('rangePlots', i)]]))
+      #       showPlot(input[[paste0('rangePlots', i)]], i) # TODO : write function that handles showing/hiding based on selectInput status
+      #     })
+      #   }
+      #   # else      # hide previous scenario plots
+      #   #  showPlot(input[[paste0('rangePlots', i)]], i) # TODO : write function that handles showing/hiding based on selectInput status
+      # })
+      
+      # Add observer for selectInput drop down list
+      i <- tail(Scenarios,1)
+      observeEvent(input[[paste0('rangePlots', i)]], {
+        # print(paste("Show/Hide plot: ", input[[paste0('rangePlots', i)]]))
+        showPlot(input[[paste0('rangePlots', i)]], i) # TODO : write function that handles showing/hiding based on selectInput status
+      })
+      
+      # Store results from all runs in a reactive matrix
+      rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = tail(Scenarios,1))
+      # Store all results of Gain per Year
+      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = tail(Scenarios,1), scenarioDT =  yti$data)
+      # Store all results of Gain per cost 
+      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = tail(Scenarios,1), scenarioDT =  yti$data)
+      
+      # Render grouped boxplots for all scenario results for Overview tab
+      output$overviewTab <- renderPlot({
+        plotScenarioGroup(rv$results_all)
+      })    
+      # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
+      output$overviewTabxTime <- renderPlot({
+        plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
+      })  
+      # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
+      output$overviewTabxCost <- renderPlot({
+        plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
+      })   
+      
+      
+  
+      
+      # Include content from R file locally as if it was pasted here to manage if-else
+      source('if_run_btn.r', local=TRUE) # OLD METHOD with if-else loop handling but with duplicated code for up to 5 scenarios WORKS!
+      #
+      # NOT USED FOR NOW
+      # source('update_scenarios.r', local = TRUE) # alternative recursive method IN PROGRESS
+      # source('all_in_one.r', local = TRUE) # alternative recursive method that uses divID -- IN PROGRESS 
+      #
+      # # Attempt to enrich v object with I/O data for every scenario - NOT USED
+      # v$data = list(v$data, list("id" = tail(Scenarios,1), 
+      #                            "in" = list("varG" = varG,
+      #                                        "varGxY" = varGxY,
+      #                                        "varGxL" = varGxL,
+      #                                        "stages_current" = stages_current,
+      #                                        "varieties" = varieties), 
+      #                            "out" = result)
+      #               )
    
     }) #endof try()
   }) # end of run button

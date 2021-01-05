@@ -50,58 +50,68 @@ if (tail(Scenarios,1) == 1)
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn1, {
     
-    result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                          isolate(reactDT1$data[,2]),isolate(reactDT1$data[,3]),
-                          isolate(reactDT1$data[,4]),isolate(reactDT1$data[,5]),
-                          isolate(reactDT1$data[,6]),isolate(input$varieties))
+  try(
+    if (!validInput(reactDT1$data)) # (is.unsorted(rev(entries))) # 
+    {
+      # TODO pop-up message and handle exception
+      shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
+      stop("Invalid input: entries should not increase in later stages.")
+    }
+    else
+    {
+      result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+                            isolate(reactDT1$data[,2]),isolate(reactDT1$data[,3]),
+                            isolate(reactDT1$data[,4]),isolate(reactDT1$data[,5]),
+                            isolate(reactDT1$data[,6]),isolate(input$varieties))
+      
+      output$cyPlot1 <- renderPlot({
+        plotScenario(result)
+      })   # end of renderPlot
+      
+      # Update Mean Genetic Gain for each stage in summary table
+      stages_current$mean <- meanGain(result)
+      reactDT1$data[,8] <- stages_current$mean
+  
+      # Update results_all entries
+      # First remove previous run entries
+      rv$results_all = removeScenarioResult(1)
+      # rv$results_all <- rv$results_all[,rv$results_all[3,]!=1] # WORKS!
+      #
+      # Then add to matrix
+      rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 1)
+  
+      # Render Group Boxplot with updated entries
+      output$overviewTab <- renderPlot({
+        plotScenarioGroup(rv$results_all)
+      })   # end of renderPlot for Overview tab
+      
+      
+      #------------ Overview Gain per Year ------------#
+      #------------------------------------------------#
+      # First remove previous run entries
+      rv$results_allxTime = removeScenarioResult(1, rv$results_allxTime)
+      # Store all results conditioned by Time in rv
+      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 1, scenarioDT = reactDT1$data)
+      #
+      # Render grouped boxplots for Gain per Year
+      output$overviewTabxTime <- renderPlot({
+        plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
+      })   
+      
+      
+      #------------ Overview Gain per Cost ------------#
+      #------------------------------------------------#
+      # First remove previous run entries
+      rv$results_allxCost = removeScenarioResult(1, rv$results_allxCost)
+      # Store all Gain results conditioned by Cost
+      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 1, scenarioDT = reactDT1$data)
+      #
+      # Render grouped boxplots for Gain per Cost
+      output$overviewTabxCost <- renderPlot({
+              plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
+      })  
     
-    output$cyPlot1 <- renderPlot({
-      plotScenario(result)
-    })   # end of renderPlot
-    
-    # Update Mean Genetic Gain for each stage in summary table
-    stages_current$mean <- round(apply(result, 1, mean), 2)
-    reactDT1$data[,8] <- stages_current$mean
-
-    # Update results_all entries
-    # First remove previous run entries
-    rv$results_all = removeScenarioResult(1)
-    # rv$results_all <- rv$results_all[,rv$results_all[3,]!=1] # WORKS!
-    #
-    # Then add to matrix
-    rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 1)
-
-    # Render Group Boxplot with updated entries
-    output$overviewTab <- renderPlot({
-      plotScenarioGroup(rv$results_all)
-    })   # end of renderPlot for Overview tab
-    
-    
-    #------------ Overview Gain per Year ------------#
-    #------------------------------------------------#
-    # First remove previous run entries
-    rv$results_allxTime = removeScenarioResult(1, rv$results_allxTime)
-    # Store all results conditioned by Time in rv
-    rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 1, scenarioDT = reactDT1$data)
-    #
-    # Render grouped boxplots for Gain per Year
-    output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
-    })   
-    
-    
-    #------------ Overview Gain per Cost ------------#
-    #------------------------------------------------#
-    # First remove previous run entries
-    rv$results_allxCost = removeScenarioResult(1, rv$results_allxCost)
-    # Store all Gain results conditioned by Cost
-    rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 1, scenarioDT = reactDT1$data)
-    #
-    # Render grouped boxplots for Gain per Cost
-    output$overviewTabxCost <- renderPlot({
-            plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
-    })  
-    
+    }) #endof try()
   }) # endof update btn1
 
   # Update H2 for every stage as soon as input data that affect H2 change
@@ -145,58 +155,68 @@ if (tail(Scenarios,1) == 1)
 
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn2, {
-    result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                          isolate(reactDT2$data[,2]),isolate(reactDT2$data[,3]),
-                          isolate(reactDT2$data[,4]),isolate(reactDT2$data[,5]),
-                          isolate(reactDT2$data[,6]),isolate(input$varieties))
-
-    output$cyPlot2 <- renderPlot({
-      plotScenario(result)
-    })   # end of renderPlot
-
-    # Update Mean Genetic Gain for each stage in summary table
-    stages_current$mean <- round(apply(result, 1, mean), 2)
-    reactDT2$data[,8] <- stages_current$mean
     
-    # Update results_all entries
-    # First remove previous run entries
-    rv$results_all = removeScenarioResult(2)
-    
-    # Then add to matrix
-    rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 2)
-
-    # Render Group Boxplot with updated entries
-    output$overviewTab <- renderPlot({
-      plotScenarioGroup(rv$results_all)
-    })   # end of renderPlot for Overview tab
-    
-    
-    #------------ Overview Plot x Time --------------#
-    #------------------------------------------------#
-    # Update results_allxTime entries
-    # First remove previous run entries
-    rv$results_allxTime = removeScenarioResult(2, rv$results_allxTime) 
-    #
-    # Store all results conditioned by Time in rv
-    rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 2, scenarioDT = reactDT2$data)
-    #
-    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
-    output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
-    })   # end of renderPlot for Overview tab    
-    
-    #------------ Overview Gain per Cost ------------#
-    #------------------------------------------------#
-    # First remove previous run entries
-    rv$results_allxCost = removeScenarioResult(2, rv$results_allxCost)
-    # Store all Gain results conditioned by Cost
-    rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 2, scenarioDT = reactDT2$data)
-    #
-    # Render grouped boxplots for Gain per Cost
-    output$overviewTabxCost <- renderPlot({
-            plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
-    })  
-    
+  try(
+    if (!validInput(reactDT2$data)) # (is.unsorted(rev(entries))) # 
+    {
+      # TODO pop-up message and handle exception
+      shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
+      stop("Invalid input: entries should not increase in later stages.")
+    }
+    else
+    {
+      result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+                            isolate(reactDT2$data[,2]),isolate(reactDT2$data[,3]),
+                            isolate(reactDT2$data[,4]),isolate(reactDT2$data[,5]),
+                            isolate(reactDT2$data[,6]),isolate(input$varieties))
+  
+      output$cyPlot2 <- renderPlot({
+        plotScenario(result)
+      })   # end of renderPlot
+  
+      # Update Mean Genetic Gain for each stage in summary table
+      stages_current$mean <- meanGain(result)
+      reactDT2$data[,8] <- stages_current$mean
+      
+      # Update results_all entries
+      # First remove previous run entries
+      rv$results_all = removeScenarioResult(2)
+      
+      # Then add to matrix
+      rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 2)
+  
+      # Render Group Boxplot with updated entries
+      output$overviewTab <- renderPlot({
+        plotScenarioGroup(rv$results_all)
+      })   # end of renderPlot for Overview tab
+      
+      
+      #------------ Overview Plot x Time --------------#
+      #------------------------------------------------#
+      # Update results_allxTime entries
+      # First remove previous run entries
+      rv$results_allxTime = removeScenarioResult(2, rv$results_allxTime) 
+      #
+      # Store all results conditioned by Time in rv
+      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 2, scenarioDT = reactDT2$data)
+      #
+      # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
+      output$overviewTabxTime <- renderPlot({
+        plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
+      })   # end of renderPlot for Overview tab    
+      
+      #------------ Overview Gain per Cost ------------#
+      #------------------------------------------------#
+      # First remove previous run entries
+      rv$results_allxCost = removeScenarioResult(2, rv$results_allxCost)
+      # Store all Gain results conditioned by Cost
+      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 2, scenarioDT = reactDT2$data)
+      #
+      # Render grouped boxplots for Gain per Cost
+      output$overviewTabxCost <- renderPlot({
+              plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
+      })  
+    }) #endof try()
   }) # endof update btn
 
   # Update H2 for every stage as soon as input data that affect H2 change
@@ -240,58 +260,67 @@ if (tail(Scenarios,1) == 1)
 
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn3, {
-
-    result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                          isolate(reactDT3$data[,2]),isolate(reactDT3$data[,3]),
-                          isolate(reactDT3$data[,4]),isolate(reactDT3$data[,5]),
-                          isolate(reactDT3$data[,6]),isolate(input$varieties))
-    output$cyPlot3 <- renderPlot({
-      plotScenario(result)
-    })   # end of renderPlot
-
-    # Update Mean Genetic Gain for each stage in summary table
-    stages_current$mean <- round(apply(result, 1, mean), 2)
-    reactDT3$data[,8] <- stages_current$mean
-
-    # Update results_all entries
-    # First remove previous run entries
-    rv$results_all = removeScenarioResult(3)
-
-    # Then add to matrix
-    rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 3)
-
-    # Render Group Boxplot with updated entries
-    output$overviewTab <- renderPlot({
-      plotScenarioGroup(rv$results_all)
-    })   # end of renderPlot for Overview tab
     
-    
-    #------------ Overview Plot x Time --------------#
-    #------------------------------------------------#
-    # Update results_allxTime entries
-    # First remove previous run entries
-    rv$results_allxTime = removeScenarioResult(3, rv$results_allxTime)
-    #
-    # Store all results conditioned by Time in rv
-    rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 3, scenarioDT = reactDT3$data)
-    #
-    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
-    output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
-    })   # end of renderPlot for Overview tab    
-    
-    #------------ Overview Gain per Cost ------------#
-    #------------------------------------------------#
-    # First remove previous run entries
-    rv$results_allxCost = removeScenarioResult(3, rv$results_allxCost)
-    # Store all Gain results conditioned by Cost
-    rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 3, scenarioDT = reactDT3$data)
-    #
-    # Render grouped boxplots for Gain per Cost
-    output$overviewTabxCost <- renderPlot({
-            plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
-    })  
-    
+  try(
+    if (!validInput(reactDT3$data)) # (is.unsorted(rev(entries))) # 
+    {
+      # TODO pop-up message and handle exception
+      shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
+      stop("Invalid input: entries should not increase in later stages.")
+    }
+    else
+    {
+      result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+                            isolate(reactDT3$data[,2]),isolate(reactDT3$data[,3]),
+                            isolate(reactDT3$data[,4]),isolate(reactDT3$data[,5]),
+                            isolate(reactDT3$data[,6]),isolate(input$varieties))
+      output$cyPlot3 <- renderPlot({
+        plotScenario(result)
+      })   # end of renderPlot
+  
+      # Update Mean Genetic Gain for each stage in summary table
+      stages_current$mean <- meanGain(result)
+      reactDT3$data[,8] <- stages_current$mean
+  
+      # Update results_all entries
+      # First remove previous run entries
+      rv$results_all = removeScenarioResult(3)
+  
+      # Then add to matrix
+      rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 3)
+  
+      # Render Group Boxplot with updated entries
+      output$overviewTab <- renderPlot({
+        plotScenarioGroup(rv$results_all)
+      })   # end of renderPlot for Overview tab
+      
+      
+      #------------ Overview Plot x Time --------------#
+      #------------------------------------------------#
+      # Update results_allxTime entries
+      # First remove previous run entries
+      rv$results_allxTime = removeScenarioResult(3, rv$results_allxTime)
+      #
+      # Store all results conditioned by Time in rv
+      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 3, scenarioDT = reactDT3$data)
+      #
+      # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
+      output$overviewTabxTime <- renderPlot({
+        plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
+      })   # end of renderPlot for Overview tab    
+      
+      #------------ Overview Gain per Cost ------------#
+      #------------------------------------------------#
+      # First remove previous run entries
+      rv$results_allxCost = removeScenarioResult(3, rv$results_allxCost)
+      # Store all Gain results conditioned by Cost
+      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 3, scenarioDT = reactDT3$data)
+      #
+      # Render grouped boxplots for Gain per Cost
+      output$overviewTabxCost <- renderPlot({
+              plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
+      })  
+    }) #endof try()
   }) # endof update btn
 
   # Update H2 for every stage as soon as input data that affect H2 change
@@ -335,58 +364,67 @@ if (tail(Scenarios,1) == 1)
 
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn4, {
-
-    result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                          isolate(reactDT4$data[,2]),isolate(reactDT4$data[,3]),
-                          isolate(reactDT4$data[,4]),isolate(reactDT4$data[,5]),
-                          isolate(reactDT4$data[,6]),isolate(input$varieties))
-    output$cyPlot4 <- renderPlot({
-      plotScenario(result)
-    })   # end of renderPlot
-
-    # Update Mean Genetic Gain for each stage in summary table
-    stages_current$mean <- round(apply(result, 1, mean), 2)
-    reactDT4$data[,8] <- stages_current$mean
-
-    # Update results_all entries
-    # First remove previous run entries
-    rv$results_all = removeScenarioResult(4)
-
-    # Then add to matrix
-    rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 4)
-
-    # Render Group Boxplot with updated entries
-    output$overviewTab <- renderPlot({
-      plotScenarioGroup(rv$results_all)
-    })   # end of renderPlot for Overview tab
     
-    
-    #------------ Overview Plot x Time --------------#
-    #------------------------------------------------#
-    # Update results_allxTime entries
-    # First remove previous run entries
-    rv$results_allxTime = removeScenarioResult(4, rv$results_allxTime) 
-    #
-    # Store all results conditioned by Time in rv
-    rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 4, scenarioDT = reactDT4$data)
-    #
-    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
-    output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
-    })   # end of renderPlot for Overview tab    
-    
-    #------------ Overview Gain per Cost ------------#
-    #------------------------------------------------#
-    # First remove previous run entries
-    rv$results_allxCost = removeScenarioResult(4, rv$results_allxCost)
-    # Store all Gain results conditioned by Cost
-    rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 4, scenarioDT = reactDT4$data)
-    #
-    # Render grouped boxplots for Gain per Cost
-    output$overviewTabxCost <- renderPlot({
-            plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
-    })  
-
+  try(
+    if (!validInput(reactDT4$data)) # (is.unsorted(rev(entries))) # 
+    {
+      # TODO pop-up message and handle exception
+      shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
+      stop("Invalid input: entries should not increase in later stages.")
+    }
+    else
+    {
+      result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+                            isolate(reactDT4$data[,2]),isolate(reactDT4$data[,3]),
+                            isolate(reactDT4$data[,4]),isolate(reactDT4$data[,5]),
+                            isolate(reactDT4$data[,6]),isolate(input$varieties))
+      output$cyPlot4 <- renderPlot({
+        plotScenario(result)
+      })   # end of renderPlot
+  
+      # Update Mean Genetic Gain for each stage in summary table
+      stages_current$mean <- meanGain(result)
+      reactDT4$data[,8] <- stages_current$mean
+  
+      # Update results_all entries
+      # First remove previous run entries
+      rv$results_all = removeScenarioResult(4)
+  
+      # Then add to matrix
+      rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 4)
+  
+      # Render Group Boxplot with updated entries
+      output$overviewTab <- renderPlot({
+        plotScenarioGroup(rv$results_all)
+      })   # end of renderPlot for Overview tab
+      
+      
+      #------------ Overview Plot x Time --------------#
+      #------------------------------------------------#
+      # Update results_allxTime entries
+      # First remove previous run entries
+      rv$results_allxTime = removeScenarioResult(4, rv$results_allxTime) 
+      #
+      # Store all results conditioned by Time in rv
+      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 4, scenarioDT = reactDT4$data)
+      #
+      # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
+      output$overviewTabxTime <- renderPlot({
+        plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
+      })   # end of renderPlot for Overview tab    
+      
+      #------------ Overview Gain per Cost ------------#
+      #------------------------------------------------#
+      # First remove previous run entries
+      rv$results_allxCost = removeScenarioResult(4, rv$results_allxCost)
+      # Store all Gain results conditioned by Cost
+      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 4, scenarioDT = reactDT4$data)
+      #
+      # Render grouped boxplots for Gain per Cost
+      output$overviewTabxCost <- renderPlot({
+              plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
+      })  
+    }) #endof try()
   }) # endof update btn
 
   # Update H2 for every stage as soon as input data that affect H2 change
@@ -432,58 +470,67 @@ if (tail(Scenarios,1) == 1)
 
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn5, {
-
-    result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                          isolate(reactDT5$data[,2]),isolate(reactDT5$data[,3]),
-                          isolate(reactDT5$data[,4]),isolate(reactDT5$data[,5]),
-                          isolate(reactDT5$data[,6]),isolate(input$varieties))
-    output$cyPlot5 <- renderPlot({
-      plotScenario(result)
-    })   # end of renderPlot
-
-    # Update Mean Genetic Gain for each stage in summary table
-    stages_current$mean <- round(apply(result, 1, mean), 2)
-    reactDT5$data[,8] <- stages_current$mean
-
-    # Update results_all entries
-    # First remove previous run entries
-    rv$results_all = removeScenarioResult(5)
-
-    # Then add to matrix
-    rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 5)
-
-    # Render Group Boxplot with updated entries
-    output$overviewTab <- renderPlot({
-      plotScenarioGroup(rv$results_all)
-    })   # end of renderPlot for Overview tab
-
     
-    #------------ Overview Plot x Time --------------#
-    #------------------------------------------------#
-    # Update results_allxTime entries
-    # First remove previous run entries
-    rv$results_allxTime = removeScenarioResult(5, rv$results_allxTime)
-    #
-    # Store all results conditioned by Time in rv
-    rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 5, scenarioDT = reactDT5$data)
-    #
-    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
-    output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
-    })   # end of renderPlot for Overview tab
-    
-    #------------ Overview Gain per Cost ------------#
-    #------------------------------------------------#
-    # First remove previous run entries
-    rv$results_allxCost = removeScenarioResult(5, rv$results_allxCost)
-    # Store all Gain results conditioned by Cost
-    rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 5, scenarioDT = reactDT5$data)
-    #
-    # Render grouped boxplots for Gain per Cost
-    output$overviewTabxCost <- renderPlot({
-            plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
-    })  
-    
+  try(
+    if (!validInput(reactDT5$data)) # (is.unsorted(rev(entries))) # 
+    {
+      # TODO pop-up message and handle exception
+      shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
+      stop("Invalid input: entries should not increase in later stages.")
+    }
+    else
+    {
+      result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+                            isolate(reactDT5$data[,2]),isolate(reactDT5$data[,3]),
+                            isolate(reactDT5$data[,4]),isolate(reactDT5$data[,5]),
+                            isolate(reactDT5$data[,6]),isolate(input$varieties))
+      output$cyPlot5 <- renderPlot({
+        plotScenario(result)
+      })   # end of renderPlot
+  
+      # Update Mean Genetic Gain for each stage in summary table
+      stages_current$mean <- meanGain(result)
+      reactDT5$data[,8] <- stages_current$mean
+  
+      # Update results_all entries
+      # First remove previous run entries
+      rv$results_all = removeScenarioResult(5)
+  
+      # Then add to matrix
+      rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 5)
+  
+      # Render Group Boxplot with updated entries
+      output$overviewTab <- renderPlot({
+        plotScenarioGroup(rv$results_all)
+      })   # end of renderPlot for Overview tab
+  
+      
+      #------------ Overview Plot x Time --------------#
+      #------------------------------------------------#
+      # Update results_allxTime entries
+      # First remove previous run entries
+      rv$results_allxTime = removeScenarioResult(5, rv$results_allxTime)
+      #
+      # Store all results conditioned by Time in rv
+      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 5, scenarioDT = reactDT5$data)
+      #
+      # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
+      output$overviewTabxTime <- renderPlot({
+        plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
+      })   # end of renderPlot for Overview tab
+      
+      #------------ Overview Gain per Cost ------------#
+      #------------------------------------------------#
+      # First remove previous run entries
+      rv$results_allxCost = removeScenarioResult(5, rv$results_allxCost)
+      # Store all Gain results conditioned by Cost
+      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 5, scenarioDT = reactDT5$data)
+      #
+      # Render grouped boxplots for Gain per Cost
+      output$overviewTabxCost <- renderPlot({
+              plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
+      })  
+    }) #endof try()
   }) # endof update btn
 
   # Update H2 for every stage as soon as input data that affect H2 change
@@ -529,57 +576,66 @@ if (tail(Scenarios,1) == 1)
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn6, {
     
-    result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                         isolate(reactDT6$data[,2]),isolate(reactDT6$data[,3]),
-                         isolate(reactDT6$data[,4]),isolate(reactDT6$data[,5]),
-                         isolate(reactDT6$data[,6]),isolate(input$varieties))
-    output$cyPlot6 <- renderPlot({
-      plotScenario(result)
-    })   # end of renderPlot
-    
-    # Update Mean Genetic Gain for each stage in summary table
-    stages_current$mean <- round(apply(result, 1, mean), 2)
-    reactDT6$data[,8] <- stages_current$mean    
-    
-    # Update results_all entries
-    # First remove previous run entries
-    rv$results_all = removeScenarioResult(6)
-    
-    # Then add to matrix
-    rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 6)
-    
-    # Render Group Boxplot with updated entries
-    output$overviewTab <- renderPlot({
-      plotScenarioGroup(rv$results_all)
-    })   # end of renderPlot for Overview tab
-    
-    
-    #------------ Overview Plot x Time --------------#
-    #------------------------------------------------#
-    # Update results_allxTime entries
-    # First remove previous run entries
-    rv$results_allxTime = removeScenarioResult(6, rv$results_allxTime)
-    #
-    # Store all results conditioned by Time in rv
-    rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 6, scenarioDT = reactDT6$data)
-    #
-    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
-    output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
-    })   # end of renderPlot for Overview tab
-    
-    #------------ Overview Gain per Cost ------------#
-    #------------------------------------------------#
-    # First remove previous run entries
-    rv$results_allxCost = removeScenarioResult(6, rv$results_allxCost)
-    # Store all Gain results conditioned by Cost
-    rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 6, scenarioDT = reactDT6$data)
-    #
-    # Render grouped boxplots for Gain per Cost
-    output$overviewTabxCost <- renderPlot({
-      plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
-    })  
-    
+  try(
+    if (!validInput(reactDT6$data)) # (is.unsorted(rev(entries))) # 
+    {
+      # TODO pop-up message and handle exception
+      shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
+      stop("Invalid input: entries should not increase in later stages.")
+    }
+    else
+    {
+      result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+                           isolate(reactDT6$data[,2]),isolate(reactDT6$data[,3]),
+                           isolate(reactDT6$data[,4]),isolate(reactDT6$data[,5]),
+                           isolate(reactDT6$data[,6]),isolate(input$varieties))
+      output$cyPlot6 <- renderPlot({
+        plotScenario(result)
+      })   # end of renderPlot
+      
+      # Update Mean Genetic Gain for each stage in summary table
+      stages_current$mean <- meanGain(result)
+      reactDT6$data[,8] <- stages_current$mean    
+      
+      # Update results_all entries
+      # First remove previous run entries
+      rv$results_all = removeScenarioResult(6)
+      
+      # Then add to matrix
+      rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 6)
+      
+      # Render Group Boxplot with updated entries
+      output$overviewTab <- renderPlot({
+        plotScenarioGroup(rv$results_all)
+      })   # end of renderPlot for Overview tab
+      
+      
+      #------------ Overview Plot x Time --------------#
+      #------------------------------------------------#
+      # Update results_allxTime entries
+      # First remove previous run entries
+      rv$results_allxTime = removeScenarioResult(6, rv$results_allxTime)
+      #
+      # Store all results conditioned by Time in rv
+      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 6, scenarioDT = reactDT6$data)
+      #
+      # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
+      output$overviewTabxTime <- renderPlot({
+        plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
+      })   # end of renderPlot for Overview tab
+      
+      #------------ Overview Gain per Cost ------------#
+      #------------------------------------------------#
+      # First remove previous run entries
+      rv$results_allxCost = removeScenarioResult(6, rv$results_allxCost)
+      # Store all Gain results conditioned by Cost
+      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 6, scenarioDT = reactDT6$data)
+      #
+      # Render grouped boxplots for Gain per Cost
+      output$overviewTabxCost <- renderPlot({
+        plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
+      })  
+    }) #endof try()
   }) # endof update btn
   
   # Update H2 for every stage as soon as input data that affect H2 change
@@ -624,57 +680,66 @@ if (tail(Scenarios,1) == 1)
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn7, {
     
-    result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                         isolate(reactDT7$data[,2]),isolate(reactDT7$data[,3]),
-                         isolate(reactDT7$data[,4]),isolate(reactDT7$data[,5]),
-                         isolate(reactDT7$data[,6]),isolate(input$varieties))
-    output$cyPlot7 <- renderPlot({
-      plotScenario(result)
-    })   # end of renderPlot
-    
-    # Update Mean Genetic Gain for each stage in summary table
-    stages_current$mean <- round(apply(result, 1, mean), 2)
-    reactDT7$data[,8] <- stages_current$mean 
-    
-    # Update results_all entries
-    # First remove previous run entries
-    rv$results_all = removeScenarioResult(7)
-    
-    # Then add to matrix
-    rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 7)
-    
-    # Render Group Boxplot with updated entries
-    output$overviewTab <- renderPlot({
-      plotScenarioGroup(rv$results_all)
-    })   # end of renderPlot for Overview tab
-    
-    
-    #------------ Overview Plot x Time --------------#
-    #------------------------------------------------#
-    # Update results_allxTime entries
-    # First remove previous run entries
-    rv$results_allxTime = removeScenarioResult(7, rv$results_allxTime)
-    #
-    # Store all results conditioned by Time in rv
-    rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 7, scenarioDT = reactDT7$data)
-    #
-    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
-    output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
-    })   # end of renderPlot for Overview tab
-    
-    #------------ Overview Gain per Cost ------------#
-    #------------------------------------------------#
-    # First remove previous run entries
-    rv$results_allxCost = removeScenarioResult(7, rv$results_allxCost)
-    # Store all Gain results conditioned by Cost
-    rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 7, scenarioDT = reactDT7$data)
-    #
-    # Render grouped boxplots for Gain per Cost
-    output$overviewTabxCost <- renderPlot({
-      plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
-    })  
-    
+  try(
+    if (!validInput(reactDT7$data)) # (is.unsorted(rev(entries))) # 
+    {
+      # TODO pop-up message and handle exception
+      shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
+      stop("Invalid input: entries should not increase in later stages.")
+    }
+    else
+    {
+      result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+                           isolate(reactDT7$data[,2]),isolate(reactDT7$data[,3]),
+                           isolate(reactDT7$data[,4]),isolate(reactDT7$data[,5]),
+                           isolate(reactDT7$data[,6]),isolate(input$varieties))
+      output$cyPlot7 <- renderPlot({
+        plotScenario(result)
+      })   # end of renderPlot
+      
+      # Update Mean Genetic Gain for each stage in summary table
+      stages_current$mean <- meanGain(result)
+      reactDT7$data[,8] <- stages_current$mean 
+      
+      # Update results_all entries
+      # First remove previous run entries
+      rv$results_all = removeScenarioResult(7)
+      
+      # Then add to matrix
+      rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 7)
+      
+      # Render Group Boxplot with updated entries
+      output$overviewTab <- renderPlot({
+        plotScenarioGroup(rv$results_all)
+      })   # end of renderPlot for Overview tab
+      
+      
+      #------------ Overview Plot x Time --------------#
+      #------------------------------------------------#
+      # Update results_allxTime entries
+      # First remove previous run entries
+      rv$results_allxTime = removeScenarioResult(7, rv$results_allxTime)
+      #
+      # Store all results conditioned by Time in rv
+      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 7, scenarioDT = reactDT7$data)
+      #
+      # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
+      output$overviewTabxTime <- renderPlot({
+        plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
+      })   # end of renderPlot for Overview tab
+      
+      #------------ Overview Gain per Cost ------------#
+      #------------------------------------------------#
+      # First remove previous run entries
+      rv$results_allxCost = removeScenarioResult(7, rv$results_allxCost)
+      # Store all Gain results conditioned by Cost
+      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 7, scenarioDT = reactDT7$data)
+      #
+      # Render grouped boxplots for Gain per Cost
+      output$overviewTabxCost <- renderPlot({
+        plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
+      })  
+    }) #endof try()
   }) # endof update btn
   
   # Update H2 for every stage as soon as input data that affect H2 change
@@ -719,57 +784,66 @@ if (tail(Scenarios,1) == 1)
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn8, {
     
-    result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                         isolate(reactDT8$data[,2]),isolate(reactDT8$data[,3]),
-                         isolate(reactDT8$data[,4]),isolate(reactDT8$data[,5]),
-                         isolate(reactDT8$data[,6]),isolate(input$varieties))
-    output$cyPlot8 <- renderPlot({
-      plotScenario(result)
-    })   # end of renderPlot
-    
-    # Update Mean Genetic Gain for each stage in summary table
-    stages_current$mean <- round(apply(result, 1, mean), 2)
-    reactDT8$data[,8] <- stages_current$mean   
-    
-    # Update results_all entries
-    # First remove previous run entries
-    rv$results_all = removeScenarioResult(8)
-    
-    # Then add to matrix
-    rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 8)
-    
-    # Render Group Boxplot with updated entries
-    output$overviewTab <- renderPlot({
-      plotScenarioGroup(rv$results_all)
-    })   # end of renderPlot for Overview tab
-    
-    
-    #------------ Overview Plot x Time --------------#
-    #------------------------------------------------#
-    # Update results_allxTime entries
-    # First remove previous run entries
-    rv$results_allxTime = removeScenarioResult(8, rv$results_allxTime)
-    #
-    # Store all results conditioned by Time in rv
-    rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 8, scenarioDT = reactDT8$data)
-    #
-    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
-    output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
-    })   # end of renderPlot for Overview tab
-    
-    #------------ Overview Gain per Cost ------------#
-    #------------------------------------------------#
-    # First remove previous run entries
-    rv$results_allxCost = removeScenarioResult(8, rv$results_allxCost)
-    # Store all Gain results conditioned by Cost
-    rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 8, scenarioDT = reactDT8$data)
-    #
-    # Render grouped boxplots for Gain per Cost
-    output$overviewTabxCost <- renderPlot({
-      plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
-    })  
-    
+  try(
+    if (!validInput(reactDT8$data)) # (is.unsorted(rev(entries))) # 
+    {
+      # TODO pop-up message and handle exception
+      shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
+      stop("Invalid input: entries should not increase in later stages.")
+    }
+    else
+    {
+      result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+                           isolate(reactDT8$data[,2]),isolate(reactDT8$data[,3]),
+                           isolate(reactDT8$data[,4]),isolate(reactDT8$data[,5]),
+                           isolate(reactDT8$data[,6]),isolate(input$varieties))
+      output$cyPlot8 <- renderPlot({
+        plotScenario(result)
+      })   # end of renderPlot
+      
+      # Update Mean Genetic Gain for each stage in summary table
+      stages_current$mean <- meanGain(result)
+      reactDT8$data[,8] <- stages_current$mean   
+      
+      # Update results_all entries
+      # First remove previous run entries
+      rv$results_all = removeScenarioResult(8)
+      
+      # Then add to matrix
+      rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 8)
+      
+      # Render Group Boxplot with updated entries
+      output$overviewTab <- renderPlot({
+        plotScenarioGroup(rv$results_all)
+      })   # end of renderPlot for Overview tab
+      
+      
+      #------------ Overview Plot x Time --------------#
+      #------------------------------------------------#
+      # Update results_allxTime entries
+      # First remove previous run entries
+      rv$results_allxTime = removeScenarioResult(8, rv$results_allxTime)
+      #
+      # Store all results conditioned by Time in rv
+      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 8, scenarioDT = reactDT8$data)
+      #
+      # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
+      output$overviewTabxTime <- renderPlot({
+        plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
+      })   # end of renderPlot for Overview tab
+      
+      #------------ Overview Gain per Cost ------------#
+      #------------------------------------------------#
+      # First remove previous run entries
+      rv$results_allxCost = removeScenarioResult(8, rv$results_allxCost)
+      # Store all Gain results conditioned by Cost
+      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 8, scenarioDT = reactDT8$data)
+      #
+      # Render grouped boxplots for Gain per Cost
+      output$overviewTabxCost <- renderPlot({
+        plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
+      })  
+    }) #endof try()
   }) # endof update btn
   
   # Update H2 for every stage as soon as input data that affect H2 change
@@ -814,57 +888,66 @@ if (tail(Scenarios,1) == 1)
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn9, {
     
-    result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                         isolate(reactDT9$data[,2]),isolate(reactDT9$data[,3]),
-                         isolate(reactDT9$data[,4]),isolate(reactDT9$data[,5]),
-                         isolate(reactDT9$data[,6]),isolate(input$varieties))
-    output$cyPlot9 <- renderPlot({
-      plotScenario(result)
-    })   # end of renderPlot
-    
-    # Update Mean Genetic Gain for each stage in summary table
-    stages_current$mean <- round(apply(result, 1, mean), 2)
-    reactDT9$data[,8] <- stages_current$mean 
-    
-    # Update results_all entries
-    # First remove previous run entries
-    rv$results_all = removeScenarioResult(9)
-    
-    # Then add to matrix
-    rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 9)
-    
-    # Render Group Boxplot with updated entries
-    output$overviewTab <- renderPlot({
-      plotScenarioGroup(rv$results_all)
-    })   # end of renderPlot for Overview tab
-    
-    
-    #------------ Overview Plot x Time --------------#
-    #------------------------------------------------#
-    # Update results_allxTime entries
-    # First remove previous run entries
-    rv$results_allxTime = removeScenarioResult(9, rv$results_allxTime)
-    #
-    # Store all results conditioned by Time in rv
-    rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 9, scenarioDT = reactDT9$data)
-    #
-    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
-    output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
-    })   # end of renderPlot for Overview tab
-    
-    #------------ Overview Gain per Cost ------------#
-    #------------------------------------------------#
-    # First remove previous run entries
-    rv$results_allxCost = removeScenarioResult(9, rv$results_allxCost)
-    # Store all Gain results conditioned by Cost
-    rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 9, scenarioDT = reactDT9$data)
-    #
-    # Render grouped boxplots for Gain per Cost
-    output$overviewTabxCost <- renderPlot({
-      plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
-    })  
-    
+  try(
+    if (!validInput(reactDT9$data)) # (is.unsorted(rev(entries))) # 
+    {
+      # TODO pop-up message and handle exception
+      shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
+      stop("Invalid input: entries should not increase in later stages.")
+    }
+    else
+    {
+      result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+                           isolate(reactDT9$data[,2]),isolate(reactDT9$data[,3]),
+                           isolate(reactDT9$data[,4]),isolate(reactDT9$data[,5]),
+                           isolate(reactDT9$data[,6]),isolate(input$varieties))
+      output$cyPlot9 <- renderPlot({
+        plotScenario(result)
+      })   # end of renderPlot
+      
+      # Update Mean Genetic Gain for each stage in summary table
+      stages_current$mean <- meanGain(result)
+      reactDT9$data[,8] <- stages_current$mean 
+      
+      # Update results_all entries
+      # First remove previous run entries
+      rv$results_all = removeScenarioResult(9)
+      
+      # Then add to matrix
+      rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 9)
+      
+      # Render Group Boxplot with updated entries
+      output$overviewTab <- renderPlot({
+        plotScenarioGroup(rv$results_all)
+      })   # end of renderPlot for Overview tab
+      
+      
+      #------------ Overview Plot x Time --------------#
+      #------------------------------------------------#
+      # Update results_allxTime entries
+      # First remove previous run entries
+      rv$results_allxTime = removeScenarioResult(9, rv$results_allxTime)
+      #
+      # Store all results conditioned by Time in rv
+      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 9, scenarioDT = reactDT9$data)
+      #
+      # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
+      output$overviewTabxTime <- renderPlot({
+        plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
+      })   # end of renderPlot for Overview tab
+      
+      #------------ Overview Gain per Cost ------------#
+      #------------------------------------------------#
+      # First remove previous run entries
+      rv$results_allxCost = removeScenarioResult(9, rv$results_allxCost)
+      # Store all Gain results conditioned by Cost
+      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 9, scenarioDT = reactDT9$data)
+      #
+      # Render grouped boxplots for Gain per Cost
+      output$overviewTabxCost <- renderPlot({
+        plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
+      })  
+    }) #endof try()
   }) # endof update btn
   
   # Update H2 for every stage as soon as input data that affect H2 change
@@ -909,57 +992,66 @@ if (tail(Scenarios,1) == 1)
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn10, {
     
-    result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                         isolate(reactDT10$data[,2]),isolate(reactDT10$data[,3]),
-                         isolate(reactDT10$data[,4]),isolate(reactDT10$data[,5]),
-                         isolate(reactDT10$data[,6]),isolate(input$varieties))
-    output$cyPlot10 <- renderPlot({
-      plotScenario(result)
-    })   # end of renderPlot
-    
-    # Update Mean Genetic Gain for each stage in summary table
-    stages_current$mean <- round(apply(result, 1, mean), 2)
-    reactDT10$data[,8] <- stages_current$mean
-    
-    # Update results_all entries
-    # First remove previous run entries
-    rv$results_all = removeScenarioResult(10)
-    
-    # Then add to matrix
-    rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 10)
-    
-    # Render Group Boxplot with updated entries
-    output$overviewTab <- renderPlot({
-      plotScenarioGroup(rv$results_all)
-    })   # end of renderPlot for Overview tab
-    
-    
-    #------------ Overview Plot x Time --------------#
-    #------------------------------------------------#
-    # Update results_allxTime entries
-    # First remove previous run entries
-    rv$results_allxTime = removeScenarioResult(10, rv$results_allxTime)
-    #
-    # Store all results conditioned by Time in rv
-    rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 10, scenarioDT = reactDT10$data)
-    #
-    # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
-    output$overviewTabxTime <- renderPlot({
-      plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
-    })   # end of renderPlot for Overview tab
-    
-    #------------ Overview Gain per Cost ------------#
-    #------------------------------------------------#
-    # First remove previous run entries
-    rv$results_allxCost = removeScenarioResult(10, rv$results_allxCost)
-    # Store all Gain results conditioned by Cost
-    rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 10, scenarioDT = reactDT10$data)
-    #
-    # Render grouped boxplots for Gain per Cost
-    output$overviewTabxCost <- renderPlot({
-      plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
-    })  
-    
+  try(
+    if (!validInput(reactDT10$data)) # (is.unsorted(rev(entries))) # 
+    {
+      # TODO pop-up message and handle exception
+      shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
+      stop("Invalid input: entries should not increase in later stages.")
+    }
+    else
+    {
+      result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
+                           isolate(reactDT10$data[,2]),isolate(reactDT10$data[,3]),
+                           isolate(reactDT10$data[,4]),isolate(reactDT10$data[,5]),
+                           isolate(reactDT10$data[,6]),isolate(input$varieties))
+      output$cyPlot10 <- renderPlot({
+        plotScenario(result)
+      })   # end of renderPlot
+      
+      # Update Mean Genetic Gain for each stage in summary table
+      stages_current$mean <- meanGain(result)
+      reactDT10$data[,8] <- stages_current$mean
+      
+      # Update results_all entries
+      # First remove previous run entries
+      rv$results_all = removeScenarioResult(10)
+      
+      # Then add to matrix
+      rv$results_all = storeScenarioResult(result = result, results_all = rv$results_all, scenarioID = 10)
+      
+      # Render Group Boxplot with updated entries
+      output$overviewTab <- renderPlot({
+        plotScenarioGroup(rv$results_all)
+      })   # end of renderPlot for Overview tab
+      
+      
+      #------------ Overview Plot x Time --------------#
+      #------------------------------------------------#
+      # Update results_allxTime entries
+      # First remove previous run entries
+      rv$results_allxTime = removeScenarioResult(10, rv$results_allxTime)
+      #
+      # Store all results conditioned by Time in rv
+      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 10, scenarioDT = reactDT10$data)
+      #
+      # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
+      output$overviewTabxTime <- renderPlot({
+        plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
+      })   # end of renderPlot for Overview tab
+      
+      #------------ Overview Gain per Cost ------------#
+      #------------------------------------------------#
+      # First remove previous run entries
+      rv$results_allxCost = removeScenarioResult(10, rv$results_allxCost)
+      # Store all Gain results conditioned by Cost
+      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 10, scenarioDT = reactDT10$data)
+      #
+      # Render grouped boxplots for Gain per Cost
+      output$overviewTabxCost <- renderPlot({
+        plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
+      })  
+    }) #endof try()
   }) # endof update btn
   
   # Update H2 for every stage as soon as input data that affect H2 change
