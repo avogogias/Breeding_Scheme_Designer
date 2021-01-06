@@ -91,7 +91,7 @@ server <- function(input, output, clientData, session) {
     scy = sum(scenarioDT[1:stage,3]) + selfingYears
     return(scy)
   }
-  #
+  
   # function calcucates Gain / Time dividing the gain with the number of years passed until a stage is completed
   gainTime <- function(scenarioDT = yti$data, result = result, stage = 1) {
     gt = result[stage,] / stageTotalYears(scenarioDT, stage) 
@@ -324,6 +324,7 @@ server <- function(input, output, clientData, session) {
       })
       return(rr)
   }
+  
   # function takes 2 vectors and returns a matrix with a grid between paired min max elements
   rangeGrain <- function(min = input$range[1], max = input$range[2], grain = input$grain) {
     qrt = NULL
@@ -336,6 +337,7 @@ server <- function(input, output, clientData, session) {
     }
     return(qrt)
   } 
+  
   # function corrects min_entries if found smaller than entries of second stage
   checkMinEntries <- function(entries, min_entries) {
     if (length(entries)>1)
@@ -345,6 +347,7 @@ server <- function(input, output, clientData, session) {
     }
     return(min_entries)
   }
+  
   # function that creates a pop-up message and halts execution if entries vector is not in descending order
   validInput <- function(scenarioDT = yti$data) {
     entries = scenarioDT[,2]
@@ -352,12 +355,12 @@ server <- function(input, output, clientData, session) {
       return(FALSE)
     return(TRUE)
   }
+  
   # function that returns vector of the incremental mean gain per stage calculated from runScenario() result matrix
   meanGain <- function(result = result) {
     # first calculate aggregated mean gain for each stage
     result <- round(apply(result, 1, mean), 2)
     # replace accumulative gain with incremental gain per stage
-    if (length(gain)>1)
     gain <- result
     if (length(gain)>1)
       for (i in 2:length(gain)) {result[i] <- round(gain[i]-gain[i-1], 2)} 
@@ -453,7 +456,6 @@ server <- function(input, output, clientData, session) {
     
     return(gp)
   }
-  
   
   # Heatmap plot for ranges in grid
   plotMeanGridHeatmap <- function(df = isolate(rv$results_range), myFilter = c("fs_years", "fs_locs"), myX = entries, myY = reps, myXl = "First Stage Entries", myYl = "First Stage Reps", title = "Gain by Entries by Reps") {
