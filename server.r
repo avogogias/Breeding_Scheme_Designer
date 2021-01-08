@@ -369,11 +369,38 @@ server <- function(input, output, clientData, session) {
   meanGain <- function(result = result) {
     # first calculate aggregated mean gain for each stage
     result <- round(apply(result, 1, mean), 2)
+    return(result)
+  } 
+  
+  # function that returns vector of the incremental mean gain per stage calculated from runScenario() result matrix
+  meanGainInc <- function(result = result) {
+    # first calculate aggregated mean gain for each stage
+    result <- round(apply(result, 1, mean), 2)
     # replace accumulative gain with incremental gain per stage
     gain <- result
     if (length(gain)>1)
       for (i in 2:length(gain)) {result[i] <- round(gain[i]-gain[i-1], 2)} 
     return(result)
+  } 
+  
+  # function that returns vector of the incremental mean gain per stage scaled by Time calculated from runScenario() result matrix
+  meanGainxTime <- function(result = result, scenarioDT = yti$data) {
+    # update contents of result with result by stage scaled by Years
+    for(i in 1:nrow(result)) 
+    {
+      result[i,] = gainTime(scenarioDT, result, i)
+    }
+    return(meanGain(result))
+  } 
+  
+  # function that returns vector of the incremental mean gain per stage scaled by Cost calculated from runScenario() result matrix # NOT USED
+  meanGainxCost <- function(result = result, scenarioDT = yti$data) {
+    # update contents of result with result by stage scaled by Years
+    for(i in 1:nrow(result)) 
+    {
+      result[i,] = gainCost(scenarioDT, result, i)
+    }
+    return(meanGain(result))
   } 
   
   #********************************
@@ -658,6 +685,8 @@ server <- function(input, output, clientData, session) {
       
       # Calculate and Store Mean Genetic Gain for each stage in summary table
       stages_current$mean <- meanGain(result)
+      stages_current$meanxTime <- meanGainxTime(result, yti$data)
+      # stages_current$meanxCost <- meanGainxCost(result, yti$data) # too small to display
 
       # Show 2nd Progress Bar for Plotting
       withProgress(message = 'Ploting results', value = 0, {
