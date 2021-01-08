@@ -356,6 +356,15 @@ server <- function(input, output, clientData, session) {
     return(TRUE)
   }
   
+  # function that checks if varieties is smaller than Entries in last stage and smaller than min_entries in range
+  validVarieties <- function(scenarioDT = yti$data, varieties = input$varieties, min_entries = input$entries_range[1]) {
+    entries = scenarioDT[,2]
+    last_entries = tail(entries, 1)
+    if (varieties > last_entries )
+      return(FALSE)
+    return(TRUE)
+  }
+  
   # function that returns vector of the incremental mean gain per stage calculated from runScenario() result matrix
   meanGain <- function(result = result) {
     # first calculate aggregated mean gain for each stage
@@ -601,6 +610,12 @@ server <- function(input, output, clientData, session) {
         # TODO pop-up message and handle exception
         shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
         stop("Invalid input: entries should not increase in later stages.")
+      }
+      else if (!validVarieties())
+      {
+        # TODO pop-up message and handle exception
+        shinyalert("Oops!", "The number of varieties should be less than the number of entries in the last stage.", type = "error")
+        stop("Invalid input: varieties should be less than entries in last stage.")
       }
       else
       {

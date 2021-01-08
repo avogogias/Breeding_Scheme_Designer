@@ -49,7 +49,7 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                     bsTooltip("varGxY", "Genotype-by-year interaction variance.",
                               "right", "hover", NULL),
                     
-                    numericInput("negen", "Crossing/Selfing Years",
+                    numericInput("negen", "Multiplication Time (Years)",
                                 min = 0, max = 100, value = 4, step = 1, width = '80px'),
                     # sliderInput("negen", "Crossing/Selfing Years",
                     #             min = 0, max = 10, value = 4, width = '240px'), 
@@ -97,10 +97,8 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                                 min = 1, max = 30,
                                 value = c(1,10)),
                     
-                    
                     sliderInput("grain", "Samples in Range", min = 2, max = 5, value = 2, step = 1, width = '30%'),
                     
-
                     tags$h4("Costs:"),
                     # Make cost input divs appear in one line
                     bootstrapPage(
