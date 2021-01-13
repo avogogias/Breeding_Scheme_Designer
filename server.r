@@ -641,7 +641,7 @@ server <- function(input, output, clientData, session) {
       else if (!validVarieties())
       {
         # TODO pop-up message and handle exception
-        shinyalert("Oops!", "The number of varieties should be less than the number of entries in the last stage.", type = "error")
+        shinyalert("Oops!", "The number of selected parents should be less than the number of entries in the last stage.", type = "error")
         stop("Invalid input: varieties should be less than entries in last stage.")
       }
       else

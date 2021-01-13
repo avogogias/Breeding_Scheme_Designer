@@ -7,7 +7,7 @@ sumset_DT = list( options = list(
 ),
 class = "cell-border, compact, hover", 
 rownames = F, #TRUE,
-colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Mean', 'Gain by Time'), # 'Gain by Cost'), # Too small to report
+colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year'), # 'Gain by Cost'), # Too small to report
 filter = "none",
 escape = FALSE,
 autoHideNavigation = TRUE,
