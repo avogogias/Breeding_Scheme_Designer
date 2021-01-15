@@ -152,7 +152,25 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                     tabsetPanel(id = "my_tabs",
                                 tabPanel("ALL", tags$div(id = "placeholder")),
                                 tabPanel("Scenarios", uiOutput('mytabs')),
-                                tabPanel("Overview", plotOutput('overviewTab'), plotOutput('overviewTabxTime'), plotOutput('overviewTabxCost'))
+                                tabPanel("Overview", plotOutput('overviewTab'), plotOutput('overviewTabxTime'), plotOutput('overviewTabxCost')),
+                                tabPanel(title = "About",
+                                         tags$h2("About"),
+                                         tags$br(),
+                                         tags$p("The Breeding Scheme Designer is a GUI tool (based on R-shiny) that will allow breeders and donors 
+                                                to compare different breeding strategies and calculate expected genetic gain given a set of parameters."),
+                                         tags$p("Users can:"),
+                                         tags$ol(
+                                           tags$li("Define the input parameters of a breeding cycle scenario with multiple stages."),
+                                           tags$li("Calculate parameters such as expected genetic gain, heritability, gain per year, gain per cost etc."),
+                                           tags$li("Compare genetic gain results between different scenarios."),
+                                           tags$li("Estimate the cost of scenarios and compare gain per cost."),
+                                           tags$li("Explore expected genetic gain for ranges of input parameters and their combination.")
+                                         ),
+                                         tags$br(),
+                                         tags$p("To create a new breeding scenario, fill in the input fields on the left sidebar and press the Run button at the bottom."),
+                                         tags$br(),
+                                         tags$p("Results for each scenario are displayed in different tabs at the right panel.")
+                                ) # endof tabPanel          
                               # tabPanel("Range", plotOutput('rangePlotEntriesReps'))
                     ) # endo of tabsetPanel
                   ), # endof mainPanel
