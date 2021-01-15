@@ -9,7 +9,11 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                 useShinyjs(), # hide() or toggle() using shinyjs package
                 useShinyalert(), # create pop-up alert messages 
                 
-                titlePanel("Breeding Scheme Designer"),            
+                tags$img(src = "eib_logo.svg", height = "50", align = "right"),
+                titlePanel("Breeding Scheme Designer", windowTitle="Breeding Scheme Designer"),  
+                #titlePanel( div(column(width = 6, h2("Breeding Scheme Designer")), 
+                #                column(width = 6, tags$img(src = "eib_logo.svg", height = "50", align = "right"))),
+                #            windowTitle="Breeding Scheme Designer"),
                 
                 sidebarLayout(
                   
@@ -107,6 +111,10 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                                                                     min = 0, max = 1000, value = 10, step = 1, width = '80px')),
                       # Set Location Cost 
                       div(style="display:inline-block",numericInput("costPerLoc", "Loc Cost($):",
+                                                                    min = 0, max = 1000000, value = 1000, step = 1, width = '80px')),
+                      
+                      # Set Fixed Cost 
+                      div(style="display:inline-block",numericInput("costFixed", "Fixed Cost($):",
                                                                     min = 0, max = 1000000, value = 1000, step = 1, width = '80px'))
                     ),
                     # tooltip with help
@@ -114,6 +122,9 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                               "right", "hover", NULL),
                     # tooltip with help
                     bsTooltip("costPerLoc", "The cost of a single location in the program.",
+                              "right", "hover", NULL),
+                    # tooltip with help
+                    bsTooltip("costFixed", "The fixed cost for running the program.",
                               "right", "hover", NULL),
                     
                     # Economic cost summary output for scenario

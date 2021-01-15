@@ -81,8 +81,8 @@ server <- function(input, output, clientData, session) {
   }
   
   # function calculates total cost of scenario
-  totalCost <- function(scenarioDT = yti$data, costPerLoc = input$costPerLoc, costPerPlot = input$costPerPlot) {
-    tc = totalLocsCost(scenarioDT, costPerLoc) + totalPlotsCost(scenarioDT, costPerPlot)
+  totalCost <- function(scenarioDT = yti$data, costPerLoc = input$costPerLoc, costPerPlot = input$costPerPlot, costFixed = input$costFixed) {
+    tc = totalLocsCost(scenarioDT, costPerLoc) + totalPlotsCost(scenarioDT, costPerPlot) + costFixed
     return(tc)
   }
   
