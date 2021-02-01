@@ -169,7 +169,18 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                                          tags$br(),
                                          tags$p("To create a new breeding scenario, fill in the input fields on the left sidebar and press the Run button at the bottom."),
                                          tags$br(),
-                                         tags$p("Results for each scenario are displayed in different tabs at the right panel.")
+                                         tags$p("Results for each scenario are displayed in different tabs at the right panel."),
+                                         # Glossary TODO
+                                         tags$h1("Glossary"),
+                                         tags$ul(
+                                            tags$li(tags$b("Genetic Gain:"), "the change in the breeding/genetic value which is occuring for a particular trait of interest in a period of time."),
+                                            tags$li(tags$b("Stage:"), "The allocation of resources during a breeding program before selection takes place."),
+                                            tags$li(tags$b("Entries:"), "Number of entries. Must be smaller than or equal to the number of entries in the previous stage."),
+                                            tags$li(tags$b("Years:"), "Number of years. Increasing this value will increase heritability by decreasing variation due to GxY, GxL(Y) and plot error."),
+                                            tags$li(tags$b("Locs:"), "Number of locations. Increasing this value will increase heritability by decreasing variation due to GxL(Y) and plot error."),
+                                            tags$li(tags$b("Reps:"), "Number of replications. Increasing this value will increase heritability by decreasing variation due to plot error.")
+                                           
+                                         )
                                 ) # endof tabPanel          
                               # tabPanel("Range", plotOutput('rangePlotEntriesReps'))
                     ) # endo of tabsetPanel

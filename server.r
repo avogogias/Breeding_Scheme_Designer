@@ -847,7 +847,9 @@ server <- function(input, output, clientData, session) {
     }) #endof try()
   }) # end of run button
   
-
+  # Focus on about tab on start
+  updateTabsetPanel(session = session, inputId = "my_tabs", selected = "About")
+  
   
   # TV hide ALL tab 
   shiny::hideTab(inputId = "my_tabs", target = "ALL")
