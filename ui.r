@@ -169,19 +169,29 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                                          tags$br(),
                                          tags$p("To create a new breeding scenario, fill in the input fields on the left sidebar and press the Run button at the bottom."),
                                          tags$br(),
-                                         tags$p("Results for each scenario are displayed in different tabs at the right panel."),
+                                         tags$p("Results for each scenario are displayed in different tabs at the right panel.")
+                                ), # endof About
+                                tabPanel(title = "Glossary",
                                          # Glossary TODO
-                                         tags$h1("Glossary"),
+                                         tags$h2("Glossary of Terms"),
+                                         tags$br(),
                                          tags$ul(
-                                            tags$li(tags$b("Genetic Gain:"), "the change in the breeding/genetic value which is occuring for a particular trait of interest in a period of time."),
-                                            tags$li(tags$b("Stage:"), "The allocation of resources during a breeding program before selection takes place."),
-                                            tags$li(tags$b("Entries:"), "Number of entries. Must be smaller than or equal to the number of entries in the previous stage."),
-                                            tags$li(tags$b("Years:"), "Number of years. Increasing this value will increase heritability by decreasing variation due to GxY, GxL(Y) and plot error."),
-                                            tags$li(tags$b("Locs:"), "Number of locations. Increasing this value will increase heritability by decreasing variation due to GxL(Y) and plot error."),
-                                            tags$li(tags$b("Reps:"), "Number of replications. Increasing this value will increase heritability by decreasing variation due to plot error.")
-                                           
+                                           tags$li(tags$b("Genetic Variance:"), "The variance between entries in the first stage of yield trials."),
+                                           tags$li(tags$b("GxL(Y):"), "Genotype-by-location nested in year interaction variance. This value is equivalent to the sum of genotype-by-location interaction variance and genotype-by-location-by-year interaction varaince."),
+                                           tags$li(tags$b("GxY:"), "Genotype-by-year interaction variance."),
+                                           tags$li(tags$b("Multiplication Time (Years):"), "GNumber of early generation years. This phase of the breeding program is modeled without selection."),
+                                           tags$li(tags$b("Stage:"), "The allocation of resources during a breeding program before selection takes place."),
+                                           tags$li(tags$b("Entries:"), "Number of entries. Must be smaller than or equal to the number of entries in the previous stage."),
+                                           tags$li(tags$b("Years:"), "Number of years. Increasing this value will increase heritability by decreasing variation due to GxY, GxL(Y) and plot error."),
+                                           tags$li(tags$b("Locs:"), "Number of locations. Increasing this value will increase heritability by decreasing variation due to GxL(Y) and plot error."),
+                                           tags$li(tags$b("Reps:"), "Number of replications. Increasing this value will increase heritability by decreasing variation due to plot error."),
+                                           tags$li(tags$b("Plot Error:"), "Plot error affects the heritability and it can be used to adjust its calculated value when heritability of a trait is known."),
+                                           tags$li(tags$b("Heritability:"), "Calculated using a function that takes into account the variances, years, locs, reps and plot error of yield trials at each stage."),
+                                           tags$li(tags$b("Selected Parents:"), "The final number of selected entries. Must be smaller than or equal to the number of entries in the last stage."),
+                                           tags$li(tags$b("Samples in Range:"), "The number of samples or intervals to be considered for each set of ranges."),
+                                           tags$li(tags$b("Genetic Gain:"), "the change in the breeding/genetic value which is occuring for a particular trait of interest in a period of time.")
                                          )
-                                ) # endof tabPanel          
+                                )
                               # tabPanel("Range", plotOutput('rangePlotEntriesReps'))
                     ) # endo of tabsetPanel
                   ), # endof mainPanel

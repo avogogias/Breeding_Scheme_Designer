@@ -674,6 +674,7 @@ server <- function(input, output, clientData, session) {
       
       # Focus on new tab
       updateTabsetPanel(session = session, inputId = "sc_tabs", selected = paste0('Scenario', tail(Scenarios,1)))
+      #updateTabsetPanel(session = session, inputId = "my_tabs", selected = "Scenarios")
       
       print(paste("Start Run", tail(Scenarios,1))) # input$run_btn))
       # Run C++ code
