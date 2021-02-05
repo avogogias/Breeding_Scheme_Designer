@@ -140,7 +140,167 @@ if (tail(Scenarios,1) == 1)
                                                                ),
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
-                                                               server = F )  
+                                                               server = F ) 
+  
+  
+  
+  # Download Report for scenario #1
+  # 
+  # Download Report
+  output$download_btn1 <- downloadHandler(
+    filename = function() {
+      # return(paste0("report_", Sys.Date(), ".csv")) # csv version
+      return(paste0("scenario_01_report_", Sys.Date(), ".xlsx"))
+    },
+    content = function(file) {
+      #write.csv(rv$results_all, file, row.names = FALSE) # csv version
+      my_workbook <- createWorkbook()
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Summary"
+      )
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Cost"
+      )
+      
+      setColWidths(
+        my_workbook,
+        1,
+        cols = 1:4,
+        widths = c(12, 12, 12, 12)
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        c(
+          "Breeding Scenario",
+          "Input Settings"
+        ),
+        startRow = 1,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = 1:2,
+        cols = 1
+      )
+      
+      mtx <- matrix(c(input$varG, input$varGxL, input$varGxY, input$negen, input$varieties), nrow = 1, ncol = 5)
+      colnames(mtx) <- c("Genetic Variance", "GxL(Y)", "GxY", "Multiplication Time(Y)", "Selected Parents")
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        mtx,
+        startRow = 4,
+        startCol = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        c(
+          "Yield Trials"
+        ),
+        startRow = 8,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = 8,
+        cols = 1
+      )
+      
+      tmp_data <- reactDT1$data
+      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year')
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        #yti$data,
+        tmp_data,
+        startRow = 10,
+        startCol = 1
+      )
+      
+      # Second sheet with costs
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        c("Cost Details", "Input Settings"),
+        startRow = 1,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 2,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = c(1, 2, 8),
+        cols = 1
+      )
+      
+      cost_input <- matrix(c(input$costPerPlot, input$costPerLoc, input$costFixed), nrow = 1, ncol = 3)
+      colnames(cost_input) <- c("Plot Cost($)", "Loc Cost($)", "Fixed Cost($)")
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        cost_input,
+        startRow = 4,
+        startCol = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        "Cost Summary Table",
+        startRow = 8,
+        startCol = 1
+      )
+      
+      #cost_summary <- cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data))
+      cost_summary <- cbind(totalYears(reactDT1$data, input$negen), totalLocs(reactDT1$data), totalPlots(reactDT1$data), totalLocsCost(reactDT1$data), totalPlotsCost(reactDT1$data), totalCost(reactDT1$data))
+      colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        cost_summary,
+        startRow = 10,
+        startCol = 1
+      )
+      
+      saveWorkbook(my_workbook, file)
+    }
+  )
+  
+  
+  
+  
+  
+  
+  
 
 } else if (tail(Scenarios,1) == 2)
 {

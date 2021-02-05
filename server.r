@@ -6,6 +6,7 @@ library(shinyjs)
 library(data.table)
 library(dplyr)
 library(plotly)
+library(openxlsx)
 
 sourceCpp("Engine.cpp")
 
@@ -136,6 +137,7 @@ server <- function(input, output, clientData, session) {
                DT::DTOutput(paste0('stages_summary', i)),
                # update scenario button
                actionButton(paste0("update_btn", i), "Update"),
+               downloadButton(paste0("download_btn", i), "Download Report"),
                # cost table for this scenario
                DT::DTOutput(paste0('costDT', i)),
                # Start section with plots of ranges
@@ -847,6 +849,150 @@ server <- function(input, output, clientData, session) {
    
     }) #endof try()
   }) # end of run button
+  
+  # Download Report
+  output$download_btn <- downloadHandler(
+    filename = function() {
+      # return(paste0("report_", Sys.Date(), ".csv")) # csv version
+      return(paste0("report_", Sys.Date(), ".xlsx"))
+    },
+    content = function(file) {
+      #write.csv(rv$results_all, file, row.names = FALSE) # csv version
+      my_workbook <- createWorkbook()
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Input"
+      )
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Cost"
+      )
+      
+      setColWidths(
+        my_workbook,
+        1,
+        cols = 1:4,
+        widths = c(12, 12, 12, 12)
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        c(
+          "Breeding Scenario",
+          "Input Settings"
+        ),
+        startRow = 1,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = 1:2,
+        cols = 1
+      )
+      
+      mtx <- matrix(c(input$varG, input$varGxL, input$varGxY, input$negen, input$varieties), nrow = 1, ncol = 5)
+      colnames(mtx) <- c("Genetic Variance", "GxL(Y)", "GxY", "Multiplication Time(Y)", "Selected Parents")
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        mtx,
+        startRow = 4,
+        startCol = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        c(
+          "Yield Trials"
+        ),
+        startRow = 8,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = 8,
+        cols = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        yti$data,
+        startRow = 10,
+        startCol = 1
+      )
+      
+      # Second sheet with costs
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        c("Cost Details", "Input Settings"),
+        startRow = 1,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 2,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = c(1, 2, 8),
+        cols = 1
+      )
+      
+      cost_input <- matrix(c(input$costPerPlot, input$costPerLoc, input$costFixed), nrow = 1, ncol = 3)
+      colnames(cost_input) <- c("Plot Cost($)", "Loc Cost($)", "Fixed Cost($)")
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        cost_input,
+        startRow = 4,
+        startCol = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        "Cost Summary Table",
+        startRow = 8,
+        startCol = 1
+      )
+      
+      cost_summary <- cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data))
+      colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        cost_summary,
+        startRow = 10,
+        startCol = 1
+      )
+      
+      saveWorkbook(my_workbook, file)
+    }
+  )
   
   # Focus on about tab on start
   updateTabsetPanel(session = session, inputId = "my_tabs", selected = "About")
