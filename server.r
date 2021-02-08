@@ -395,12 +395,12 @@ server <- function(input, output, clientData, session) {
     return(meanGain(result))
   } 
   
-  # function that returns vector of the incremental mean gain per stage scaled by Cost calculated from runScenario() result matrix # NOT USED
+  # function that returns vector of the incremental mean gain per stage scaled by Cost calculated from runScenario() result matrix 
   meanGainxCost <- function(result = result, scenarioDT = yti$data) {
-    # update contents of result with result by stage scaled by Years
+    # update contents of result with result by stage scaled by Cost
     for(i in 1:nrow(result)) 
     {
-      result[i,] = gainCost(scenarioDT, result, i)
+      result[i,] = gainCost(scenarioDT, result, i) * 1000 # display gg per $1000
     }
     return(meanGain(result))
   } 
@@ -689,7 +689,7 @@ server <- function(input, output, clientData, session) {
       # Calculate and Store Mean Genetic Gain for each stage in summary table
       stages_current$mean <- meanGain(result)
       stages_current$meanxTime <- meanGainxTime(result, yti$data)
-      # stages_current$meanxCost <- meanGainxCost(result, yti$data) # too small to display
+      stages_current$meanxCost <- meanGainxCost(result, yti$data) # display GG for $1000
 
       # Show 2nd Progress Bar for Plotting
       withProgress(message = 'Ploting results', value = 0, {

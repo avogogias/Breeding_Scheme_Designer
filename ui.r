@@ -152,7 +152,8 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                     tabsetPanel(id = "my_tabs",
                                 tabPanel("ALL", tags$div(id = "placeholder")),
                                 tabPanel("Scenarios", uiOutput('mytabs')),
-                                tabPanel("Overview", downloadButton("download_btn", "Download Report"), plotOutput('overviewTab'), plotOutput('overviewTabxTime'), plotOutput('overviewTabxCost')),
+                                # tabPanel("Overview", downloadButton("download_btn", "Download Report"), plotOutput('overviewTab'), plotOutput('overviewTabxTime'), plotOutput('overviewTabxCost')),
+                                tabPanel("Overview", plotOutput('overviewTab'), plotOutput('overviewTabxTime'), plotOutput('overviewTabxCost')),
                                 tabPanel(title = "About",
                                          tags$h2("About"),
                                          tags$br(),
@@ -160,7 +161,7 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                                                 to compare different breeding strategies and calculate expected genetic gain given a set of parameters."),
                                          tags$p("Users can:"),
                                          tags$ol(
-                                           tags$li("Define the input parameters of a breeding cycle scenario with multiple stages."),
+                                           tags$li("Define the input parameters of breeding scenarios with multiple stages."),
                                            tags$li("Calculate parameters such as expected genetic gain, heritability, gain per year, gain per cost etc."),
                                            tags$li("Compare genetic gain results between different scenarios."),
                                            tags$li("Estimate the cost of scenarios and compare gain per cost."),
@@ -169,7 +170,7 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                                          tags$br(),
                                          tags$p("To create a new breeding scenario, fill in the input fields on the left sidebar and press the Run button at the bottom."),
                                          tags$br(),
-                                         tags$p("Results for each scenario are displayed in different tabs at the right panel.")
+                                         tags$p("Results for each scenario are displayed in different tabs at the area on the right.")
                                 ), # endof About
                                 tabPanel(title = "Glossary",
                                          # Glossary TODO

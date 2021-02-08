@@ -7,7 +7,7 @@ sumset_DT = list( options = list(
 ),
 class = "cell-border, compact, hover", 
 rownames = F, #TRUE,
-colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year'), # 'Gain by Cost'), # Too small to report
+colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000'), 
 filter = "none",
 escape = FALSE,
 autoHideNavigation = TRUE,
@@ -73,12 +73,12 @@ if (tail(Scenarios,1) == 1)
       reactDT1$data[,8] <- stages_current$mean
       
       # Update Mean Genetic Gain x Time for each stage in summary table
-      stages_current$meanxTime <- meanGainxTime(result)
+      stages_current$meanxTime <- meanGainxTime(result, scenarioDT = reactDT1$data)
       reactDT1$data[,9] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
-      # stages_current$meanxCost <- meanGainxCost(result)
-      # reactDT1$data[,10] <- stages_current$meanxCost
+      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT1$data)
+      reactDT1$data[,10] <- stages_current$meanxCost
   
       # Update results_all entries
       # First remove previous run entries
@@ -228,7 +228,7 @@ if (tail(Scenarios,1) == 1)
       )
       
       tmp_data <- reactDT1$data
-      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year')
+      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
       
       writeData(
         my_workbook,
@@ -347,12 +347,12 @@ if (tail(Scenarios,1) == 1)
       reactDT2$data[,8] <- stages_current$mean
       
       # Update Mean Genetic Gain x Time for each stage in summary table
-      stages_current$meanxTime <- meanGainxTime(result)
+      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT2$data)
       reactDT2$data[,9] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
-      # stages_current$meanxCost <- meanGainxCost(result)
-      # reactDT2$data[,10] <- stages_current$meanxCost
+      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT2$data)
+      reactDT2$data[,10] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -415,6 +415,157 @@ if (tail(Scenarios,1) == 1)
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
                                                                server = F )
   
+  # Download Report for scenario #2
+  # 
+  # Download Report
+  output$download_btn2 <- downloadHandler(
+    filename = function() {
+      # return(paste0("report_", Sys.Date(), ".csv")) # csv version
+      return(paste0("scenario_02_report_", Sys.Date(), ".xlsx"))
+    },
+    content = function(file) {
+      #write.csv(rv$results_all, file, row.names = FALSE) # csv version
+      my_workbook <- createWorkbook()
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Summary"
+      )
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Cost"
+      )
+      
+      setColWidths(
+        my_workbook,
+        1,
+        cols = 1:4,
+        widths = c(12, 12, 12, 12)
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        c(
+          "Breeding Scenario",
+          "Input Settings"
+        ),
+        startRow = 1,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = 1:2,
+        cols = 1
+      )
+      
+      mtx <- matrix(c(input$varG, input$varGxL, input$varGxY, input$negen, input$varieties), nrow = 1, ncol = 5)
+      colnames(mtx) <- c("Genetic Variance", "GxL(Y)", "GxY", "Multiplication Time(Y)", "Selected Parents")
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        mtx,
+        startRow = 4,
+        startCol = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        c(
+          "Yield Trials"
+        ),
+        startRow = 8,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = 8,
+        cols = 1
+      )
+      
+      tmp_data <- reactDT2$data
+      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        #yti$data,
+        tmp_data,
+        startRow = 10,
+        startCol = 1
+      )
+      
+      # Second sheet with costs
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        c("Cost Details", "Input Settings"),
+        startRow = 1,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 2,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = c(1, 2, 8),
+        cols = 1
+      )
+      
+      cost_input <- matrix(c(input$costPerPlot, input$costPerLoc, input$costFixed), nrow = 1, ncol = 3)
+      colnames(cost_input) <- c("Plot Cost($)", "Loc Cost($)", "Fixed Cost($)")
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        cost_input,
+        startRow = 4,
+        startCol = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        "Cost Summary Table",
+        startRow = 8,
+        startCol = 1
+      )
+      
+      #cost_summary <- cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data))
+      cost_summary <- cbind(totalYears(reactDT2$data, input$negen), totalLocs(reactDT2$data), totalPlots(reactDT2$data), totalLocsCost(reactDT2$data), totalPlotsCost(reactDT2$data), totalCost(reactDT2$data))
+      colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        cost_summary,
+        startRow = 10,
+        startCol = 1
+      )
+      
+      saveWorkbook(my_workbook, file)
+    }
+  )  
+  
 } else if (tail(Scenarios,1) == 3)
 {
   reactDT3 <- reactiveValues(data = stages_current)
@@ -459,12 +610,12 @@ if (tail(Scenarios,1) == 1)
       reactDT3$data[,8] <- stages_current$mean
   
       # Update Mean Genetic Gain x Time for each stage in summary table
-      stages_current$meanxTime <- meanGainxTime(result)
+      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT3$data)
       reactDT3$data[,9] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
-      # stages_current$meanxCost <- meanGainxCost(result)
-      # reactDT3$data[,10] <- stages_current$meanxCost
+      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT3$data)
+      reactDT3$data[,10] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -527,6 +678,158 @@ if (tail(Scenarios,1) == 1)
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
                                                                server = F )
   
+
+  # Download Report for scenario #3
+  # 
+  # Download Report
+  output$download_btn3 <- downloadHandler(
+    filename = function() {
+      # return(paste0("report_", Sys.Date(), ".csv")) # csv version
+      return(paste0("scenario_03_report_", Sys.Date(), ".xlsx"))
+    },
+    content = function(file) {
+      #write.csv(rv$results_all, file, row.names = FALSE) # csv version
+      my_workbook <- createWorkbook()
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Summary"
+      )
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Cost"
+      )
+      
+      setColWidths(
+        my_workbook,
+        1,
+        cols = 1:4,
+        widths = c(12, 12, 12, 12)
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        c(
+          "Breeding Scenario",
+          "Input Settings"
+        ),
+        startRow = 1,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = 1:2,
+        cols = 1
+      )
+      
+      mtx <- matrix(c(input$varG, input$varGxL, input$varGxY, input$negen, input$varieties), nrow = 1, ncol = 5)
+      colnames(mtx) <- c("Genetic Variance", "GxL(Y)", "GxY", "Multiplication Time(Y)", "Selected Parents")
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        mtx,
+        startRow = 4,
+        startCol = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        c(
+          "Yield Trials"
+        ),
+        startRow = 8,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = 8,
+        cols = 1
+      )
+      
+      tmp_data <- reactDT3$data
+      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        #yti$data,
+        tmp_data,
+        startRow = 10,
+        startCol = 1
+      )
+      
+      # Second sheet with costs
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        c("Cost Details", "Input Settings"),
+        startRow = 1,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 2,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = c(1, 2, 8),
+        cols = 1
+      )
+      
+      cost_input <- matrix(c(input$costPerPlot, input$costPerLoc, input$costFixed), nrow = 1, ncol = 3)
+      colnames(cost_input) <- c("Plot Cost($)", "Loc Cost($)", "Fixed Cost($)")
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        cost_input,
+        startRow = 4,
+        startCol = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        "Cost Summary Table",
+        startRow = 8,
+        startCol = 1
+      )
+      
+      #cost_summary <- cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data))
+      cost_summary <- cbind(totalYears(reactDT3$data, input$negen), totalLocs(reactDT3$data), totalPlots(reactDT3$data), totalLocsCost(reactDT3$data), totalPlotsCost(reactDT3$data), totalCost(reactDT3$data))
+      colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        cost_summary,
+        startRow = 10,
+        startCol = 1
+      )
+      
+      saveWorkbook(my_workbook, file)
+    }
+  )  
+  
 } else if (tail(Scenarios,1) == 4)
 {
   reactDT4 <- reactiveValues(data = stages_current)
@@ -571,12 +874,12 @@ if (tail(Scenarios,1) == 1)
       reactDT4$data[,8] <- stages_current$mean
   
       # Update Mean Genetic Gain x Time for each stage in summary table
-      stages_current$meanxTime <- meanGainxTime(result)
+      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT4$data)
       reactDT4$data[,9] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
-      # stages_current$meanxCost <- meanGainxCost(result)
-      # reactDT4$data[,10] <- stages_current$meanxCost
+      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT4$data)
+      reactDT4$data[,10] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -641,6 +944,159 @@ if (tail(Scenarios,1) == 1)
                                                                server = F )
   
   
+
+  # Download Report for scenario #4
+  # 
+  # Download Report
+  output$download_btn4 <- downloadHandler(
+    filename = function() {
+      # return(paste0("report_", Sys.Date(), ".csv")) # csv version
+      return(paste0("scenario_04_report_", Sys.Date(), ".xlsx"))
+    },
+    content = function(file) {
+      #write.csv(rv$results_all, file, row.names = FALSE) # csv version
+      my_workbook <- createWorkbook()
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Summary"
+      )
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Cost"
+      )
+      
+      setColWidths(
+        my_workbook,
+        1,
+        cols = 1:4,
+        widths = c(12, 12, 12, 12)
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        c(
+          "Breeding Scenario",
+          "Input Settings"
+        ),
+        startRow = 1,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = 1:2,
+        cols = 1
+      )
+      
+      mtx <- matrix(c(input$varG, input$varGxL, input$varGxY, input$negen, input$varieties), nrow = 1, ncol = 5)
+      colnames(mtx) <- c("Genetic Variance", "GxL(Y)", "GxY", "Multiplication Time(Y)", "Selected Parents")
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        mtx,
+        startRow = 4,
+        startCol = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        c(
+          "Yield Trials"
+        ),
+        startRow = 8,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = 8,
+        cols = 1
+      )
+      
+      tmp_data <- reactDT4$data
+      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        #yti$data,
+        tmp_data,
+        startRow = 10,
+        startCol = 1
+      )
+      
+      # Second sheet with costs
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        c("Cost Details", "Input Settings"),
+        startRow = 1,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 2,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = c(1, 2, 8),
+        cols = 1
+      )
+      
+      cost_input <- matrix(c(input$costPerPlot, input$costPerLoc, input$costFixed), nrow = 1, ncol = 3)
+      colnames(cost_input) <- c("Plot Cost($)", "Loc Cost($)", "Fixed Cost($)")
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        cost_input,
+        startRow = 4,
+        startCol = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        "Cost Summary Table",
+        startRow = 8,
+        startCol = 1
+      )
+      
+      #cost_summary <- cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data))
+      cost_summary <- cbind(totalYears(reactDT4$data, input$negen), totalLocs(reactDT4$data), totalPlots(reactDT4$data), totalLocsCost(reactDT4$data), totalPlotsCost(reactDT4$data), totalCost(reactDT4$data))
+      colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        cost_summary,
+        startRow = 10,
+        startCol = 1
+      )
+      
+      saveWorkbook(my_workbook, file)
+    }
+  )    
+  
+  
 } else if (tail(Scenarios,1) == 5)
 {
   reactDT5 <- reactiveValues(data = stages_current)
@@ -685,12 +1141,12 @@ if (tail(Scenarios,1) == 1)
       reactDT5$data[,8] <- stages_current$mean
   
       # Update Mean Genetic Gain x Time for each stage in summary table
-      stages_current$meanxTime <- meanGainxTime(result)
+      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT5$data)
       reactDT5$data[,9] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
-      # stages_current$meanxCost <- meanGainxCost(result)
-      # reactDT5$data[,10] <- stages_current$meanxCost
+      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT5$data)
+      reactDT5$data[,10] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -754,6 +1210,157 @@ if (tail(Scenarios,1) == 1)
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
                                                                server = F )
   
+  # Download Report for scenario #5
+  # 
+  # Download Report
+  output$download_btn5 <- downloadHandler(
+    filename = function() {
+      # return(paste0("report_", Sys.Date(), ".csv")) # csv version
+      return(paste0("scenario_05_report_", Sys.Date(), ".xlsx"))
+    },
+    content = function(file) {
+      #write.csv(rv$results_all, file, row.names = FALSE) # csv version
+      my_workbook <- createWorkbook()
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Summary"
+      )
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Cost"
+      )
+      
+      setColWidths(
+        my_workbook,
+        1,
+        cols = 1:4,
+        widths = c(12, 12, 12, 12)
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        c(
+          "Breeding Scenario",
+          "Input Settings"
+        ),
+        startRow = 1,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = 1:2,
+        cols = 1
+      )
+      
+      mtx <- matrix(c(input$varG, input$varGxL, input$varGxY, input$negen, input$varieties), nrow = 1, ncol = 5)
+      colnames(mtx) <- c("Genetic Variance", "GxL(Y)", "GxY", "Multiplication Time(Y)", "Selected Parents")
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        mtx,
+        startRow = 4,
+        startCol = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        c(
+          "Yield Trials"
+        ),
+        startRow = 8,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = 8,
+        cols = 1
+      )
+      
+      tmp_data <- reactDT5$data
+      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        #yti$data,
+        tmp_data,
+        startRow = 10,
+        startCol = 1
+      )
+      
+      # Second sheet with costs
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        c("Cost Details", "Input Settings"),
+        startRow = 1,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 2,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = c(1, 2, 8),
+        cols = 1
+      )
+      
+      cost_input <- matrix(c(input$costPerPlot, input$costPerLoc, input$costFixed), nrow = 1, ncol = 3)
+      colnames(cost_input) <- c("Plot Cost($)", "Loc Cost($)", "Fixed Cost($)")
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        cost_input,
+        startRow = 4,
+        startCol = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        "Cost Summary Table",
+        startRow = 8,
+        startCol = 1
+      )
+      
+      #cost_summary <- cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data))
+      cost_summary <- cbind(totalYears(reactDT5$data, input$negen), totalLocs(reactDT5$data), totalPlots(reactDT5$data), totalLocsCost(reactDT5$data), totalPlotsCost(reactDT5$data), totalCost(reactDT5$data))
+      colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        cost_summary,
+        startRow = 10,
+        startCol = 1
+      )
+      
+      saveWorkbook(my_workbook, file)
+    }
+  )  
+  
 } else if (tail(Scenarios,1) == 6)
 {
   reactDT6 <- reactiveValues(data = stages_current)
@@ -798,12 +1405,12 @@ if (tail(Scenarios,1) == 1)
       reactDT6$data[,8] <- stages_current$mean    
       
       # Update Mean Genetic Gain x Time for each stage in summary table
-      stages_current$meanxTime <- meanGainxTime(result)
+      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT6$data)
       reactDT6$data[,9] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
-      # stages_current$meanxCost <- meanGainxCost(result)
-      # reactDT6$data[,10] <- stages_current$meanxCost
+      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT6$data)
+      reactDT6$data[,10] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -866,6 +1473,161 @@ if (tail(Scenarios,1) == 1)
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
                                                                server = F )
+
+  
+
+  # Download Report for scenario #6
+  # 
+  # Download Report
+  output$download_btn6 <- downloadHandler(
+    filename = function() {
+      # return(paste0("report_", Sys.Date(), ".csv")) # csv version
+      return(paste0("scenario_06_report_", Sys.Date(), ".xlsx"))
+    },
+    content = function(file) {
+      #write.csv(rv$results_all, file, row.names = FALSE) # csv version
+      my_workbook <- createWorkbook()
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Summary"
+      )
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Cost"
+      )
+      
+      setColWidths(
+        my_workbook,
+        1,
+        cols = 1:4,
+        widths = c(12, 12, 12, 12)
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        c(
+          "Breeding Scenario",
+          "Input Settings"
+        ),
+        startRow = 1,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = 1:2,
+        cols = 1
+      )
+      
+      mtx <- matrix(c(input$varG, input$varGxL, input$varGxY, input$negen, input$varieties), nrow = 1, ncol = 5)
+      colnames(mtx) <- c("Genetic Variance", "GxL(Y)", "GxY", "Multiplication Time(Y)", "Selected Parents")
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        mtx,
+        startRow = 4,
+        startCol = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        c(
+          "Yield Trials"
+        ),
+        startRow = 8,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = 8,
+        cols = 1
+      )
+      
+      tmp_data <- reactDT6$data
+      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        #yti$data,
+        tmp_data,
+        startRow = 10,
+        startCol = 1
+      )
+      
+      # Second sheet with costs
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        c("Cost Details", "Input Settings"),
+        startRow = 1,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 2,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = c(1, 2, 8),
+        cols = 1
+      )
+      
+      cost_input <- matrix(c(input$costPerPlot, input$costPerLoc, input$costFixed), nrow = 1, ncol = 3)
+      colnames(cost_input) <- c("Plot Cost($)", "Loc Cost($)", "Fixed Cost($)")
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        cost_input,
+        startRow = 4,
+        startCol = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        "Cost Summary Table",
+        startRow = 8,
+        startCol = 1
+      )
+      
+      #cost_summary <- cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data))
+      cost_summary <- cbind(totalYears(reactDT6$data, input$negen), totalLocs(reactDT6$data), totalPlots(reactDT6$data), totalLocsCost(reactDT6$data), totalPlotsCost(reactDT6$data), totalCost(reactDT6$data))
+      colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        cost_summary,
+        startRow = 10,
+        startCol = 1
+      )
+      
+      saveWorkbook(my_workbook, file)
+    }
+  )
+  
+    
 } else if (tail(Scenarios,1) == 7)
 {
   reactDT7 <- reactiveValues(data = stages_current)
@@ -910,12 +1672,12 @@ if (tail(Scenarios,1) == 1)
       reactDT7$data[,8] <- stages_current$mean 
       
       # Update Mean Genetic Gain x Time for each stage in summary table
-      stages_current$meanxTime <- meanGainxTime(result)
+      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT7$data)
       reactDT7$data[,9] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
-      # stages_current$meanxCost <- meanGainxCost(result)
-      # reactDT7$data[,10] <- stages_current$meanxCost
+      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT7$data)
+      reactDT7$data[,10] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -978,6 +1740,160 @@ if (tail(Scenarios,1) == 1)
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
                                                                server = F )
+  
+  
+  # Download Report for scenario #7
+  # 
+  # Download Report
+  output$download_btn7 <- downloadHandler(
+    filename = function() {
+      # return(paste0("report_", Sys.Date(), ".csv")) # csv version
+      return(paste0("scenario_07_report_", Sys.Date(), ".xlsx"))
+    },
+    content = function(file) {
+      #write.csv(rv$results_all, file, row.names = FALSE) # csv version
+      my_workbook <- createWorkbook()
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Summary"
+      )
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Cost"
+      )
+      
+      setColWidths(
+        my_workbook,
+        1,
+        cols = 1:4,
+        widths = c(12, 12, 12, 12)
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        c(
+          "Breeding Scenario",
+          "Input Settings"
+        ),
+        startRow = 1,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = 1:2,
+        cols = 1
+      )
+      
+      mtx <- matrix(c(input$varG, input$varGxL, input$varGxY, input$negen, input$varieties), nrow = 1, ncol = 5)
+      colnames(mtx) <- c("Genetic Variance", "GxL(Y)", "GxY", "Multiplication Time(Y)", "Selected Parents")
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        mtx,
+        startRow = 4,
+        startCol = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        c(
+          "Yield Trials"
+        ),
+        startRow = 8,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = 8,
+        cols = 1
+      )
+      
+      tmp_data <- reactDT7$data
+      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        #yti$data,
+        tmp_data,
+        startRow = 10,
+        startCol = 1
+      )
+      
+      # Second sheet with costs
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        c("Cost Details", "Input Settings"),
+        startRow = 1,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 2,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = c(1, 2, 8),
+        cols = 1
+      )
+      
+      cost_input <- matrix(c(input$costPerPlot, input$costPerLoc, input$costFixed), nrow = 1, ncol = 3)
+      colnames(cost_input) <- c("Plot Cost($)", "Loc Cost($)", "Fixed Cost($)")
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        cost_input,
+        startRow = 4,
+        startCol = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        "Cost Summary Table",
+        startRow = 8,
+        startCol = 1
+      )
+      
+      #cost_summary <- cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data))
+      cost_summary <- cbind(totalYears(reactDT7$data, input$negen), totalLocs(reactDT7$data), totalPlots(reactDT7$data), totalLocsCost(reactDT7$data), totalPlotsCost(reactDT7$data), totalCost(reactDT7$data))
+      colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        cost_summary,
+        startRow = 10,
+        startCol = 1
+      )
+      
+      saveWorkbook(my_workbook, file)
+    }
+  )
+  
+  
 } else if (tail(Scenarios,1) == 8)
 {
   reactDT8 <- reactiveValues(data = stages_current)
@@ -1022,12 +1938,12 @@ if (tail(Scenarios,1) == 1)
       reactDT8$data[,8] <- stages_current$mean   
       
       # Update Mean Genetic Gain x Time for each stage in summary table
-      stages_current$meanxTime <- meanGainxTime(result)
+      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT8$data)
       reactDT8$data[,9] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
-      # stages_current$meanxCost <- meanGainxCost(result)
-      # reactDT8$data[,10] <- stages_current$meanxCost
+      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT8$data)
+      reactDT8$data[,10] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -1090,6 +2006,160 @@ if (tail(Scenarios,1) == 1)
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
                                                                server = F )
+  
+  
+  # Download Report for scenario #8
+  # 
+  # Download Report
+  output$download_btn8 <- downloadHandler(
+    filename = function() {
+      # return(paste0("report_", Sys.Date(), ".csv")) # csv version
+      return(paste0("scenario_08_report_", Sys.Date(), ".xlsx"))
+    },
+    content = function(file) {
+      #write.csv(rv$results_all, file, row.names = FALSE) # csv version
+      my_workbook <- createWorkbook()
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Summary"
+      )
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Cost"
+      )
+      
+      setColWidths(
+        my_workbook,
+        1,
+        cols = 1:4,
+        widths = c(12, 12, 12, 12)
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        c(
+          "Breeding Scenario",
+          "Input Settings"
+        ),
+        startRow = 1,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = 1:2,
+        cols = 1
+      )
+      
+      mtx <- matrix(c(input$varG, input$varGxL, input$varGxY, input$negen, input$varieties), nrow = 1, ncol = 5)
+      colnames(mtx) <- c("Genetic Variance", "GxL(Y)", "GxY", "Multiplication Time(Y)", "Selected Parents")
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        mtx,
+        startRow = 4,
+        startCol = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        c(
+          "Yield Trials"
+        ),
+        startRow = 8,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = 8,
+        cols = 1
+      )
+      
+      tmp_data <- reactDT8$data
+      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        #yti$data,
+        tmp_data,
+        startRow = 10,
+        startCol = 1
+      )
+      
+      # Second sheet with costs
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        c("Cost Details", "Input Settings"),
+        startRow = 1,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 2,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = c(1, 2, 8),
+        cols = 1
+      )
+      
+      cost_input <- matrix(c(input$costPerPlot, input$costPerLoc, input$costFixed), nrow = 1, ncol = 3)
+      colnames(cost_input) <- c("Plot Cost($)", "Loc Cost($)", "Fixed Cost($)")
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        cost_input,
+        startRow = 4,
+        startCol = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        "Cost Summary Table",
+        startRow = 8,
+        startCol = 1
+      )
+      
+      #cost_summary <- cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data))
+      cost_summary <- cbind(totalYears(reactDT8$data, input$negen), totalLocs(reactDT8$data), totalPlots(reactDT8$data), totalLocsCost(reactDT8$data), totalPlotsCost(reactDT8$data), totalCost(reactDT8$data))
+      colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        cost_summary,
+        startRow = 10,
+        startCol = 1
+      )
+      
+      saveWorkbook(my_workbook, file)
+    }
+  )
+  
+  
 } else if (tail(Scenarios,1) == 9)
 {
   reactDT9 <- reactiveValues(data = stages_current)
@@ -1134,12 +2204,12 @@ if (tail(Scenarios,1) == 1)
       reactDT9$data[,8] <- stages_current$mean 
       
       # Update Mean Genetic Gain x Time for each stage in summary table
-      stages_current$meanxTime <- meanGainxTime(result)
+      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT9$data)
       reactDT9$data[,9] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
-      # stages_current$meanxCost <- meanGainxCost(result)
-      # reactDT9$data[,10] <- stages_current$meanxCost
+      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT9$data)
+      reactDT9$data[,10] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -1202,6 +2272,161 @@ if (tail(Scenarios,1) == 1)
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
                                                                server = F )
+  
+  
+  
+  # Download Report for scenario #9
+  # 
+  # Download Report
+  output$download_btn9 <- downloadHandler(
+    filename = function() {
+      # return(paste0("report_", Sys.Date(), ".csv")) # csv version
+      return(paste0("scenario_09_report_", Sys.Date(), ".xlsx"))
+    },
+    content = function(file) {
+      #write.csv(rv$results_all, file, row.names = FALSE) # csv version
+      my_workbook <- createWorkbook()
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Summary"
+      )
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Cost"
+      )
+      
+      setColWidths(
+        my_workbook,
+        1,
+        cols = 1:4,
+        widths = c(12, 12, 12, 12)
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        c(
+          "Breeding Scenario",
+          "Input Settings"
+        ),
+        startRow = 1,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = 1:2,
+        cols = 1
+      )
+      
+      mtx <- matrix(c(input$varG, input$varGxL, input$varGxY, input$negen, input$varieties), nrow = 1, ncol = 5)
+      colnames(mtx) <- c("Genetic Variance", "GxL(Y)", "GxY", "Multiplication Time(Y)", "Selected Parents")
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        mtx,
+        startRow = 4,
+        startCol = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        c(
+          "Yield Trials"
+        ),
+        startRow = 8,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = 8,
+        cols = 1
+      )
+      
+      tmp_data <- reactDT9$data
+      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        #yti$data,
+        tmp_data,
+        startRow = 10,
+        startCol = 1
+      )
+      
+      # Second sheet with costs
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        c("Cost Details", "Input Settings"),
+        startRow = 1,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 2,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = c(1, 2, 8),
+        cols = 1
+      )
+      
+      cost_input <- matrix(c(input$costPerPlot, input$costPerLoc, input$costFixed), nrow = 1, ncol = 3)
+      colnames(cost_input) <- c("Plot Cost($)", "Loc Cost($)", "Fixed Cost($)")
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        cost_input,
+        startRow = 4,
+        startCol = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        "Cost Summary Table",
+        startRow = 8,
+        startCol = 1
+      )
+      
+      #cost_summary <- cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data))
+      cost_summary <- cbind(totalYears(reactDT9$data, input$negen), totalLocs(reactDT9$data), totalPlots(reactDT9$data), totalLocsCost(reactDT9$data), totalPlotsCost(reactDT9$data), totalCost(reactDT9$data))
+      colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        cost_summary,
+        startRow = 10,
+        startCol = 1
+      )
+      
+      saveWorkbook(my_workbook, file)
+    }
+  )
+  
+  
 } else if (tail(Scenarios,1) == 10)
 {
   reactDT10 <- reactiveValues(data = stages_current)
@@ -1246,12 +2471,12 @@ if (tail(Scenarios,1) == 1)
       reactDT10$data[,8] <- stages_current$mean
       
       # Update Mean Genetic Gain x Time for each stage in summary table
-      stages_current$meanxTime <- meanGainxTime(result)
+      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT10$data)
       reactDT10$data[,9] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
-      # stages_current$meanxCost <- meanGainxCost(result)
-      # reactDT10$data[,10] <- stages_current$meanxCost
+      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT10$data)
+      reactDT10$data[,10] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -1314,5 +2539,159 @@ if (tail(Scenarios,1) == 1)
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
                                                                server = F )
+  
+  
+  
+  # Download Report for scenario #10
+  # 
+  # Download Report
+  output$download_btn10 <- downloadHandler(
+    filename = function() {
+      # return(paste0("report_", Sys.Date(), ".csv")) # csv version
+      return(paste0("scenario_10_report_", Sys.Date(), ".xlsx"))
+    },
+    content = function(file) {
+      #write.csv(rv$results_all, file, row.names = FALSE) # csv version
+      my_workbook <- createWorkbook()
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Summary"
+      )
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Cost"
+      )
+      
+      setColWidths(
+        my_workbook,
+        1,
+        cols = 1:4,
+        widths = c(12, 12, 12, 12)
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        c(
+          "Breeding Scenario",
+          "Input Settings"
+        ),
+        startRow = 1,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = 1:2,
+        cols = 1
+      )
+      
+      mtx <- matrix(c(input$varG, input$varGxL, input$varGxY, input$negen, input$varieties), nrow = 1, ncol = 5)
+      colnames(mtx) <- c("Genetic Variance", "GxL(Y)", "GxY", "Multiplication Time(Y)", "Selected Parents")
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        mtx,
+        startRow = 4,
+        startCol = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        c(
+          "Yield Trials"
+        ),
+        startRow = 8,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = 8,
+        cols = 1
+      )
+      
+      tmp_data <- reactDT10$data
+      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        #yti$data,
+        tmp_data,
+        startRow = 10,
+        startCol = 1
+      )
+      
+      # Second sheet with costs
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        c("Cost Details", "Input Settings"),
+        startRow = 1,
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 2,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = c(1, 2, 8),
+        cols = 1
+      )
+      
+      cost_input <- matrix(c(input$costPerPlot, input$costPerLoc, input$costFixed), nrow = 1, ncol = 3)
+      colnames(cost_input) <- c("Plot Cost($)", "Loc Cost($)", "Fixed Cost($)")
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        cost_input,
+        startRow = 4,
+        startCol = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        "Cost Summary Table",
+        startRow = 8,
+        startCol = 1
+      )
+      
+      #cost_summary <- cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data))
+      cost_summary <- cbind(totalYears(reactDT10$data, input$negen), totalLocs(reactDT10$data), totalPlots(reactDT10$data), totalLocsCost(reactDT10$data), totalPlotsCost(reactDT10$data), totalCost(reactDT10$data))
+      colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
+      
+      writeData(
+        my_workbook,
+        sheet = 2,
+        cost_summary,
+        startRow = 10,
+        startCol = 1
+      )
+      
+      saveWorkbook(my_workbook, file)
+    }
+  )
+  
 } #else
   #assign(paste('output$cyPlot', sep = "", tail(Scenarios,1)), nplot) # DOESNOT WORK  
