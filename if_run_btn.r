@@ -7,7 +7,7 @@ sumset_DT = list( options = list(
 ),
 class = "cell-border, compact, hover", 
 rownames = F, #TRUE,
-colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000'), 
+colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000'), 
 filter = "none",
 escape = FALSE,
 autoHideNavigation = TRUE,
@@ -17,8 +17,8 @@ server = TRUE) # server = F doesn't work with replaceData() cell editing
 
 # Currently results_all updates only for scenarios 1-5
 # Common lines of code between Scenario IDs
-# cnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2')
-#RANGE cnames = c('Stage', 'Min Entries', 'Max Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2')
+# cnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2')
+#RANGE cnames = c('Stage', 'Min Entries', 'Max Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2')
 
 # The following blocks of code are repeated for every run_btn index
 # Ideally this control would take place recursively but building an
@@ -228,7 +228,7 @@ if (tail(Scenarios,1) == 1)
       )
       
       tmp_data <- reactDT1$data
-      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
+      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
       
       writeData(
         my_workbook,
@@ -499,7 +499,7 @@ if (tail(Scenarios,1) == 1)
       )
       
       tmp_data <- reactDT2$data
-      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
+      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
       
       writeData(
         my_workbook,
@@ -763,7 +763,7 @@ if (tail(Scenarios,1) == 1)
       )
       
       tmp_data <- reactDT3$data
-      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
+      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
       
       writeData(
         my_workbook,
@@ -1029,7 +1029,7 @@ if (tail(Scenarios,1) == 1)
       )
       
       tmp_data <- reactDT4$data
-      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
+      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
       
       writeData(
         my_workbook,
@@ -1294,7 +1294,7 @@ if (tail(Scenarios,1) == 1)
       )
       
       tmp_data <- reactDT5$data
-      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
+      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
       
       writeData(
         my_workbook,
@@ -1560,7 +1560,7 @@ if (tail(Scenarios,1) == 1)
       )
       
       tmp_data <- reactDT6$data
-      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
+      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
       
       writeData(
         my_workbook,
@@ -1826,7 +1826,7 @@ if (tail(Scenarios,1) == 1)
       )
       
       tmp_data <- reactDT7$data
-      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
+      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
       
       writeData(
         my_workbook,
@@ -2092,7 +2092,7 @@ if (tail(Scenarios,1) == 1)
       )
       
       tmp_data <- reactDT8$data
-      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
+      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
       
       writeData(
         my_workbook,
@@ -2359,7 +2359,7 @@ if (tail(Scenarios,1) == 1)
       )
       
       tmp_data <- reactDT9$data
-      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
+      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
       
       writeData(
         my_workbook,
@@ -2626,7 +2626,7 @@ if (tail(Scenarios,1) == 1)
       )
       
       tmp_data <- reactDT10$data
-      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
+      colnames(tmp_data) <- c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
       
       writeData(
         my_workbook,

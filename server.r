@@ -405,6 +405,32 @@ server <- function(input, output, clientData, session) {
     return(meanGain(result))
   } 
   
+  # function returns a summary matrix of mean genetic gain for each stage (rows) of all scenarios (cols)
+  meanGainSum <- function(result = rv$results_all) {
+    result = as.data.frame(t(result)) # transform to data frame with Stage, Value, Scenario as colnames
+    mtx = matrix(NA, nrow=50, ncol=tail(Scenarios,1)) # create large enough empty matrix to store all stages of the data
+    maxr = 1 # initialize max stages of rnows in matrix 
+    
+    for(i in 1:tail(Scenarios,1))
+    {
+      sc <- filter(result, Scenario == i)
+      
+      for(j in 1:tail(sc$Stage, n=1))
+      {
+        st <- filter(sc, Stage == j)
+        mtx[j,i] <- mean(st$Value) # store mean in matrix  - NOT ROUNDED !
+      }
+      
+      if (maxr < tail(sc$Stage, n=1)) maxr <- tail(sc$Stage, n=1) # update max nrow for mtx
+    }
+    # print(paste0("num of max stages = ", maxr))
+    mtx <- mtx[1:maxr,] # truncate mtx at the end.
+    # print(mtx)
+    rownames(mtx) <- c(paste0("Stage ", 1:maxr))
+    colnames(mtx) <- c(paste0("Scenario ", 1:ncol(mtx)))
+    return(mtx)
+  }
+  
   #********************************
   #--------------------------------  
   # ************ PLOTS ************
@@ -542,7 +568,7 @@ server <- function(input, output, clientData, session) {
                                      ),
                                      class = "cell-border, compact, hover", 
                                      rownames = F, #TRUE,
-                                     colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error', toString(withMathJax('$$h^2$$'))), # '$$h_2$$'),  # 'h2'),
+                                     colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', toString(withMathJax('$$h^2$$'))), # '$$h_2$$'),  # 'h2'),
                                      filter = "none",
                                      escape = FALSE,
                                      autoHideNavigation = TRUE,
@@ -675,8 +701,8 @@ server <- function(input, output, clientData, session) {
       })
       
       # Focus on new tab
-      updateTabsetPanel(session = session, inputId = "sc_tabs", selected = paste0('Scenario', tail(Scenarios,1)))
-      #updateTabsetPanel(session = session, inputId = "my_tabs", selected = "Scenarios")
+      #updateTabsetPanel(session = session, inputId = "sc_tabs", selected = paste0('Scenario', tail(Scenarios,1)))
+      updateTabsetPanel(session = session, inputId = "my_tabs", selected = "Scenarios")
       
       print(paste("Start Run", tail(Scenarios,1))) # input$run_btn))
       # Run C++ code
@@ -847,11 +873,16 @@ server <- function(input, output, clientData, session) {
       #                            "out" = result)
       #               )
    
+      
+      # Focus on new tab
+      updateTabsetPanel(session = session, inputId = "sc_tabs", selected = paste0('Scenario', tail(Scenarios,1)))
+      #updateTabsetPanel(session = session, inputId = "my_tabs", selected = "Scenarios")
+      
     }) #endof try()
   }) # end of run button
   
   # Download Report
-  output$download_btn <- downloadHandler(
+  output$download_all <- downloadHandler(
     filename = function() {
       # return(paste0("report_", Sys.Date(), ".csv")) # csv version
       return(paste0("report_", Sys.Date(), ".xlsx"))
@@ -862,12 +893,17 @@ server <- function(input, output, clientData, session) {
       
       addWorksheet(
         wb = my_workbook,
-        sheetName = "Input"
+        sheetName = "Gain"
       )
       
       addWorksheet(
         wb = my_workbook,
-        sheetName = "Cost"
+        sheetName = "Gain by Time"
+      )
+      
+      addWorksheet(
+        wb = my_workbook,
+        sheetName = "Gain by Cost"
       )
       
       setColWidths(
@@ -881,8 +917,8 @@ server <- function(input, output, clientData, session) {
         my_workbook,
         sheet = 1,
         c(
-          "Breeding Scenario",
-          "Input Settings"
+          "Summary Report",
+          "---- Gain ----"
         ),
         startRow = 1,
         startCol = 1
@@ -899,52 +935,20 @@ server <- function(input, output, clientData, session) {
         cols = 1
       )
       
-      mtx <- matrix(c(input$varG, input$varGxL, input$varGxY, input$negen, input$varieties), nrow = 1, ncol = 5)
-      colnames(mtx) <- c("Genetic Variance", "GxL(Y)", "GxY", "Multiplication Time(Y)", "Selected Parents")
-      
       writeData(
         my_workbook,
         sheet = 1,
-        mtx,
+        meanGainSum(result = rv$results_all),
         startRow = 4,
         startCol = 1
       )
       
-      writeData(
-        my_workbook,
-        sheet = 1,
-        c(
-          "Yield Trials"
-        ),
-        startRow = 8,
-        startCol = 1
-      )
-      
-      addStyle(
-        my_workbook,
-        sheet = 1,
-        style = createStyle(
-          fontSize = 18,
-          textDecoration = "bold"
-        ),
-        rows = 8,
-        cols = 1
-      )
-      
-      writeData(
-        my_workbook,
-        sheet = 1,
-        yti$data,
-        startRow = 10,
-        startCol = 1
-      )
-      
-      # Second sheet with costs
+      # Second sheet xTime
       
       writeData(
         my_workbook,
         sheet = 2,
-        c("Cost Details", "Input Settings"),
+        c("Gain by Time", "Summary"),
         startRow = 1,
         startCol = 1
       )
@@ -956,39 +960,47 @@ server <- function(input, output, clientData, session) {
           fontSize = 18,
           textDecoration = "bold"
         ),
-        rows = c(1, 2, 8),
+        rows = c(1, 2),
         cols = 1
       )
-      
-      cost_input <- matrix(c(input$costPerPlot, input$costPerLoc, input$costFixed), nrow = 1, ncol = 3)
-      colnames(cost_input) <- c("Plot Cost($)", "Loc Cost($)", "Fixed Cost($)")
       
       writeData(
         my_workbook,
         sheet = 2,
-        cost_input,
+        meanGainSum(result = rv$results_allxTime),
         startRow = 4,
         startCol = 1
       )
       
-      writeData(
-        my_workbook,
-        sheet = 2,
-        "Cost Summary Table",
-        startRow = 8,
-        startCol = 1
-      )
-      
-      cost_summary <- cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data))
-      colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
+      # Third sheet xCost
       
       writeData(
         my_workbook,
-        sheet = 2,
-        cost_summary,
-        startRow = 10,
+        sheet = 3,
+        c("Gain by Cost", "Summary"),
+        startRow = 1,
         startCol = 1
       )
+      
+      addStyle(
+        my_workbook,
+        sheet = 3,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = c(1, 2),
+        cols = 1
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 3,
+        meanGainSum(result = rv$results_allxCost),
+        startRow = 4,
+        startCol = 1
+      )
+      
       
       saveWorkbook(my_workbook, file)
     }
