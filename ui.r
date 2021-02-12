@@ -159,18 +159,23 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                                          tags$br(),
                                          tags$p("The Breeding Scheme Designer is a GUI tool (based on R-shiny) that will allow breeders and donors 
                                                 to compare different breeding strategies and calculate expected genetic gain given a set of parameters."),
+                                         tags$br(),
                                          tags$p("Users can:"),
                                          tags$ol(
                                            tags$li("Define the input parameters of breeding scenarios with multiple stages."),
                                            tags$li("Calculate parameters such as expected genetic gain, heritability, gain per year, gain per cost etc."),
-                                           tags$li("Compare genetic gain results between different scenarios."),
+                                           tags$li("Compare results between different scenarios (stage-by-stage)."),
                                            tags$li("Estimate the cost of scenarios and compare gain per cost."),
-                                           tags$li("Explore expected genetic gain for ranges of input parameters and their combination.")
+                                           tags$li("Explore expected genetic gain for ranges of input parameters and their pairwise combinations.")
                                          ),
                                          tags$br(),
-                                         tags$p("To create a new breeding scenario, fill in the input fields on the left sidebar and press the Run button at the bottom."),
-                                         tags$br(),
-                                         tags$p("Results for each scenario are displayed in different tabs at the area on the right.")
+                                         tags$p("Basic Instructions:"),
+                                         tags$ul(
+                                           tags$li("To create a new breeding scenario, fill in the input fields on the left sidebar and press the Run button at the bottom."),
+                                           tags$li("Repeat the same process to create more breeding scenarios."),
+                                           tags$li("Results for each scenario will be displayed in different \"Scenario\" tabs at the area on the right."),
+                                           tags$li("To compare between different scenarios, click on the \"Overview\" tab.")
+                                         )
                                 ), # endof About
                                 tabPanel(title = "Glossary",
                                          # Glossary TODO
@@ -191,7 +196,12 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                                            tags$li(tags$b("Selected Parents:"), "The final number of selected entries. Must be smaller than or equal to the number of entries in the last stage."),
                                            tags$li(tags$b("Samples in Range:"), "The number of samples or intervals to be considered for each set of ranges."),
                                            tags$li(tags$b("Genetic Gain:"), "the change in the breeding/genetic value which is occuring for a particular trait of interest in a period of time.")
-                                         )
+                                         ),
+                                         tags$br(),
+                                         tags$p("Find more details about the definitions of those terms and how they can be calculated in the ", 
+                                                tags$a(href="https://excellenceinbreeding.org/toolbox/tools/eib-breeding-scheme-optimization-manuals", "EiB breeding scheme optimization manuals.")),
+                                         
+                                         
                                 )
                               # tabPanel("Range", plotOutput('rangePlotEntriesReps'))
                     ) # endo of tabsetPanel

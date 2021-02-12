@@ -423,9 +423,7 @@ server <- function(input, output, clientData, session) {
       
       if (maxr < tail(sc$Stage, n=1)) maxr <- tail(sc$Stage, n=1) # update max nrow for mtx
     }
-    # print(paste0("num of max stages = ", maxr))
-    mtx <- mtx[1:maxr,] # truncate mtx at the end.
-    # print(mtx)
+    mtx <- mtx[1:maxr,, drop = FALSE] # truncate mtx at the end and avoid conversion into a vector if dim = 1.
     rownames(mtx) <- c(paste0("Stage ", 1:maxr))
     colnames(mtx) <- c(paste0("Scenario ", 1:ncol(mtx)))
     return(mtx)
@@ -885,7 +883,7 @@ server <- function(input, output, clientData, session) {
   output$download_all <- downloadHandler(
     filename = function() {
       # return(paste0("report_", Sys.Date(), ".csv")) # csv version
-      return(paste0("report_", Sys.Date(), ".xlsx"))
+      return(paste0("summary_report_", Sys.Date(), ".xlsx"))
     },
     content = function(file) {
       #write.csv(rv$results_all, file, row.names = FALSE) # csv version
@@ -894,16 +892,6 @@ server <- function(input, output, clientData, session) {
       addWorksheet(
         wb = my_workbook,
         sheetName = "Gain"
-      )
-      
-      addWorksheet(
-        wb = my_workbook,
-        sheetName = "Gain by Time"
-      )
-      
-      addWorksheet(
-        wb = my_workbook,
-        sheetName = "Gain by Cost"
       )
       
       setColWidths(
@@ -916,10 +904,7 @@ server <- function(input, output, clientData, session) {
       writeData(
         my_workbook,
         sheet = 1,
-        c(
-          "Summary Report",
-          "---- Gain ----"
-        ),
+        "Summary Tables",
         startRow = 1,
         startCol = 1
       )
@@ -931,76 +916,88 @@ server <- function(input, output, clientData, session) {
           fontSize = 18,
           textDecoration = "bold"
         ),
-        rows = 1:2,
+        rows = 1,
         cols = 1
+      )
+      
+      sumxGain <- meanGainSum(result = rv$results_all)
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        sumxGain,
+        startRow = 4,
+        startCol = 1,
+        xy = NULL,
+        colNames = TRUE,
+        rowNames = TRUE,
+        headerStyle = NULL,
+        borders = c("none", "surrounding", "rows", "columns", "all"),
+        borderColour = getOption("openxlsx.borderColour", "black"),
+        borderStyle = getOption("openxlsx.borderStyle", "thin"),
+        withFilter = FALSE,
+        keepNA = FALSE,
+        na.string = NULL,
+        name = NULL,
+        sep = ", "
       )
       
       writeData(
         my_workbook,
         sheet = 1,
-        meanGainSum(result = rv$results_all),
+        "Gain",
         startRow = 4,
         startCol = 1
       )
       
-      # Second sheet xTime
+      sumxTime <- meanGainSum(result = rv$results_allxTime)
       
       writeData(
         my_workbook,
-        sheet = 2,
-        c("Gain by Time", "Summary"),
-        startRow = 1,
+        sheet = 1,
+        sumxTime,
+        startRow = 8 + nrow(sumxGain),
+        startCol = 1, #3 + ncol(sumxGain),
+        rowNames = TRUE
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        "Gain per Year",
+        startRow = 8 + nrow(sumxGain),
+        startCol = 1
+      )
+      
+      sumxCost <- meanGainSum(result = rv$results_allxCost)
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        sumxCost,
+        startRow = 12 + nrow(sumxGain) + nrow(sumxTime),
+        startCol = 1, #4 + 2*ncol(sumxTime),
+        rowNames = TRUE
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        "Gain per Cost",
+        startRow = 12 + nrow(sumxGain) + nrow(sumxTime),
         startCol = 1
       )
       
       addStyle(
         my_workbook,
-        sheet = 2,
+        sheet = 1,
         style = createStyle(
-          fontSize = 18,
+          fontSize = 12,
           textDecoration = "bold"
         ),
-        rows = c(1, 2),
+        rows = c(4, 8 + nrow(sumxGain), 12 + nrow(sumxGain) + nrow(sumxTime)),
         cols = 1
       )
-      
-      writeData(
-        my_workbook,
-        sheet = 2,
-        meanGainSum(result = rv$results_allxTime),
-        startRow = 4,
-        startCol = 1
-      )
-      
-      # Third sheet xCost
-      
-      writeData(
-        my_workbook,
-        sheet = 3,
-        c("Gain by Cost", "Summary"),
-        startRow = 1,
-        startCol = 1
-      )
-      
-      addStyle(
-        my_workbook,
-        sheet = 3,
-        style = createStyle(
-          fontSize = 18,
-          textDecoration = "bold"
-        ),
-        rows = c(1, 2),
-        cols = 1
-      )
-      
-      writeData(
-        my_workbook,
-        sheet = 3,
-        meanGainSum(result = rv$results_allxCost),
-        startRow = 4,
-        startCol = 1
-      )
-      
       
       saveWorkbook(my_workbook, file)
     }
