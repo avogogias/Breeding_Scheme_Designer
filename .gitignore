@@ -2,6 +2,8 @@ www/bootstrap.*
 rsconnect
 *.Rproj
 server_range.r
+server_mod.r
+ui_mod.r
 temp_app.R
 PYT20.rds
 not_working.r
