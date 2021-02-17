@@ -3,7 +3,8 @@ sumset_DT = list( options = list(
   searching = F, # no search box
   paginate = F,  # no num of pages
   lengthChange = F, # no show entries
-  scrollX = T # horizontal slider
+  scrollX = T, # horizontal slider
+  ordering = F # suppressing sorting
 ),
 class = "cell-border, compact, hover", 
 rownames = F, #TRUE,
@@ -136,7 +137,8 @@ if (tail(Scenarios,1) == 1)
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
                                                                  lengthChange = F, # no show entries
-                                                                 scrollX = T # horizontal slider
+                                                                 scrollX = T, # horizontal slider
+                                                                 ordering = F # suppressing sorting
                                                                ),
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
@@ -409,7 +411,8 @@ if (tail(Scenarios,1) == 1)
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
                                                                  lengthChange = F, # no show entries
-                                                                 scrollX = T # horizontal slider
+                                                                 scrollX = T, # horizontal slider
+                                                                 ordering = F # suppressing sorting
                                                                ),
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
@@ -672,7 +675,8 @@ if (tail(Scenarios,1) == 1)
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
                                                                  lengthChange = F, # no show entries
-                                                                 scrollX = T # horizontal slider
+                                                                 scrollX = T, # horizontal slider
+                                                                 ordering = F # suppressing sorting
                                                                ),
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
@@ -937,7 +941,8 @@ if (tail(Scenarios,1) == 1)
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
                                                                  lengthChange = F, # no show entries
-                                                                 scrollX = T # horizontal slider
+                                                                 scrollX = T, # horizontal slider
+                                                                 ordering = F # suppressing sorting
                                                                ),
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
@@ -1204,7 +1209,8 @@ if (tail(Scenarios,1) == 1)
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
                                                                  lengthChange = F, # no show entries
-                                                                 scrollX = T # horizontal slider
+                                                                 scrollX = T, # horizontal slider
+                                                                 ordering = F # suppressing sorting
                                                                ),
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
@@ -1468,7 +1474,8 @@ if (tail(Scenarios,1) == 1)
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
                                                                  lengthChange = F, # no show entries
-                                                                 scrollX = T # horizontal slider
+                                                                 scrollX = T, # horizontal slider
+                                                                 ordering = F # suppressing sorting
                                                                ),
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
@@ -1735,7 +1742,8 @@ if (tail(Scenarios,1) == 1)
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
                                                                  lengthChange = F, # no show entries
-                                                                 scrollX = T # horizontal slider
+                                                                 scrollX = T, # horizontal slider
+                                                                 ordering = F # suppressing sorting
                                                                ),
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
@@ -2001,7 +2009,8 @@ if (tail(Scenarios,1) == 1)
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
                                                                  lengthChange = F, # no show entries
-                                                                 scrollX = T # horizontal slider
+                                                                 scrollX = T, # horizontal slider
+                                                                 ordering = F # suppressing sorting
                                                                ),
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
@@ -2267,7 +2276,8 @@ if (tail(Scenarios,1) == 1)
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
                                                                  lengthChange = F, # no show entries
-                                                                 scrollX = T # horizontal slider
+                                                                 scrollX = T, # horizontal slider
+                                                                 ordering = F # suppressing sorting
                                                                ),
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
@@ -2534,7 +2544,8 @@ if (tail(Scenarios,1) == 1)
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
                                                                  lengthChange = F, # no show entries
-                                                                 scrollX = T # horizontal slider
+                                                                 scrollX = T, # horizontal slider
+                                                                 ordering = F # suppressing sorting
                                                                ),
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),

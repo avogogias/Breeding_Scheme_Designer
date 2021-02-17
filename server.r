@@ -562,7 +562,8 @@ server <- function(input, output, clientData, session) {
                                        searching = F, # no search box
                                        paginate = F,  # no num of pages
                                        lengthChange = F, # no show entries
-                                       scrollX = T # horizontal slider
+                                       scrollX = T, # horizontal slider
+                                       ordering = F # suppressing sorting 
                                      ),
                                      class = "cell-border, compact, hover", 
                                      rownames = F, #TRUE,
@@ -580,7 +581,8 @@ server <- function(input, output, clientData, session) {
                                      searching = F, # no search box
                                      paginate = F,  # no num of pages
                                      lengthChange = F, # no show entries
-                                     scrollX = T # horizontal slider
+                                     scrollX = T, # horizontal slider
+                                     ordering = F # suppressing sorting 
                                    ),
                                    rownames = F,
                                    colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
@@ -697,6 +699,18 @@ server <- function(input, output, clientData, session) {
       output$mytabs = renderUI({
         createTab(scenarioID = tail(Scenarios,1))
       })
+      
+      # Create a Download Report button in Overview Tab at first Run
+      if (tail(Scenarios,1) == 1)
+      {
+        insertUI(
+          selector = "#dbtn_placeholder",
+          ui = tags$div(id = "dbtn_id",
+                        downloadButton("download_all", "Download Report"),
+          )
+        )
+      }
+
       
       # Focus on new tab
       #updateTabsetPanel(session = session, inputId = "sc_tabs", selected = paste0('Scenario', tail(Scenarios,1)))
