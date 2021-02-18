@@ -103,17 +103,17 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                     
                     sliderInput("grain", "Samples in Range", min = 2, max = 5, value = 2, step = 1, width = '30%'),
                     
-                    tags$h4("Costs:"),
+                    # tags$h4("Costs:"),
                     # Make cost input divs appear in one line
                     bootstrapPage(
-                      # Set Plot Cost 
+                      # Set Plot Cost
                       div(style="display:inline-block",numericInput("costPerPlot", "Plot Cost($):",
                                                                     min = 0, max = 1000, value = 10, step = 1, width = '80px')),
-                      # Set Location Cost 
+                      # Set Location Cost
                       div(style="display:inline-block",numericInput("costPerLoc", "Loc Cost($):",
                                                                     min = 0, max = 1000000, value = 1000, step = 1, width = '80px')),
-                      
-                      # Set Fixed Cost 
+
+                      # Set Fixed Cost
                       div(style="display:inline-block",numericInput("costFixed", "Fixed Cost($):",
                                                                     min = 0, max = 1000000, value = 1000, step = 1, width = '80px'))
                     ),

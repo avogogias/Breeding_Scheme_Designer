@@ -654,10 +654,12 @@ server <- function(input, output, clientData, session) {
     reps = isolate(yti$data[,5]) # c(1,2,3)
     error = isolate(yti$data[,6]) # c(1,1,1)
     h2 = isolate(yti$data[,7])
+    plotCost = isolate(yti$data[,8])
+    locCost = isolate(yti$data[,9])
     varieties = isolate(input$varieties)
     
     # store settings for summary plot TODO : append column with mean genetic gain for each stage
-    stages_current = data.frame(stages, entries, years, locs, reps, error, h2)
+    stages_current = data.frame(stages, entries, years, locs, reps, error, h2, plotCost, locCost)
 
     # validate stage entries input
     # checkEntries()

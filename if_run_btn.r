@@ -8,12 +8,12 @@ sumset_DT = list( options = list(
 ),
 class = "cell-border, compact, hover", 
 rownames = F, #TRUE,
-colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Genetic Gain', 'Gain per Year', 'Gain per $1000'), 
+colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Plot Cost($)', 'Loc Cost($)', 'Genetic Gain', 'Gain per Year', 'Gain per $1000'), 
 filter = "none",
 escape = FALSE,
 autoHideNavigation = TRUE,
 selection = "none",
-editable = list(target = "cell", disable = list(columns = c(0, 6, 7, 8))),
+editable = list(target = "cell", disable = list(columns = c(0, 6, 9, 10, 11))),
 server = TRUE) # server = F doesn't work with replaceData() cell editing
 
 # Currently results_all updates only for scenarios 1-5
@@ -71,15 +71,15 @@ if (tail(Scenarios,1) == 1)
       
       # Update Mean Genetic Gain for each stage in summary table
       stages_current$mean <- meanGain(result)
-      reactDT1$data[,8] <- stages_current$mean
+      reactDT1$data[,10] <- stages_current$mean
       
       # Update Mean Genetic Gain x Time for each stage in summary table
       stages_current$meanxTime <- meanGainxTime(result, scenarioDT = reactDT1$data)
-      reactDT1$data[,9] <- stages_current$meanxTime
+      reactDT1$data[,11] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
       stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT1$data)
-      reactDT1$data[,10] <- stages_current$meanxCost
+      reactDT1$data[,12] <- stages_current$meanxCost
   
       # Update results_all entries
       # First remove previous run entries
@@ -346,15 +346,15 @@ if (tail(Scenarios,1) == 1)
   
       # Update Mean Genetic Gain for each stage in summary table
       stages_current$mean <- meanGain(result)
-      reactDT2$data[,8] <- stages_current$mean
+      reactDT2$data[,10] <- stages_current$mean
       
       # Update Mean Genetic Gain x Time for each stage in summary table
       stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT2$data)
-      reactDT2$data[,9] <- stages_current$meanxTime
+      reactDT2$data[,11] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
       stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT2$data)
-      reactDT2$data[,10] <- stages_current$meanxCost
+      reactDT2$data[,12] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -610,15 +610,15 @@ if (tail(Scenarios,1) == 1)
   
       # Update Mean Genetic Gain for each stage in summary table
       stages_current$mean <- meanGain(result)
-      reactDT3$data[,8] <- stages_current$mean
+      reactDT3$data[,10] <- stages_current$mean
   
       # Update Mean Genetic Gain x Time for each stage in summary table
       stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT3$data)
-      reactDT3$data[,9] <- stages_current$meanxTime
+      reactDT3$data[,11] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
       stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT3$data)
-      reactDT3$data[,10] <- stages_current$meanxCost
+      reactDT3$data[,12] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -875,15 +875,15 @@ if (tail(Scenarios,1) == 1)
   
       # Update Mean Genetic Gain for each stage in summary table
       stages_current$mean <- meanGain(result)
-      reactDT4$data[,8] <- stages_current$mean
+      reactDT4$data[,10] <- stages_current$mean
   
       # Update Mean Genetic Gain x Time for each stage in summary table
       stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT4$data)
-      reactDT4$data[,9] <- stages_current$meanxTime
+      reactDT4$data[,11] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
       stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT4$data)
-      reactDT4$data[,10] <- stages_current$meanxCost
+      reactDT4$data[,12] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -1143,15 +1143,15 @@ if (tail(Scenarios,1) == 1)
   
       # Update Mean Genetic Gain for each stage in summary table
       stages_current$mean <- meanGain(result)
-      reactDT5$data[,8] <- stages_current$mean
+      reactDT5$data[,10] <- stages_current$mean
   
       # Update Mean Genetic Gain x Time for each stage in summary table
       stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT5$data)
-      reactDT5$data[,9] <- stages_current$meanxTime
+      reactDT5$data[,11] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
       stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT5$data)
-      reactDT5$data[,10] <- stages_current$meanxCost
+      reactDT5$data[,12] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -1408,15 +1408,15 @@ if (tail(Scenarios,1) == 1)
       
       # Update Mean Genetic Gain for each stage in summary table
       stages_current$mean <- meanGain(result)
-      reactDT6$data[,8] <- stages_current$mean    
+      reactDT6$data[,10] <- stages_current$mean    
       
       # Update Mean Genetic Gain x Time for each stage in summary table
       stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT6$data)
-      reactDT6$data[,9] <- stages_current$meanxTime
+      reactDT6$data[,11] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
       stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT6$data)
-      reactDT6$data[,10] <- stages_current$meanxCost
+      reactDT6$data[,12] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -1676,15 +1676,15 @@ if (tail(Scenarios,1) == 1)
       
       # Update Mean Genetic Gain for each stage in summary table
       stages_current$mean <- meanGain(result)
-      reactDT7$data[,8] <- stages_current$mean 
+      reactDT7$data[,10] <- stages_current$mean 
       
       # Update Mean Genetic Gain x Time for each stage in summary table
       stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT7$data)
-      reactDT7$data[,9] <- stages_current$meanxTime
+      reactDT7$data[,11] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
       stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT7$data)
-      reactDT7$data[,10] <- stages_current$meanxCost
+      reactDT7$data[,12] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -1943,15 +1943,15 @@ if (tail(Scenarios,1) == 1)
       
       # Update Mean Genetic Gain for each stage in summary table
       stages_current$mean <- meanGain(result)
-      reactDT8$data[,8] <- stages_current$mean   
+      reactDT8$data[,10] <- stages_current$mean   
       
       # Update Mean Genetic Gain x Time for each stage in summary table
       stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT8$data)
-      reactDT8$data[,9] <- stages_current$meanxTime
+      reactDT8$data[,11] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
       stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT8$data)
-      reactDT8$data[,10] <- stages_current$meanxCost
+      reactDT8$data[,12] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -2210,15 +2210,15 @@ if (tail(Scenarios,1) == 1)
       
       # Update Mean Genetic Gain for each stage in summary table
       stages_current$mean <- meanGain(result)
-      reactDT9$data[,8] <- stages_current$mean 
+      reactDT9$data[,10] <- stages_current$mean 
       
       # Update Mean Genetic Gain x Time for each stage in summary table
       stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT9$data)
-      reactDT9$data[,9] <- stages_current$meanxTime
+      reactDT9$data[,11] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
       stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT9$data)
-      reactDT9$data[,10] <- stages_current$meanxCost
+      reactDT9$data[,12] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -2478,15 +2478,15 @@ if (tail(Scenarios,1) == 1)
       
       # Update Mean Genetic Gain for each stage in summary table
       stages_current$mean <- meanGain(result)
-      reactDT10$data[,8] <- stages_current$mean
+      reactDT10$data[,10] <- stages_current$mean
       
       # Update Mean Genetic Gain x Time for each stage in summary table
       stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT10$data)
-      reactDT10$data[,9] <- stages_current$meanxTime
+      reactDT10$data[,11] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
       stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT10$data)
-      reactDT10$data[,10] <- stages_current$meanxCost
+      reactDT10$data[,12] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
