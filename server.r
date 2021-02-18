@@ -28,7 +28,9 @@ server <- function(input, output, clientData, session) {
   reps = c(1,2,3)
   error = c(1,1,1)
   h2 = c(0.5,0.5,0.5) # this is a calculated value initialised here
-  yt = cbind(stage,entries,years,locs,reps,error,h2)
+  plotCost = c(10,10,10)
+  locCost = c(1000,1000,1000)
+  yt = cbind(stage,entries,years,locs,reps,error,h2,plotCost,locCost)
   
   # per-session reactive values object to store all results of this user session
   rv <- reactiveValues(results_all = NULL, results_allxTime = NULL, results_allxCost = NULL, results_range = NULL)
@@ -567,7 +569,7 @@ server <- function(input, output, clientData, session) {
                                      ),
                                      class = "cell-border, compact, hover", 
                                      rownames = F, #TRUE,
-                                     colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', toString(withMathJax('$$h^2$$'))), # '$$h_2$$'),  # 'h2'),
+                                     colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', toString(withMathJax('$$h^2$$')), 'Plot Cost($)', 'Loc Cost($)'),
                                      filter = "none",
                                      escape = FALSE,
                                      autoHideNavigation = TRUE,
