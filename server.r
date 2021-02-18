@@ -30,7 +30,8 @@ server <- function(input, output, clientData, session) {
   h2 = c(0.5,0.5,0.5) # this is a calculated value initialised here
   plotCost = c(10,10,10)
   locCost = c(1000,1000,1000)
-  yt = cbind(stage,entries,years,locs,reps,error,h2,plotCost,locCost)
+  fixedCost = c(1000,1000,1000)
+  yt = cbind(stage,entries,years,locs,reps,error,h2,plotCost,locCost,fixedCost)
   
   # per-session reactive values object to store all results of this user session
   rv <- reactiveValues(results_all = NULL, results_allxTime = NULL, results_allxCost = NULL, results_range = NULL)
@@ -72,20 +73,44 @@ server <- function(input, output, clientData, session) {
   }
 
   # function calculates total cost of locations
-  totalLocsCost <-function(scenarioDT = yti$data, costPerLoc = input$costPerLoc) {
-    tlc = totalLocs(scenarioDT) * costPerLoc
+  # totalLocsCost <-function(scenarioDT = yti$data, costPerLoc = input$costPerLoc) {
+  #   tlc = totalLocs(scenarioDT) * costPerLoc
+  #   return(tlc)
+  # }
+  totalLocsCost <-function(scenarioDT = yti$data) {
+    tlc = 0
+    for (i in 1:nrow(scenarioDT))
+    {
+      tlc = tlc + stageLocsCost(scenarioDT, i)
+    }
     return(tlc)
   }
   
   # function calculates total cost of plots
-  totalPlotsCost <-function(scenarioDT = yti$data, costPerPlot = input$costPerPlot) {
-    tpc = totalPlots(scenarioDT) * costPerPlot
+  # totalPlotsCost <-function(scenarioDT = yti$data, costPerPlot = input$costPerPlot) {
+  #   tpc = totalPlots(scenarioDT) * costPerPlot
+  #   return(tpc)
+  # }
+  totalPlotsCost <-function(scenarioDT = yti$data) {
+    tpc = 0
+    for (i in 1:nrow(scenarioDT))
+    {
+      tpc = tpc + stagePlotsCost(scenarioDT, i)
+    }
     return(tpc)
   }
   
   # function calculates total cost of scenario
-  totalCost <- function(scenarioDT = yti$data, costPerLoc = input$costPerLoc, costPerPlot = input$costPerPlot, costFixed = input$costFixed) {
-    tc = totalLocsCost(scenarioDT, costPerLoc) + totalPlotsCost(scenarioDT, costPerPlot) + costFixed
+  # totalCost <- function(scenarioDT = yti$data, costPerLoc = input$costPerLoc, costPerPlot = input$costPerPlot, costFixed = input$costFixed) {
+  #   tc = totalLocsCost(scenarioDT, costPerLoc) + totalPlotsCost(scenarioDT, costPerPlot) + costFixed
+  #   return(tc)
+  # }
+  totalCost <- function(scenarioDT = yti$data) {
+    tc = 0
+    for (i in 1:nrow(scenarioDT))
+    {
+      tc = tc + stageTotalCost(scenarioDT, i)
+    }
     return(tc)
   }
   
@@ -100,6 +125,17 @@ server <- function(input, output, clientData, session) {
     gt = result[stage,] / stageTotalYears(scenarioDT, stage) 
     return(gt)
   }
+
+  # function returns total locs in a stage (default is stage 1)
+  stageTotalLocs <-function(scenarioDT = yti$data, stage = 1) {
+    stl = 0
+    for (i in 1:stage)
+    {
+      stl = stl + prod(scenarioDT[i,3:4])
+    }
+    # stl = sum(prod(scenarioDT[1:stage,1:4]))
+    return(stl)
+  }
   
   # function returns total plots in a stage (default is stage 1)
   stageTotalPlots <-function(scenarioDT = yti$data, stage = 1) {
@@ -112,21 +148,50 @@ server <- function(input, output, clientData, session) {
     #stp = sum(prod(scenarioDT[1:stage,1:4])) # + previous stages total plots
     return(stp)
   }
-
-  # function returns total plots in a stage (default is stage 1)
-  stageTotalLocs <-function(scenarioDT = yti$data, stage = 1) {
-    stl = 0
-    for (i in 1:stage)
-    {
-      stl = stl + prod(scenarioDT[i,3:4])
-    }
-    # stl = sum(prod(scenarioDT[1:stage,1:4]))
-    return(stl)
+  
+  # function returns number of locs of a single stage 
+  stageLocs <-function(scenarioDT = yti$data, stage = 1) {
+    sl = prod(scenarioDT[stage,3:4])
+    return(sl)
+  }
+  
+  # function returns number of plots of a single stage 
+  stagePlots <-function(scenarioDT = yti$data, stage = 1) {
+    sp = prod(scenarioDT[stage,2:5])
+    return(sp)
+  }
+  
+  # function returns cost of Locs for a single stage
+  stageLocsCost <-function(scenarioDT = yti$data, stage = 1) {
+    slc = stageLocs(scenarioDT, stage) * scenarioDT[stage, 9]
+    return(slc)
+  }
+  
+  # function returns cost of Plots for a single stage
+  stagePlotsCost <-function(scenarioDT = yti$data, stage = 1) {
+    spc = stagePlots(scenarioDT) * scenarioDT[stage, 8]
+    return(spc)
+  }
+  
+  # function returns tolal cost of a single stage
+  stageTotalCost <-function(scenarioDT = yti$data, stage = 1) {
+    stc = stageLocsCost(scenarioDT, stage) + stagePlotsCost(scenarioDT, stage) + scenarioDT[stage, 10] # + Fixed Cost
+    return(stc)
   }
 
   # Return the gain over cost as this is calculated from plot and loc costs in the program
-  gainCost <- function(scenarioDT = yti$data, result = result, stage = 1, costPerPlot = input$costPerPlot, costPerLoc = input$costPerLoc) {
-    gc = result[stage,]  / (stageTotalPlots(scenarioDT, stage) * costPerPlot + stageTotalLocs(scenarioDT, stage) * costPerLoc)
+  # gainCost <- function(scenarioDT = yti$data, result = result, stage = 1, costPerPlot = input$costPerPlot, costPerLoc = input$costPerLoc) {
+  #   gc = result[stage,]  / (stageTotalPlots(scenarioDT, stage) * costPerPlot + stageTotalLocs(scenarioDT, stage) * costPerLoc)
+  #   return(gc)
+  # }
+  gainCost <- function(scenarioDT = yti$data, result = result, stage = 1) {
+    gc = 0
+    for (i in 1:stage)
+    {
+      gc = gc + stagePlots(scenarioDT, i) * scenarioDT[i, 8] + stageLocs(scenarioDT, i) * scenarioDT[i, 9]  # !!!!!!!!!!!!!!!!!!
+      
+    }
+    gc = result[stage,] / gc  
     return(gc)
   }
   
@@ -569,7 +634,7 @@ server <- function(input, output, clientData, session) {
                                      ),
                                      class = "cell-border, compact, hover", 
                                      rownames = F, #TRUE,
-                                     colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', toString(withMathJax('$$h^2$$')), 'Plot Cost($)', 'Loc Cost($)'),
+                                     colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', toString(withMathJax('$$h^2$$')), 'Plot Cost($)', 'Loc Cost($)', 'Fixed Cost($)'),
                                      filter = "none",
                                      escape = FALSE,
                                      autoHideNavigation = TRUE,
@@ -632,7 +697,7 @@ server <- function(input, output, clientData, session) {
     #print(yti$data[1,3:6])
     # calc h2 for this stage
     new_h2 = input$varG / (input$varG + input$varGxY + input$varGxL + 1)
-    yti$data = rbind(yti$data, c(length(yti$data[,1])+1,2,1,1,1,1,round(new_h2, 3)))
+    yti$data = rbind(yti$data, c(length(yti$data[,1])+1,2,1,1,1,1,round(new_h2, 3),10,1000,1000))
   })
   
   observeEvent(input$delete_btn, {
@@ -656,10 +721,11 @@ server <- function(input, output, clientData, session) {
     h2 = isolate(yti$data[,7])
     plotCost = isolate(yti$data[,8])
     locCost = isolate(yti$data[,9])
+    fixedCost = isolate(yti$data[,10])
     varieties = isolate(input$varieties)
     
     # store settings for summary plot TODO : append column with mean genetic gain for each stage
-    stages_current = data.frame(stages, entries, years, locs, reps, error, h2, plotCost, locCost)
+    stages_current = data.frame(stages, entries, years, locs, reps, error, h2, plotCost, locCost, fixedCost)
 
     # validate stage entries input
     # checkEntries()

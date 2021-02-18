@@ -82,6 +82,43 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                     bsTooltip("varieties", "The final number of selected entries. Must be smaller than or equal to the number of entries in the last stage.",
                               "right", "hover", NULL),
                     
+                    
+                    # tags$h4("Costs:"),
+                    # Make cost input divs appear in one line
+                    # bootstrapPage(
+                    #   # Set Plot Cost
+                    #   div(style="display:inline-block",numericInput("costPerPlot", "Plot Cost($):",
+                    #                                                 min = 0, max = 1000, value = 10, step = 1, width = '80px')),
+                    #   # Set Location Cost
+                    #   div(style="display:inline-block",numericInput("costPerLoc", "Loc Cost($):",
+                    #                                                 min = 0, max = 1000000, value = 1000, step = 1, width = '80px')),
+                    # 
+                    #   # Set Fixed Cost
+                    #   div(style="display:inline-block",numericInput("costFixed", "Fixed Cost($):",
+                    #                                                 min = 0, max = 1000000, value = 1000, step = 1, width = '80px'))
+                    # ),
+                    # # tooltip with help
+                    # bsTooltip("costPerPlot", "The cost of a single plot in the program.",
+                    #           "right", "hover", NULL),
+                    # # tooltip with help
+                    # bsTooltip("costPerLoc", "The cost of a single location in the program.",
+                    #           "right", "hover", NULL),
+                    # # tooltip with help
+                    # bsTooltip("costFixed", "The fixed cost for running the program.",
+                    #           "right", "hover", NULL),
+                    
+                    # Economic cost summary output for scenario
+                    tags$h4("Summary Cost"),
+                    div( # CUSTOMISE div style for DT
+                      DT::DTOutput("cost_table"),
+                      style = "font-size: 85%; width: 100%"
+                    ),
+                    # div( # CUSTOMISE div style for DT
+                    #   DT::DTOutput("total_cost_table"),
+                    #   style = "font-size: 85%; width: 100%"
+                    # ),
+                    
+                    
                     tags$h4("Ranges:"),
                     
                     # Input: Specification of range within an interval ----
@@ -102,42 +139,7 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                                 value = c(1,10)),
                     
                     sliderInput("grain", "Samples in Range", min = 2, max = 5, value = 2, step = 1, width = '30%'),
-                    
-                    # tags$h4("Costs:"),
-                    # Make cost input divs appear in one line
-                    bootstrapPage(
-                      # Set Plot Cost
-                      div(style="display:inline-block",numericInput("costPerPlot", "Plot Cost($):",
-                                                                    min = 0, max = 1000, value = 10, step = 1, width = '80px')),
-                      # Set Location Cost
-                      div(style="display:inline-block",numericInput("costPerLoc", "Loc Cost($):",
-                                                                    min = 0, max = 1000000, value = 1000, step = 1, width = '80px')),
 
-                      # Set Fixed Cost
-                      div(style="display:inline-block",numericInput("costFixed", "Fixed Cost($):",
-                                                                    min = 0, max = 1000000, value = 1000, step = 1, width = '80px'))
-                    ),
-                    # tooltip with help
-                    bsTooltip("costPerPlot", "The cost of a single plot in the program.",
-                              "right", "hover", NULL),
-                    # tooltip with help
-                    bsTooltip("costPerLoc", "The cost of a single location in the program.",
-                              "right", "hover", NULL),
-                    # tooltip with help
-                    bsTooltip("costFixed", "The fixed cost for running the program.",
-                              "right", "hover", NULL),
-                    
-                    # Economic cost summary output for scenario
-                    tags$h4("Summary Cost"),
-                    div( # CUSTOMISE div style for DT
-                      DT::DTOutput("cost_table"),
-                      style = "font-size: 85%; width: 100%"
-                    ),
-                    # div( # CUSTOMISE div style for DT
-                    #   DT::DTOutput("total_cost_table"),
-                    #   style = "font-size: 85%; width: 100%"
-                    # ),
-                    
                     tags$br(),
                     
                     actionButton("run_btn", "Run")
