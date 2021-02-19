@@ -109,7 +109,7 @@ server <- function(input, output, clientData, session) {
     tc = 0
     for (i in 1:nrow(scenarioDT))
     {
-      tc = tc + stageTotalCost(scenarioDT, i)
+      tc = tc + stageCost(scenarioDT, i)
     }
     return(tc)
   }
@@ -174,12 +174,18 @@ server <- function(input, output, clientData, session) {
   }
   
   # function returns tolal cost of a single stage
-  stageTotalCost <-function(scenarioDT = yti$data, stage = 1) {
+  stageCost <-function(scenarioDT = yti$data, stage = 1) {
     stc = stageLocsCost(scenarioDT, stage) + stagePlotsCost(scenarioDT, stage) + scenarioDT[stage, 10] # + Fixed Cost
     return(stc)
   }
+  
+  # function returns gain per cost for a single stage independently of previous stages cost ****** --- N O T    U S E D ! ! ! --- ******
+  stageGainCost <-function(scenarioDT = yti$data, result = result, stage = 1) {
+    sgc = result[stage,] / stageCost(scenarioDT, stage)
+    return(sgc)
+  }
 
-  # Return the gain over cost as this is calculated from plot and loc costs in the program
+  # Return the gain over cost up until the end of a stage in the whole program
   # gainCost <- function(scenarioDT = yti$data, result = result, stage = 1, costPerPlot = input$costPerPlot, costPerLoc = input$costPerLoc) {
   #   gc = result[stage,]  / (stageTotalPlots(scenarioDT, stage) * costPerPlot + stageTotalLocs(scenarioDT, stage) * costPerLoc)
   #   return(gc)
@@ -188,8 +194,7 @@ server <- function(input, output, clientData, session) {
     gc = 0
     for (i in 1:stage)
     {
-      gc = gc + stagePlots(scenarioDT, i) * scenarioDT[i, 8] + stageLocs(scenarioDT, i) * scenarioDT[i, 9]  # !!!!!!!!!!!!!!!!!!
-      
+      gc = gc + stagePlotsCost(scenarioDT, i) + stageLocsCost(scenarioDT, i) + scenarioDT[i, 10]  # + Fixed Cost included!
     }
     gc = result[stage,] / gc  
     return(gc)
