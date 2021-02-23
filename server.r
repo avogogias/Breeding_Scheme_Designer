@@ -213,52 +213,57 @@ server <- function(input, output, clientData, session) {
                # cost table for this scenario
                DT::DTOutput(paste0('costDT', i)),
                # Start section with plots of ranges
-               tags$h3("Plots for ranges of parameters at first stage"),
-               # Drop down lists to select plots to view for each Scenario Tab
-               selectInput(inputId = paste0('rangePlots', i), label =  "Show Range Plots:",
-                           choices =  c("Entries" = paste0('rangePlotEntries', i),
-                                        "Years" = paste0('rangePlotYears', i),
-                                        "Locs" = paste0('rangePlotLocs', i),
-                                        "Reps" = paste0('rangePlotReps', i),
-                                        "Entries by Years" = paste0('rangePlotEntriesYears', i),
-                                        "Entries by Locs" = paste0('rangePlotEntriesLocs', i),
-                                        "Entries by Reps" = paste0('rangePlotEntriesReps', i),
-                                        "Years by Locs" = paste0('rangePlotYearsLocs', i),
-                                        "Years by Reps" = paste0('rangePlotYearsReps', i),
-                                        "Locs by Reps" = paste0('rangePlotLocsReps', i)),
-                           selected = NULL,
-                           multiple = FALSE,
-                           selectize = TRUE
-               ),
-               textOutput(paste0('plotMe', i)),
-               
-               # range plot overwrites first stage entries
-               plotOutput(paste0('rangePlotEntries', i)),
-               # range plot overwrites first stage years
-               plotOutput(paste0('rangePlotYears', i)),
-               # range plot overwrites first stage locs
-               plotOutput(paste0('rangePlotLocs', i)),
-               # range plot overwrites first stage reps
-               plotOutput(paste0('rangePlotReps', i)),
-               
-               # bubble / plotly-heatmap range plot for x6 pairs of entries/years/locs/reps ranges in first stage
-               # Enable switching between plotlyOutput and plotOutput for bubble plots and heatmaps
-               # TODO
-               
-               # hide plots and only show when selected in drop box
-               plotlyOutput(paste0('rangePlotEntriesYears', i)),
-               #  
-               plotlyOutput(paste0('rangePlotEntriesLocs', i)),
-               #  
-               plotlyOutput(paste0('rangePlotEntriesReps', i)),
-               # 
-               plotlyOutput(paste0('rangePlotYearsLocs', i)),
-               #  
-               plotlyOutput(paste0('rangePlotYearsReps', i)),
-               #  
-               plotlyOutput(paste0('rangePlotLocsReps', i))
-               #
-      )
+               conditionalPanel(
+                 condition = "input.chk_ranges",
+                 tags$div(class = "div_ranges", checked = NA, 
+                          tags$h3("Plots for ranges of parameters at first stage"),
+                          # Drop down lists to select plots to view for each Scenario Tab
+                          selectInput(inputId = paste0('rangePlots', i), label =  "Show Range Plots:",
+                                      choices =  c("Entries" = paste0('rangePlotEntries', i),
+                                                   "Years" = paste0('rangePlotYears', i),
+                                                   "Locs" = paste0('rangePlotLocs', i),
+                                                   "Reps" = paste0('rangePlotReps', i),
+                                                   "Entries by Years" = paste0('rangePlotEntriesYears', i),
+                                                   "Entries by Locs" = paste0('rangePlotEntriesLocs', i),
+                                                   "Entries by Reps" = paste0('rangePlotEntriesReps', i),
+                                                   "Years by Locs" = paste0('rangePlotYearsLocs', i),
+                                                   "Years by Reps" = paste0('rangePlotYearsReps', i),
+                                                   "Locs by Reps" = paste0('rangePlotLocsReps', i)),
+                                      selected = NULL,
+                                      multiple = FALSE,
+                                      selectize = TRUE
+                          ),
+                          textOutput(paste0('plotMe', i)),
+                          
+                          # range plot overwrites first stage entries
+                          plotOutput(paste0('rangePlotEntries', i)),
+                          # range plot overwrites first stage years
+                          plotOutput(paste0('rangePlotYears', i)),
+                          # range plot overwrites first stage locs
+                          plotOutput(paste0('rangePlotLocs', i)),
+                          # range plot overwrites first stage reps
+                          plotOutput(paste0('rangePlotReps', i)),
+                          
+                          # bubble / plotly-heatmap range plot for x6 pairs of entries/years/locs/reps ranges in first stage
+                          # Enable switching between plotlyOutput and plotOutput for bubble plots and heatmaps
+                          # TODO
+                          
+                          # hide plots and only show when selected in drop box
+                          plotlyOutput(paste0('rangePlotEntriesYears', i)),
+                          #  
+                          plotlyOutput(paste0('rangePlotEntriesLocs', i)),
+                          #  
+                          plotlyOutput(paste0('rangePlotEntriesReps', i)),
+                          # 
+                          plotlyOutput(paste0('rangePlotYearsLocs', i)),
+                          #  
+                          plotlyOutput(paste0('rangePlotYearsReps', i)),
+                          #  
+                          plotlyOutput(paste0('rangePlotLocsReps', i))
+                        
+               ) # endof div
+          ) # endof Conditional Panel
+      ) # endof Tab Panel
     }) 
     do.call("tabsetPanel", c(myTabs, id = "sc_tabs"))
   }
