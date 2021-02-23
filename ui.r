@@ -117,34 +117,43 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                     #   DT::DTOutput("total_cost_table"),
                     #   style = "font-size: 85%; width: 100%"
                     # ),
-                    
-                    
-                    tags$h4("Ranges:"),
-                    
-                    # Input: Specification of range within an interval ----
-                    sliderInput("entries_range", "First Stage Entries:",
-                                min = 100, max = 5000,
-                                value = c(100,1000)),
-                    # Input: Specification of range within an interval ----
-                    sliderInput("years_range", "First Stage Years:",
-                                min = 1, max = 10,
-                                value = c(1,5)),
-                    # Input: Specification of range within an interval ----
-                    sliderInput("locs_range", "First Stage Locs:",
-                                min = 1, max = 10,
-                                value = c(1,5)),
-                    # Input: Specification of range within an interval ----
-                    sliderInput("reps_range", "First Stage Reps:",
-                                min = 1, max = 30,
-                                value = c(1,10)),
-                    
-                    sliderInput("grain", "Samples in Range", min = 2, max = 5, value = 2, step = 1, width = '30%'),
 
-                    tags$br(),
                     
-                    actionButton("run_btn", "Run")
+                    checkboxInput("chk_ranges", "Set Ranges", FALSE),
                     
+                    # Only show this panel if the chk_ranges is checked
+                    conditionalPanel(
+                      condition = "input.chk_ranges",
+                      tags$div(class = "div_ranges", checked = NA, 
+                               
+                               tags$h4("Ranges:"),
+                               
+                               # Input: Specification of range within an interval ----
+                               sliderInput("entries_range", "First Stage Entries:",
+                                           min = 100, max = 5000,
+                                           value = c(100,1000)),
+                               # Input: Specification of range within an interval ----
+                               sliderInput("years_range", "First Stage Years:",
+                                           min = 1, max = 10,
+                                           value = c(1,5)),
+                               # Input: Specification of range within an interval ----
+                               sliderInput("locs_range", "First Stage Locs:",
+                                           min = 1, max = 10,
+                                           value = c(1,5)),
+                               # Input: Specification of range within an interval ----
+                               sliderInput("reps_range", "First Stage Reps:",
+                                           min = 1, max = 30,
+                                           value = c(1,10)),
+                               
+                               sliderInput("grain", "Samples in Range", min = 2, max = 5, value = 2, step = 1, width = '30%')
+                      
+                      ) # endof div ranges
+                      
+                    ), # endof conditionalPanel
+                  
+                    #tags$br(),
                     
+                    actionButton("run_btn", "Run"),
                     
                   ), # endof SidebarPanel
                   # Show plots and charts 
@@ -188,13 +197,13 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                                            tags$li(tags$b("GxL(Y):"), "Genotype-by-location nested in year interaction variance. This value is equivalent to the sum of genotype-by-location interaction variance and genotype-by-location-by-year interaction varaince."),
                                            tags$li(tags$b("GxY:"), "Genotype-by-year interaction variance."),
                                            tags$li(tags$b("Multiplication Time (Years):"), "GNumber of early generation years. This phase of the breeding program is modeled without selection."),
-                                           tags$li(tags$b("Stage:"), "The allocation of resources during a breeding program before selection takes place."),
+                                           tags$li(tags$b("Stage:"), "The allocation of resources during a breeding program period, before a selection step takes place."),
                                            tags$li(tags$b("Entries:"), "Number of entries. Must be smaller than or equal to the number of entries in the previous stage."),
                                            tags$li(tags$b("Years:"), "Number of years. Increasing this value will increase heritability by decreasing variation due to GxY, GxL(Y) and plot error."),
                                            tags$li(tags$b("Locs:"), "Number of locations. Increasing this value will increase heritability by decreasing variation due to GxL(Y) and plot error."),
                                            tags$li(tags$b("Reps:"), "Number of replications. Increasing this value will increase heritability by decreasing variation due to plot error."),
                                            tags$li(tags$b("Plot Error Variance:"), "Plot error variance affects the heritability and it can be used to adjust its calculated value when heritability of a trait is known."),
-                                           tags$li(tags$b("Heritability:"), "Calculated using a function that takes into account the variances, years, locs, reps and plot error variance of yield trials at each stage."),
+                                           tags$li(tags$b("Heritability:"), " Proportion of phenotypic variance attributable to additive genetic effects. Calculated using a function that takes into account the variances, years, locs, reps and plot error variance of yield trials at each stage."),
                                            tags$li(tags$b("Selected Parents:"), "The final number of selected entries. Must be smaller than or equal to the number of entries in the last stage."),
                                            tags$li(tags$b("Samples in Range:"), "The number of samples or intervals to be considered for each set of ranges."),
                                            tags$li(tags$b("Genetic Gain:"), "the change in the breeding/genetic value which is occuring for a particular trait of interest in a period of time.")
