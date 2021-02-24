@@ -453,7 +453,7 @@ server <- function(input, output, clientData, session) {
   # function that returns vector of the incremental mean gain per stage calculated from runScenario() result matrix
   meanGain <- function(result = result) {
     # first calculate aggregated mean gain for each stage
-    result <- round(apply(result, 1, mean), 2)
+    result <- round(apply(result, 1, mean), 3)
     return(result)
   } 
   
@@ -464,7 +464,7 @@ server <- function(input, output, clientData, session) {
     # replace accumulative gain with incremental gain per stage
     gain <- result
     if (length(gain)>1)
-      for (i in 2:length(gain)) {result[i] <- round(gain[i]-gain[i-1], 2)} 
+      for (i in 2:length(gain)) {result[i] <- round(gain[i]-gain[i-1], 3)} 
     return(result)
   } 
   
