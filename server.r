@@ -42,6 +42,8 @@ server <- function(input, output, clientData, session) {
   
   # initialize empty vector to stores status of chk_ranges for each scenario
   rangesVec <- vector()
+  # initialize empty list to store data frames of reactiveValues created for each Scenario, e.g. reactDT1
+  reactDT.list <- list()
 
   # ***************************************************** #
   # ********************* FUNCTIONS ********************* #
@@ -1110,97 +1112,97 @@ server <- function(input, output, clientData, session) {
 
       
       
-      # # save results of each scenario in different workbook tabs
-      # for (i in 1:tail(Scenarios,1))
-      # {
-      #   addWorksheet(
-      #     wb = my_workbook,
-      #     sheetName = paste("Scenario", i)
-      #   )
-      #   
-      #   setColWidths(
-      #     my_workbook,
-      #     1,
-      #     cols = 1:4,
-      #     widths = c(12, 12, 12, 12)
-      #   )
-      #   
-      #   writeData(
-      #     my_workbook,
-      #     sheet = i+1,
-      #     c(
-      #       paste("Breeding Scenario", i),
-      #       "Input Settings"
-      #     ),
-      #     startRow = 1,
-      #     startCol = 1
-      #   )
-      #   
-      #   addStyle(
-      #     my_workbook,
-      #     sheet = i+1,
-      #     style = createStyle(
-      #       fontSize = 18,
-      #       textDecoration = "bold"
-      #     ),
-      #     rows = c(1, 2, 2, 8),
-      #     cols = c(1, 1, 8, 1)
-      #   )
-      #   
-      #   mtx <- matrix(c(input$varG, input$varGxL, input$varGxY, input$negen, input$varieties), nrow = 1, ncol = 5)
-      #   colnames(mtx) <- c("Genetic Variance", "GxL(Y)", "GxY", "Multiplication Time(Y)", "Selected Parents")
-      #   
-      #   writeData(
-      #     my_workbook,
-      #     sheet = i+1,
-      #     mtx,
-      #     startRow = 4,
-      #     startCol = 1
-      #   )
-      #   
-      #   writeData(
-      #     my_workbook,
-      #     sheet = i+1,
-      #     c(
-      #       "Yield Trials"
-      #     ),
-      #     startRow = 8,
-      #     startCol = 1
-      #   )
-      #   
-      #   tmp_data <- stages_current # TODO :: call to reactDT1$data
-      #   colnames(tmp_data) = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Plot Cost($)', 'Loc Cost($)', 'Fixed Cost($)', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
-      #   
-      #   writeData(
-      #     my_workbook,
-      #     sheet = i+1,
-      #     #yti$data,
-      #     tmp_data,
-      #     startRow = 10,
-      #     startCol = 1
-      #   )
-      #   
-      #   writeData(
-      #     my_workbook,
-      #     sheet = i+1,
-      #     "Cost Summary Table",
-      #     startRow = 2,
-      #     startCol = 8
-      #   )
-      #   
-      #   cost_summary <- cbind(totalYears(tmp_data, input$negen), totalLocs(tmp_data), totalPlots(tmp_data), totalLocsCost(tmp_data), totalPlotsCost(tmp_data), totalCost(tmp_data))
-      #   colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
-      #   
-      #   writeData(
-      #     my_workbook,
-      #     sheet = i+1,
-      #     cost_summary,
-      #     startRow = 4,
-      #     startCol = 8
-      #   )
-      #   
-      # } # endof for loop over scenarios
-      
+      # save results of each scenario in different workbook tabs
+      for (i in 1:tail(Scenarios,1))
+      {
+        addWorksheet(
+          wb = my_workbook,
+          sheetName = paste("Scenario", i)
+        )
+
+        setColWidths(
+          my_workbook,
+          1,
+          cols = 1:4,
+          widths = c(12, 12, 12, 12)
+        )
+
+        writeData(
+          my_workbook,
+          sheet = i+1,
+          c(
+            paste("Breeding Scenario", i),
+            "Input Settings"
+          ),
+          startRow = 1,
+          startCol = 1
+        )
+
+        addStyle(
+          my_workbook,
+          sheet = i+1,
+          style = createStyle(
+            fontSize = 18,
+            textDecoration = "bold"
+          ),
+          rows = c(1, 2, 2, 8),
+          cols = c(1, 1, 8, 1)
+        )
+
+        mtx <- matrix(c(input$varG, input$varGxL, input$varGxY, input$negen, input$varieties), nrow = 1, ncol = 5)
+        colnames(mtx) <- c("Genetic Variance", "GxL(Y)", "GxY", "Multiplication Time(Y)", "Selected Parents")
+
+        writeData(
+          my_workbook,
+          sheet = i+1,
+          mtx,
+          startRow = 4,
+          startCol = 1
+        )
+
+        writeData(
+          my_workbook,
+          sheet = i+1,
+          c(
+            "Yield Trials"
+          ),
+          startRow = 8,
+          startCol = 1
+        )
+
+        tmp_data <- reactDT.list[[i]] # stages_current # TODO :: call to reactDT1$data
+        colnames(tmp_data) = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Plot Cost($)', 'Loc Cost($)', 'Fixed Cost($)', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
+
+        writeData(
+          my_workbook,
+          sheet = i+1,
+          #yti$data,
+          tmp_data,
+          startRow = 10,
+          startCol = 1
+        )
+
+        writeData(
+          my_workbook,
+          sheet = i+1,
+          "Cost Summary Table",
+          startRow = 2,
+          startCol = 8
+        )
+
+        cost_summary <- cbind(totalYears(tmp_data, input$negen), totalLocs(tmp_data), totalPlots(tmp_data), totalLocsCost(tmp_data), totalPlotsCost(tmp_data), totalCost(tmp_data))
+        colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
+
+        writeData(
+          my_workbook,
+          sheet = i+1,
+          cost_summary,
+          startRow = 4,
+          startCol = 8
+        )
+
+      } # endof for loop over scenarios
+
 
       
       

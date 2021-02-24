@@ -28,6 +28,9 @@ if (tail(Scenarios,1) == 1)
 {
   #assign(paste0("reactDT", tail(Scenarios,1)), reactiveValues(data = stages_current)) # WORKS BUT not useful
   reactDT1 <- reactiveValues(data = stages_current)
+  
+  reactDT.list <<- c(reactDT.list, list(reactDT1$data)) # list(as.data.frame(reactDT1$data))) # append it in list of reactive values
+  
   output[[paste0("stages_summary", tail(Scenarios,1))]] = DT::renderDT(reactDT1$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   #output$stages_summary1 = DT::renderDT(reactDT1$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
@@ -120,6 +123,9 @@ if (tail(Scenarios,1) == 1)
               plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
       })  
     
+      reactDT.list[1] <- list(reactDT1$data) # update list of reactive values for each scenario
+      print(reactDT.list[[1]]) # prints the updated element of the list - OK
+      
     }) #endof try()
   }) # endof update btn1
 
@@ -262,6 +268,9 @@ if (tail(Scenarios,1) == 1)
 } else if (tail(Scenarios,1) == 2)
 {
   reactDT2 <- reactiveValues(data = stages_current)
+  
+  reactDT.list <<- c(reactDT.list, list(reactDT2$data)) # list(as.data.frame(reactDT1$data))) # append it in list of reactive values
+  
   output$stages_summary2 = DT::renderDT(reactDT2$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary2')
@@ -479,6 +488,9 @@ if (tail(Scenarios,1) == 1)
 } else if (tail(Scenarios,1) == 3)
 {
   reactDT3 <- reactiveValues(data = stages_current)
+  
+  reactDT.list <<- c(reactDT.list, list(reactDT3$data)) # list(as.data.frame(reactDT1$data))) # append it in list of reactive values
+  
   output$stages_summary3 = DT::renderDT(reactDT3$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary3')
@@ -696,6 +708,9 @@ if (tail(Scenarios,1) == 1)
 } else if (tail(Scenarios,1) == 4)
 {
   reactDT4 <- reactiveValues(data = stages_current)
+  
+  reactDT.list <<- c(reactDT.list, list(reactDT4$data)) # list(as.data.frame(reactDT1$data))) # append it in list of reactive values
+  
   output$stages_summary4 = DT::renderDT(reactDT4$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary4')
@@ -916,6 +931,9 @@ if (tail(Scenarios,1) == 1)
 } else if (tail(Scenarios,1) == 5)
 {
   reactDT5 <- reactiveValues(data = stages_current)
+  
+  reactDT.list <<- c(reactDT.list, list(reactDT5$data)) # list(as.data.frame(reactDT1$data))) # append it in list of reactive values
+  
   output$stages_summary5 = DT::renderDT(reactDT5$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary5')
@@ -1133,6 +1151,9 @@ if (tail(Scenarios,1) == 1)
 } else if (tail(Scenarios,1) == 6)
 {
   reactDT6 <- reactiveValues(data = stages_current)
+  
+  reactDT.list <<- c(reactDT.list, list(reactDT6$data)) # list(as.data.frame(reactDT1$data))) # append it in list of reactive values
+  
   output$stages_summary6 = DT::renderDT(reactDT6$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary6')
@@ -1353,6 +1374,9 @@ if (tail(Scenarios,1) == 1)
 } else if (tail(Scenarios,1) == 7)
 {
   reactDT7 <- reactiveValues(data = stages_current)
+  
+  reactDT.list <<- c(reactDT.list, list(reactDT7$data)) # list(as.data.frame(reactDT1$data))) # append it in list of reactive values
+  
   output$stages_summary7 = DT::renderDT(reactDT7$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary7')
@@ -1572,6 +1596,9 @@ if (tail(Scenarios,1) == 1)
 } else if (tail(Scenarios,1) == 8)
 {
   reactDT8 <- reactiveValues(data = stages_current)
+  
+  reactDT.list <<- c(reactDT.list, list(reactDT8$data)) # list(as.data.frame(reactDT1$data))) # append it in list of reactive values
+  
   output$stages_summary8 = DT::renderDT(reactDT8$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary8')
@@ -1791,6 +1818,9 @@ if (tail(Scenarios,1) == 1)
 } else if (tail(Scenarios,1) == 9)
 {
   reactDT9 <- reactiveValues(data = stages_current)
+  
+  reactDT.list <<- c(reactDT.list, list(reactDT9$data)) # list(as.data.frame(reactDT1$data))) # append it in list of reactive values
+  
   output$stages_summary9 = DT::renderDT(reactDT9$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary9')
@@ -2011,6 +2041,9 @@ if (tail(Scenarios,1) == 1)
 } else if (tail(Scenarios,1) == 10)
 {
   reactDT10 <- reactiveValues(data = stages_current)
+  
+  reactDT.list <<- c(reactDT.list, list(reactDT10$data)) # list(as.data.frame(reactDT1$data))) # append it in list of reactive values
+  
   output$stages_summary10 = DT::renderDT(reactDT10$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary10')
@@ -2227,5 +2260,9 @@ if (tail(Scenarios,1) == 1)
     }
   )
   
-} #else
-  #assign(paste('output$cyPlot', sep = "", tail(Scenarios,1)), nplot) # DOESNOT WORK  
+} #endof if loop
+
+
+print(reactDT.list) #[[1]])
+
+  
