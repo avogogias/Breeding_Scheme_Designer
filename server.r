@@ -982,6 +982,134 @@ server <- function(input, output, clientData, session) {
         sheetName = "Overview"
       )
       
+      setColWidths(
+        my_workbook,
+        sheet = 1,
+        cols = 1:4,
+        widths = c(12, 12, 12, 12)
+      )
+      
+      sumxGain <- meanGainSum(result = rv$results_all)
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        sumxGain,
+        startRow = 4,
+        startCol = 1,
+        xy = NULL,
+        colNames = TRUE,
+        rowNames = TRUE,
+        headerStyle = NULL,
+        borders = c("none", "surrounding", "rows", "columns", "all"),
+        borderColour = getOption("openxlsx.borderColour", "black"),
+        borderStyle = getOption("openxlsx.borderStyle", "thin"),
+        withFilter = FALSE,
+        keepNA = FALSE,
+        na.string = NULL,
+        name = NULL,
+        sep = ", "
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        "Gain",
+        startRow = 4,
+        startCol = 1
+      )
+      
+      sumxTime <- meanGainSum(result = rv$results_allxTime)
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        sumxTime,
+        startRow = 6 + nrow(sumxGain),
+        startCol = 1, #3 + ncol(sumxGain),
+        rowNames = TRUE
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        "Gain per Year",
+        startRow = 6 + nrow(sumxGain),
+        startCol = 1
+      )
+      
+      sumxCost <- meanGainSum(result = rv$results_allxCost)
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        sumxCost,
+        startRow = 8 + nrow(sumxGain) + nrow(sumxTime),
+        startCol = 1, #4 + 2*ncol(sumxTime),
+        rowNames = TRUE
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        "Gain per Cost",
+        startRow = 8 + nrow(sumxGain) + nrow(sumxTime),
+        startCol = 1
+      )
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 12,
+          textDecoration = "bold"
+        ),
+        rows = c(4, 6 + nrow(sumxGain), 8 + nrow(sumxGain) + nrow(sumxTime)),
+        cols = 1
+      )
+      
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        "Mean Gain Tables",
+        startRow = 1,
+        startCol = 1 #c(1, 3 + ncol(sumxGain))
+      )
+      
+      writeData(
+        my_workbook,
+        sheet = 1,
+        "Overview Plots",
+        startRow = 1,
+        startCol = 4 + ncol(sumxGain)
+      )
+      
+      
+      addStyle(
+        my_workbook,
+        sheet = 1,
+        style = createStyle(
+          fontSize = 18,
+          textDecoration = "bold"
+        ),
+        rows = c(1, 1),
+        cols = c(1, 4 + ncol(sumxGain))
+      )
+      
+      
+      # Save plots as images in Excel file ## Insert currently displayed plot in first row and col calculated by number of stages of summary tables
+      print(plotScenarioGroup(rv$results_all))
+      insertPlot(my_workbook, 1, xy = c(3 + ncol(sumxGain), 4), height = 3.5, fileType = "png", units = "in")
+      #
+      print(plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)"))
+      insertPlot(my_workbook, 1, xy = c(3 + ncol(sumxGain), 24), height = 3.5, fileType = "png", units = "in")
+      #
+      print(plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)"))
+      insertPlot(my_workbook, 1, xy = c(3 + ncol(sumxGain), 44), height = 3.5, fileType = "png", units = "in")
+
+      
+      
       # # save results of each scenario in different workbook tabs
       # for (i in 1:tail(Scenarios,1))
       # {
@@ -1073,131 +1201,6 @@ server <- function(input, output, clientData, session) {
       #   
       # } # endof for loop over scenarios
       
-      setColWidths(
-        my_workbook,
-        sheet = 1,
-        cols = 1:4,
-        widths = c(12, 12, 12, 12)
-      )
-      
-      sumxGain <- meanGainSum(result = rv$results_all)
-      
-      writeData(
-        my_workbook,
-        sheet = 1,
-        sumxGain,
-        startRow = 4,
-        startCol = 1,
-        xy = NULL,
-        colNames = TRUE,
-        rowNames = TRUE,
-        headerStyle = NULL,
-        borders = c("none", "surrounding", "rows", "columns", "all"),
-        borderColour = getOption("openxlsx.borderColour", "black"),
-        borderStyle = getOption("openxlsx.borderStyle", "thin"),
-        withFilter = FALSE,
-        keepNA = FALSE,
-        na.string = NULL,
-        name = NULL,
-        sep = ", "
-      )
-      
-      writeData(
-        my_workbook,
-        sheet = 1,
-        "Gain",
-        startRow = 4,
-        startCol = 1
-      )
-      
-      sumxTime <- meanGainSum(result = rv$results_allxTime)
-      
-      writeData(
-        my_workbook,
-        sheet = 1,
-        sumxTime,
-        startRow = 6 + nrow(sumxGain),
-        startCol = 1, #3 + ncol(sumxGain),
-        rowNames = TRUE
-      )
-      
-      writeData(
-        my_workbook,
-        sheet = 1,
-        "Gain per Year",
-        startRow = 6 + nrow(sumxGain),
-        startCol = 1
-      )
-      
-      sumxCost <- meanGainSum(result = rv$results_allxCost)
-      
-      writeData(
-        my_workbook,
-        sheet = 1,
-        sumxCost,
-        startRow = 8 + nrow(sumxGain) + nrow(sumxTime),
-        startCol = 1, #4 + 2*ncol(sumxTime),
-        rowNames = TRUE
-      )
-      
-      writeData(
-        my_workbook,
-        sheet = 1,
-        "Gain per Cost",
-        startRow = 8 + nrow(sumxGain) + nrow(sumxTime),
-        startCol = 1
-      )
-      
-      addStyle(
-        my_workbook,
-        sheet = 1,
-        style = createStyle(
-          fontSize = 12,
-          textDecoration = "bold"
-        ),
-        rows = c(4, 6 + nrow(sumxGain), 8 + nrow(sumxGain) + nrow(sumxTime)),
-        cols = 1
-      )
-      
-      
-      writeData(
-        my_workbook,
-        sheet = 1,
-        c("Mean Gain Tables", "Overview Plots"),
-        startRow = c(1, 1),
-        startCol = c(1, 3 + ncol(sumxGain))
-      )
-      
-      
-      addStyle(
-        my_workbook,
-        sheet = 1,
-        style = createStyle(
-          fontSize = 18,
-          textDecoration = "bold"
-        ),
-        rows = c(1, 1),
-        cols = c(1, 3+ ncol(sumxGain))
-      )
-      
-      
-      # Save plots as images in Excel file ## Insert currently displayed plot in first row and col calculated by number of stages of summary tables
-      print(plotScenarioGroup(rv$results_all))
-      insertPlot(my_workbook, 1, xy = c(3 + ncol(sumxGain), 4), height = 3.5, fileType = "png", units = "in")
-      #
-      print(plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)"))
-      insertPlot(my_workbook, 1, xy = c(3 + ncol(sumxGain), 24), height = 3.5, fileType = "png", units = "in")
-      #
-      print(plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)"))
-      insertPlot(my_workbook, 1, xy = c(3 + ncol(sumxGain), 44), height = 3.5, fileType = "png", units = "in")
-      #
-      # sheet.2 <- createSheet(my_workbook, sheetName = "Plots")
-      # ggsave(
-      #   "plot1.jpeg", 
-      #    plotScenarioGroup(rv$results_all),    #output$overviewTab, 
-      #   device="jpeg"
-      # )
-      # addPicture(file = paste0(getwd(), "/plot1.jpeg"), sheet = 2, scale = 1,startRow = 4, startColumn = 4)
 
       
       
