@@ -108,7 +108,7 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                     #           "right", "hover", NULL),
                     
                     # Economic cost summary output for scenario
-                    tags$h4("Summary Cost"),
+                    tags$h4("Cost Summary"),
                     div( # CUSTOMISE div style for DT
                       DT::DTOutput("cost_table"),
                       style = "font-size: 85%; width: 100%"
