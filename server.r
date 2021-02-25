@@ -214,7 +214,7 @@ server <- function(input, output, clientData, session) {
                DT::DTOutput(paste0('stages_summary', i)),
                # update scenario button
                actionButton(paste0("update_btn", i), "Update"),
-               downloadButton(paste0("download_btn", i), "Download Report"),
+               # downloadButton(paste0("download_btn", i), "Download Report"), # Disabled
                # cost table for this scenario
                DT::DTOutput(paste0('costDT', i)),
                # Start section with plots of ranges
@@ -941,9 +941,7 @@ server <- function(input, output, clientData, session) {
         plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
       })   
       
-      
-  
-      
+            
       # Include content from R file locally as if it was pasted here to manage if-else
       source('if_run_btn.r', local=TRUE) # OLD METHOD with if-else loop handling but with duplicated code for up to 5 scenarios WORKS!
       #
