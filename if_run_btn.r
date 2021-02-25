@@ -27,11 +27,12 @@ server = TRUE) # server = F doesn't work with replaceData() cell editing
 if (tail(Scenarios,1) == 1)
 {
   #assign(paste0("reactDT", tail(Scenarios,1)), reactiveValues(data = stages_current)) # WORKS BUT not useful
-  reactDT1 <- reactiveValues(data = stages_current)
+  # reactDT1 <- reactiveValues(data = stages_current) # PREV WORKING
   
-  reactDT.list <<- c(reactDT.list, list(reactDT1$data)) # list(as.data.frame(reactDT1$data))) # append it in list of reactive values
+  reactDT.list[['1']] <- stages_current
+  # reactDT.list <<- c(reactDT.list, list(reactDT1$data)) # list(as.data.frame(reactDT1$data))) # append it in list of reactive values
   
-  output[[paste0("stages_summary", tail(Scenarios,1))]] = DT::renderDT(reactDT1$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  output[[paste0("stages_summary", tail(Scenarios,1))]] = DT::renderDT(reactDT.list[['1']], options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   #output$stages_summary1 = DT::renderDT(reactDT1$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = cnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy(paste0('stages_summary', tail(Scenarios,1)))
@@ -45,17 +46,17 @@ if (tail(Scenarios,1) == 1)
     v = info$value
     str(info)
     # Character string needs to be coerced to same type as target value. Here as.integer()
-    reactDT1$data[i, j] = DT::coerceValue(v, reactDT1$data[i, j])
+    reactDT.list[['1']][i, j] = DT::coerceValue(v, reactDT.list[['1']][i, j])
 
     # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
-    replaceData(proxy, reactDT1$data, resetPaging = FALSE)  # important
+    replaceData(proxy, reactDT.list[['1']], resetPaging = FALSE)  # important
   })
 
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn1, {
     
   try(
-    if (!validInput(reactDT1$data)) # (is.unsorted(rev(entries))) # 
+    if (!validInput(reactDT.list[['1']])) # (is.unsorted(rev(entries))) # 
     {
       # TODO pop-up message and handle exception
       shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
@@ -64,9 +65,9 @@ if (tail(Scenarios,1) == 1)
     else
     {
       result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                            isolate(reactDT1$data[,2]),isolate(reactDT1$data[,3]),
-                            isolate(reactDT1$data[,4]),isolate(reactDT1$data[,5]),
-                            isolate(reactDT1$data[,6]),isolate(input$varieties))
+                            isolate(reactDT.list[['1']][,2]),isolate(reactDT.list[['1']][,3]),
+                            isolate(reactDT.list[['1']][,4]),isolate(reactDT.list[['1']][,5]),
+                            isolate(reactDT.list[['1']][,6]),isolate(input$varieties))
       
       output$cyPlot1 <- renderPlot({
         plotScenario(result)
@@ -74,15 +75,15 @@ if (tail(Scenarios,1) == 1)
       
       # Update Mean Genetic Gain for each stage in summary table
       stages_current$mean <- meanGain(result)
-      reactDT1$data[,11] <- stages_current$mean
+      reactDT.list[['1']][,11] <- stages_current$mean
       
       # Update Mean Genetic Gain x Time for each stage in summary table
-      stages_current$meanxTime <- meanGainxTime(result, scenarioDT = reactDT1$data)
-      reactDT1$data[,12] <- stages_current$meanxTime
+      stages_current$meanxTime <- meanGainxTime(result, scenarioDT = reactDT.list[['1']])
+      reactDT.list[['1']][,12] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
-      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT1$data)
-      reactDT1$data[,13] <- stages_current$meanxCost
+      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT.list[['1']])
+      reactDT.list[['1']][,13] <- stages_current$meanxCost
   
       # Update results_all entries
       # First remove previous run entries
@@ -103,7 +104,7 @@ if (tail(Scenarios,1) == 1)
       # First remove previous run entries
       rv$results_allxTime = removeScenarioResult(1, rv$results_allxTime)
       # Store all results conditioned by Time in rv
-      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 1, scenarioDT = reactDT1$data)
+      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 1, scenarioDT = reactDT.list[['1']])
       #
       # Render grouped boxplots for Gain per Year
       output$overviewTabxTime <- renderPlot({
@@ -116,29 +117,30 @@ if (tail(Scenarios,1) == 1)
       # First remove previous run entries
       rv$results_allxCost = removeScenarioResult(1, rv$results_allxCost)
       # Store all Gain results conditioned by Cost
-      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 1, scenarioDT = reactDT1$data)
+      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 1, scenarioDT = reactDT.list[['1']])
       #
       # Render grouped boxplots for Gain per Cost
       output$overviewTabxCost <- renderPlot({
               plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
       })  
     
-      reactDT.list[1] <- list(reactDT1$data) # update list of reactive values for each scenario
-      print(reactDT.list[[1]]) # prints the updated element of the list - OK
+      # reactDT.list[1] = list(reactDT.list[['1']]) # update glabal list storing the reactive values for each scenario
+      # print(reactDT.list[['1']]) # prints the updated element of the list - OK
+      # print(reactDT.list[['1']])
       
     }) #endof try()
   }) # endof update btn1
 
   # Update H2 for every stage as soon as input data that affect H2 change
   observe({
-    for (i in 1:nrow(reactDT1$data))
+    for (i in 1:nrow(reactDT.list[['1']]))
     {
-      reactDT1$data[i,7] = updateH2(reactDT1$data[i,]) # round(input$varG/(input$varG + input$varGxY/reactDT1$data[i,3] + input$varGxL/(reactDT1$data[i,3]*reactDT1$data[i,4]) + reactDT1$data[i,6]/(reactDT1$data[i,3]*reactDT1$data[i,4]*reactDT1$data[i,5])), 3)
+      reactDT.list[['1']][i,7] = updateH2(reactDT.list[['1']][i,]) # round(input$varG/(input$varG + input$varGxY/reactDT.list[['1']][i,3] + input$varGxL/(reactDT.list[['1']][i,3]*reactDT.list[['1']][i,4]) + reactDT.list[['1']][i,6]/(reactDT.list[['1']][i,3]*reactDT.list[['1']][i,4]*reactDT.list[['1']][i,5])), 3)
     }
   })
   
   # Update cost table as soon as input data that affect cost change
-  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT1$data, input$negen), totalLocs(reactDT1$data), totalPlots(reactDT1$data), totalLocsCost(reactDT1$data), totalPlotsCost(reactDT1$data), totalCost(reactDT1$data)), 
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT.list[['1']], input$negen), totalLocs(reactDT.list[['1']]), totalPlots(reactDT.list[['1']]), totalLocsCost(reactDT.list[['1']]), totalPlotsCost(reactDT.list[['1']]), totalCost(reactDT.list[['1']])), 
                                                                options = list(
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
@@ -220,7 +222,7 @@ if (tail(Scenarios,1) == 1)
       )
       
       
-      tmp_data <- reactDT1$data
+      tmp_data <- reactDT.list[['1']]
       colnames(tmp_data) = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Plot Cost($)', 'Loc Cost($)', 'Fixed Cost($)', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
       
       
@@ -243,7 +245,7 @@ if (tail(Scenarios,1) == 1)
       )
       
       #cost_summary <- cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data))
-      cost_summary <- cbind(totalYears(reactDT1$data, input$negen), totalLocs(reactDT1$data), totalPlots(reactDT1$data), totalLocsCost(reactDT1$data), totalPlotsCost(reactDT1$data), totalCost(reactDT1$data))
+      cost_summary <- cbind(totalYears(reactDT.list[['1']], input$negen), totalLocs(reactDT.list[['1']]), totalPlots(reactDT.list[['1']]), totalLocsCost(reactDT.list[['1']]), totalPlotsCost(reactDT.list[['1']]), totalCost(reactDT.list[['1']]))
       colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
       
       writeData(
@@ -267,11 +269,9 @@ if (tail(Scenarios,1) == 1)
 
 } else if (tail(Scenarios,1) == 2)
 {
-  reactDT2 <- reactiveValues(data = stages_current)
+  reactDT.list[['2']] <- stages_current # list(as.data.frame(reactDT1$data))) # append it in list of reactive values
   
-  reactDT.list <<- c(reactDT.list, list(reactDT2$data)) # list(as.data.frame(reactDT1$data))) # append it in list of reactive values
-  
-  output$stages_summary2 = DT::renderDT(reactDT2$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  output$stages_summary2 = DT::renderDT(reactDT.list[['2']], options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary2')
   #
@@ -282,16 +282,16 @@ if (tail(Scenarios,1) == 1)
     v = info$value
     str(info)
     # Character string needs to be coerced to same type as target value. Here as.integer()
-    reactDT2$data[i, j] = DT::coerceValue(v, reactDT2$data[i, j])
+    reactDT.list[['2']][i, j] = DT::coerceValue(v, reactDT.list[['2']][i, j])
     # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
-    replaceData(proxy, reactDT2$data, resetPaging = FALSE)  # important
+    replaceData(proxy, reactDT.list[['2']], resetPaging = FALSE)  # important
   })
 
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn2, {
     
   try(
-    if (!validInput(reactDT2$data)) # (is.unsorted(rev(entries))) # 
+    if (!validInput(reactDT.list[['2']])) # (is.unsorted(rev(entries))) # 
     {
       # TODO pop-up message and handle exception
       shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
@@ -300,9 +300,9 @@ if (tail(Scenarios,1) == 1)
     else
     {
       result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                            isolate(reactDT2$data[,2]),isolate(reactDT2$data[,3]),
-                            isolate(reactDT2$data[,4]),isolate(reactDT2$data[,5]),
-                            isolate(reactDT2$data[,6]),isolate(input$varieties))
+                            isolate(reactDT.list[['2']][,2]),isolate(reactDT.list[['2']][,3]),
+                            isolate(reactDT.list[['2']][,4]),isolate(reactDT.list[['2']][,5]),
+                            isolate(reactDT.list[['2']][,6]),isolate(input$varieties))
   
       output$cyPlot2 <- renderPlot({
         plotScenario(result)
@@ -310,15 +310,15 @@ if (tail(Scenarios,1) == 1)
   
       # Update Mean Genetic Gain for each stage in summary table
       stages_current$mean <- meanGain(result)
-      reactDT2$data[,11] <- stages_current$mean
+      reactDT.list[['2']][,11] <- stages_current$mean
       
       # Update Mean Genetic Gain x Time for each stage in summary table
-      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT2$data)
-      reactDT2$data[,12] <- stages_current$meanxTime
+      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT.list[['2']])
+      reactDT.list[['2']][,12] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
-      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT2$data)
-      reactDT2$data[,13] <- stages_current$meanxCost
+      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT.list[['2']])
+      reactDT.list[['2']][,13] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -340,7 +340,7 @@ if (tail(Scenarios,1) == 1)
       rv$results_allxTime = removeScenarioResult(2, rv$results_allxTime) 
       #
       # Store all results conditioned by Time in rv
-      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 2, scenarioDT = reactDT2$data)
+      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 2, scenarioDT = reactDT.list[['2']])
       #
       # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
       output$overviewTabxTime <- renderPlot({
@@ -352,7 +352,7 @@ if (tail(Scenarios,1) == 1)
       # First remove previous run entries
       rv$results_allxCost = removeScenarioResult(2, rv$results_allxCost)
       # Store all Gain results conditioned by Cost
-      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 2, scenarioDT = reactDT2$data)
+      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 2, scenarioDT = reactDT.list[['2']])
       #
       # Render grouped boxplots for Gain per Cost
       output$overviewTabxCost <- renderPlot({
@@ -363,14 +363,14 @@ if (tail(Scenarios,1) == 1)
 
   # Update H2 for every stage as soon as input data that affect H2 change
   observe({
-    for (i in 1:nrow(reactDT2$data))
+    for (i in 1:nrow(reactDT.list[['2']]))
     {
-      reactDT2$data[i,7] = updateH2(reactDT2$data[i,]) # round(input$varG/(input$varG + input$varGxY/reactDT2$data[i,3] + input$varGxL/(reactDT2$data[i,3]*reactDT2$data[i,4]) + reactDT2$data[i,6]/(reactDT2$data[i,3]*reactDT2$data[i,4]*reactDT2$data[i,5])), 3)
+      reactDT.list[['2']][i,7] = updateH2(reactDT.list[['2']][i,]) # round(input$varG/(input$varG + input$varGxY/reactDT.list[['2']][i,3] + input$varGxL/(reactDT.list[['2']][i,3]*reactDT.list[['2']][i,4]) + reactDT.list[['2']][i,6]/(reactDT.list[['2']][i,3]*reactDT.list[['2']][i,4]*reactDT.list[['2']][i,5])), 3)
     }
   })
   
   # Update cost table as soon as input data that affect cost change
-  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT2$data, input$negen), totalLocs(reactDT2$data), totalPlots(reactDT2$data), totalLocsCost(reactDT2$data), totalPlotsCost(reactDT2$data), totalCost(reactDT2$data)), 
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT.list[['2']], input$negen), totalLocs(reactDT.list[['2']]), totalPlots(reactDT.list[['2']]), totalLocsCost(reactDT.list[['2']]), totalPlotsCost(reactDT.list[['2']]), totalCost(reactDT.list[['2']])), 
                                                                options = list(
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
@@ -449,7 +449,7 @@ if (tail(Scenarios,1) == 1)
         startCol = 1
       )
 
-      tmp_data <- reactDT2$data
+      tmp_data <- reactDT.list[['2']]
       colnames(tmp_data) = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Plot Cost($)', 'Loc Cost($)', 'Fixed Cost($)', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
       
       writeData(
@@ -470,7 +470,7 @@ if (tail(Scenarios,1) == 1)
       )
       
       #cost_summary <- cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data))
-      cost_summary <- cbind(totalYears(reactDT2$data, input$negen), totalLocs(reactDT2$data), totalPlots(reactDT2$data), totalLocsCost(reactDT2$data), totalPlotsCost(reactDT2$data), totalCost(reactDT2$data))
+      cost_summary <- cbind(totalYears(reactDT.list[['2']], input$negen), totalLocs(reactDT.list[['2']]), totalPlots(reactDT.list[['2']]), totalLocsCost(reactDT.list[['2']]), totalPlotsCost(reactDT.list[['2']]), totalCost(reactDT.list[['2']]))
       colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
       
       writeData(
@@ -487,11 +487,9 @@ if (tail(Scenarios,1) == 1)
   
 } else if (tail(Scenarios,1) == 3)
 {
-  reactDT3 <- reactiveValues(data = stages_current)
+  reactDT.list[['3']] <- stages_current
   
-  reactDT.list <<- c(reactDT.list, list(reactDT3$data)) # list(as.data.frame(reactDT1$data))) # append it in list of reactive values
-  
-  output$stages_summary3 = DT::renderDT(reactDT3$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  output$stages_summary3 = DT::renderDT(reactDT.list[['3']], options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary3')
   #
@@ -502,16 +500,16 @@ if (tail(Scenarios,1) == 1)
     v = info$value
     str(info)
     # Character string needs to be coerced to same type as target value. Here as.integer()
-    reactDT3$data[i, j] = DT::coerceValue(v, reactDT3$data[i, j])
+    reactDT.list[['3']][i, j] = DT::coerceValue(v, reactDT.list[['3']][i, j])
     # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
-    replaceData(proxy, reactDT3$data, resetPaging = FALSE)  # important
+    replaceData(proxy, reactDT.list[['3']], resetPaging = FALSE)  # important
   })
 
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn3, {
     
   try(
-    if (!validInput(reactDT3$data)) # (is.unsorted(rev(entries))) # 
+    if (!validInput(reactDT.list[['3']])) # (is.unsorted(rev(entries))) # 
     {
       # TODO pop-up message and handle exception
       shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
@@ -520,24 +518,24 @@ if (tail(Scenarios,1) == 1)
     else
     {
       result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                            isolate(reactDT3$data[,2]),isolate(reactDT3$data[,3]),
-                            isolate(reactDT3$data[,4]),isolate(reactDT3$data[,5]),
-                            isolate(reactDT3$data[,6]),isolate(input$varieties))
+                            isolate(reactDT.list[['3']][,2]),isolate(reactDT.list[['3']][,3]),
+                            isolate(reactDT.list[['3']][,4]),isolate(reactDT.list[['3']][,5]),
+                            isolate(reactDT.list[['3']][,6]),isolate(input$varieties))
       output$cyPlot3 <- renderPlot({
         plotScenario(result)
       })   # end of renderPlot
   
       # Update Mean Genetic Gain for each stage in summary table
       stages_current$mean <- meanGain(result)
-      reactDT3$data[,11] <- stages_current$mean
+      reactDT.list[['3']][,11] <- stages_current$mean
   
       # Update Mean Genetic Gain x Time for each stage in summary table
-      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT3$data)
-      reactDT3$data[,12] <- stages_current$meanxTime
+      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT.list[['3']])
+      reactDT.list[['3']][,12] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
-      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT3$data)
-      reactDT3$data[,13] <- stages_current$meanxCost
+      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT.list[['3']])
+      reactDT.list[['3']][,13] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -559,7 +557,7 @@ if (tail(Scenarios,1) == 1)
       rv$results_allxTime = removeScenarioResult(3, rv$results_allxTime)
       #
       # Store all results conditioned by Time in rv
-      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 3, scenarioDT = reactDT3$data)
+      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 3, scenarioDT = reactDT.list[['3']])
       #
       # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
       output$overviewTabxTime <- renderPlot({
@@ -571,7 +569,7 @@ if (tail(Scenarios,1) == 1)
       # First remove previous run entries
       rv$results_allxCost = removeScenarioResult(3, rv$results_allxCost)
       # Store all Gain results conditioned by Cost
-      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 3, scenarioDT = reactDT3$data)
+      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 3, scenarioDT = reactDT.list[['3']])
       #
       # Render grouped boxplots for Gain per Cost
       output$overviewTabxCost <- renderPlot({
@@ -582,14 +580,14 @@ if (tail(Scenarios,1) == 1)
 
   # Update H2 for every stage as soon as input data that affect H2 change
   observe({
-    for (i in 1:nrow(reactDT3$data))
+    for (i in 1:nrow(reactDT.list[['3']]))
     {
-      reactDT3$data[i,7] = updateH2(reactDT3$data[i,]) # round(input$varG/(input$varG + input$varGxY/reactDT3$data[i,3] + input$varGxL/(reactDT3$data[i,3]*reactDT3$data[i,4]) + reactDT3$data[i,6]/(reactDT3$data[i,3]*reactDT3$data[i,4]*reactDT3$data[i,5])), 3)
+      reactDT.list[['3']][i,7] = updateH2(reactDT.list[['3']][i,]) # round(input$varG/(input$varG + input$varGxY/reactDT.list[['3']][i,3] + input$varGxL/(reactDT.list[['3']][i,3]*reactDT.list[['3']][i,4]) + reactDT.list[['3']][i,6]/(reactDT.list[['3']][i,3]*reactDT.list[['3']][i,4]*reactDT.list[['3']][i,5])), 3)
     }
   })
   
   # Update cost table as soon as input data that affect cost change
-  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT3$data, input$negen), totalLocs(reactDT3$data), totalPlots(reactDT3$data), totalLocsCost(reactDT3$data), totalPlotsCost(reactDT3$data), totalCost(reactDT3$data)), 
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT.list[['3']], input$negen), totalLocs(reactDT.list[['3']]), totalPlots(reactDT.list[['3']]), totalLocsCost(reactDT.list[['3']]), totalPlotsCost(reactDT.list[['3']]), totalCost(reactDT.list[['3']])), 
                                                                options = list(
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
@@ -669,7 +667,7 @@ if (tail(Scenarios,1) == 1)
         startCol = 1
       )
 
-      tmp_data <- reactDT3$data
+      tmp_data <- reactDT.list[['3']]
       colnames(tmp_data) = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Plot Cost($)', 'Loc Cost($)', 'Fixed Cost($)', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
       
       writeData(
@@ -690,7 +688,7 @@ if (tail(Scenarios,1) == 1)
       )
       
       #cost_summary <- cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data))
-      cost_summary <- cbind(totalYears(reactDT3$data, input$negen), totalLocs(reactDT3$data), totalPlots(reactDT3$data), totalLocsCost(reactDT3$data), totalPlotsCost(reactDT3$data), totalCost(reactDT3$data))
+      cost_summary <- cbind(totalYears(reactDT.list[['3']], input$negen), totalLocs(reactDT.list[['3']]), totalPlots(reactDT.list[['3']]), totalLocsCost(reactDT.list[['3']]), totalPlotsCost(reactDT.list[['3']]), totalCost(reactDT.list[['3']]))
       colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
       
       writeData(
@@ -707,11 +705,9 @@ if (tail(Scenarios,1) == 1)
   
 } else if (tail(Scenarios,1) == 4)
 {
-  reactDT4 <- reactiveValues(data = stages_current)
+  reactDT.list[['4']] <- stages_current
   
-  reactDT.list <<- c(reactDT.list, list(reactDT4$data)) # list(as.data.frame(reactDT1$data))) # append it in list of reactive values
-  
-  output$stages_summary4 = DT::renderDT(reactDT4$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  output$stages_summary4 = DT::renderDT(reactDT.list[['4']], options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary4')
   #
@@ -722,16 +718,16 @@ if (tail(Scenarios,1) == 1)
     v = info$value
     str(info)
     # Character string needs to be coerced to same type as target value. Here as.integer()
-    reactDT4$data[i, j] = DT::coerceValue(v, reactDT4$data[i, j])
+    reactDT.list[['4']][i, j] = DT::coerceValue(v, reactDT.list[['4']][i, j])
     # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
-    replaceData(proxy, reactDT4$data, resetPaging = FALSE)  # important
+    replaceData(proxy, reactDT.list[['4']], resetPaging = FALSE)  # important
   })
 
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn4, {
     
   try(
-    if (!validInput(reactDT4$data)) # (is.unsorted(rev(entries))) # 
+    if (!validInput(reactDT.list[['4']])) # (is.unsorted(rev(entries))) # 
     {
       # TODO pop-up message and handle exception
       shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
@@ -740,24 +736,24 @@ if (tail(Scenarios,1) == 1)
     else
     {
       result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                            isolate(reactDT4$data[,2]),isolate(reactDT4$data[,3]),
-                            isolate(reactDT4$data[,4]),isolate(reactDT4$data[,5]),
-                            isolate(reactDT4$data[,6]),isolate(input$varieties))
+                            isolate(reactDT.list[['4']][,2]),isolate(reactDT.list[['4']][,3]),
+                            isolate(reactDT.list[['4']][,4]),isolate(reactDT.list[['4']][,5]),
+                            isolate(reactDT.list[['4']][,6]),isolate(input$varieties))
       output$cyPlot4 <- renderPlot({
         plotScenario(result)
       })   # end of renderPlot
   
       # Update Mean Genetic Gain for each stage in summary table
       stages_current$mean <- meanGain(result)
-      reactDT4$data[,11] <- stages_current$mean
+      reactDT.list[['4']][,11] <- stages_current$mean
   
       # Update Mean Genetic Gain x Time for each stage in summary table
-      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT4$data)
-      reactDT4$data[,12] <- stages_current$meanxTime
+      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT.list[['4']])
+      reactDT.list[['4']][,12] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
-      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT4$data)
-      reactDT4$data[,13] <- stages_current$meanxCost
+      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT.list[['4']])
+      reactDT.list[['4']][,13] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -779,7 +775,7 @@ if (tail(Scenarios,1) == 1)
       rv$results_allxTime = removeScenarioResult(4, rv$results_allxTime) 
       #
       # Store all results conditioned by Time in rv
-      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 4, scenarioDT = reactDT4$data)
+      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 4, scenarioDT = reactDT.list[['4']])
       #
       # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
       output$overviewTabxTime <- renderPlot({
@@ -791,7 +787,7 @@ if (tail(Scenarios,1) == 1)
       # First remove previous run entries
       rv$results_allxCost = removeScenarioResult(4, rv$results_allxCost)
       # Store all Gain results conditioned by Cost
-      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 4, scenarioDT = reactDT4$data)
+      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 4, scenarioDT = reactDT.list[['4']])
       #
       # Render grouped boxplots for Gain per Cost
       output$overviewTabxCost <- renderPlot({
@@ -802,15 +798,15 @@ if (tail(Scenarios,1) == 1)
 
   # Update H2 for every stage as soon as input data that affect H2 change
   observe({
-    for (i in 1:nrow(reactDT4$data))
+    for (i in 1:nrow(reactDT.list[['4']]))
     {
-      reactDT4$data[i,7] = updateH2(reactDT4$data[i,]) # round(input$varG/(input$varG + input$varGxY/reactDT4$data[i,3] + input$varGxL/(reactDT4$data[i,3]*reactDT4$data[i,4]) + reactDT4$data[i,6]/(reactDT4$data[i,3]*reactDT4$data[i,4]*reactDT4$data[i,5])), 3)
+      reactDT.list[['4']][i,7] = updateH2(reactDT.list[['4']][i,]) # round(input$varG/(input$varG + input$varGxY/reactDT.list[['4']][i,3] + input$varGxL/(reactDT.list[['4']][i,3]*reactDT.list[['4']][i,4]) + reactDT.list[['4']][i,6]/(reactDT.list[['4']][i,3]*reactDT.list[['4']][i,4]*reactDT.list[['4']][i,5])), 3)
     }
   })
   
   
   # Update cost table as soon as input data that affect cost change
-  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT4$data, input$negen), totalLocs(reactDT4$data), totalPlots(reactDT4$data), totalLocsCost(reactDT4$data), totalPlotsCost(reactDT4$data), totalCost(reactDT4$data)), 
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT.list[['4']], input$negen), totalLocs(reactDT.list[['4']]), totalPlots(reactDT.list[['4']]), totalLocsCost(reactDT.list[['4']]), totalPlotsCost(reactDT.list[['4']]), totalCost(reactDT.list[['4']])), 
                                                                options = list(
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
@@ -891,7 +887,7 @@ if (tail(Scenarios,1) == 1)
         startCol = 1
       )
       
-      tmp_data <- reactDT4$data
+      tmp_data <- reactDT.list[['4']]
       colnames(tmp_data) = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Plot Cost($)', 'Loc Cost($)', 'Fixed Cost($)', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
       
       writeData(
@@ -912,7 +908,7 @@ if (tail(Scenarios,1) == 1)
       )
       
       #cost_summary <- cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data))
-      cost_summary <- cbind(totalYears(reactDT4$data, input$negen), totalLocs(reactDT4$data), totalPlots(reactDT4$data), totalLocsCost(reactDT4$data), totalPlotsCost(reactDT4$data), totalCost(reactDT4$data))
+      cost_summary <- cbind(totalYears(reactDT.list[['4']], input$negen), totalLocs(reactDT.list[['4']]), totalPlots(reactDT.list[['4']]), totalLocsCost(reactDT.list[['4']]), totalPlotsCost(reactDT.list[['4']]), totalCost(reactDT.list[['4']]))
       colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
       
       writeData(
@@ -930,11 +926,9 @@ if (tail(Scenarios,1) == 1)
   
 } else if (tail(Scenarios,1) == 5)
 {
-  reactDT5 <- reactiveValues(data = stages_current)
+  reactDT.list[['5']] <- stages_current
   
-  reactDT.list <<- c(reactDT.list, list(reactDT5$data)) # list(as.data.frame(reactDT1$data))) # append it in list of reactive values
-  
-  output$stages_summary5 = DT::renderDT(reactDT5$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  output$stages_summary5 = DT::renderDT(reactDT.list[['5']], options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary5')
   #
@@ -945,16 +939,16 @@ if (tail(Scenarios,1) == 1)
     v = info$value
     str(info)
     # Character string needs to be coerced to same type as target value. Here as.integer()
-    reactDT5$data[i, j] = DT::coerceValue(v, reactDT5$data[i, j])
+    reactDT.list[['5']][i, j] = DT::coerceValue(v, reactDT.list[['5']][i, j])
     # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
-    replaceData(proxy, reactDT5$data, resetPaging = FALSE)  # important
+    replaceData(proxy, reactDT.list[['5']], resetPaging = FALSE)  # important
   })
 
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn5, {
     
   try(
-    if (!validInput(reactDT5$data)) # (is.unsorted(rev(entries))) # 
+    if (!validInput(reactDT.list[['5']])) # (is.unsorted(rev(entries))) # 
     {
       # TODO pop-up message and handle exception
       shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
@@ -963,24 +957,24 @@ if (tail(Scenarios,1) == 1)
     else
     {
       result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                            isolate(reactDT5$data[,2]),isolate(reactDT5$data[,3]),
-                            isolate(reactDT5$data[,4]),isolate(reactDT5$data[,5]),
-                            isolate(reactDT5$data[,6]),isolate(input$varieties))
+                            isolate(reactDT.list[['5']][,2]),isolate(reactDT.list[['5']][,3]),
+                            isolate(reactDT.list[['5']][,4]),isolate(reactDT.list[['5']][,5]),
+                            isolate(reactDT.list[['5']][,6]),isolate(input$varieties))
       output$cyPlot5 <- renderPlot({
         plotScenario(result)
       })   # end of renderPlot
   
       # Update Mean Genetic Gain for each stage in summary table
       stages_current$mean <- meanGain(result)
-      reactDT5$data[,11] <- stages_current$mean
+      reactDT.list[['5']][,11] <- stages_current$mean
   
       # Update Mean Genetic Gain x Time for each stage in summary table
-      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT5$data)
-      reactDT5$data[,12] <- stages_current$meanxTime
+      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT.list[['5']])
+      reactDT.list[['5']][,12] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
-      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT5$data)
-      reactDT5$data[,13] <- stages_current$meanxCost
+      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT.list[['5']])
+      reactDT.list[['5']][,13] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -1002,7 +996,7 @@ if (tail(Scenarios,1) == 1)
       rv$results_allxTime = removeScenarioResult(5, rv$results_allxTime)
       #
       # Store all results conditioned by Time in rv
-      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 5, scenarioDT = reactDT5$data)
+      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 5, scenarioDT = reactDT.list[['5']])
       #
       # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
       output$overviewTabxTime <- renderPlot({
@@ -1014,7 +1008,7 @@ if (tail(Scenarios,1) == 1)
       # First remove previous run entries
       rv$results_allxCost = removeScenarioResult(5, rv$results_allxCost)
       # Store all Gain results conditioned by Cost
-      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 5, scenarioDT = reactDT5$data)
+      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 5, scenarioDT = reactDT.list[['5']])
       #
       # Render grouped boxplots for Gain per Cost
       output$overviewTabxCost <- renderPlot({
@@ -1025,15 +1019,15 @@ if (tail(Scenarios,1) == 1)
 
   # Update H2 for every stage as soon as input data that affect H2 change
   observe({
-    for (i in 1:nrow(reactDT5$data))
+    for (i in 1:nrow(reactDT.list[['5']]))
     {
-      reactDT5$data[i,7] = updateH2(reactDT5$data[i,]) # round(input$varG/(input$varG + input$varGxY/reactDT5$data[i,3] + input$varGxL/(reactDT5$data[i,3]*reactDT5$data[i,4]) + reactDT5$data[i,6]/(reactDT5$data[i,3]*reactDT5$data[i,4]*reactDT5$data[i,5])), 3)
+      reactDT.list[['5']][i,7] = updateH2(reactDT.list[['5']][i,]) # round(input$varG/(input$varG + input$varGxY/reactDT.list[['5']][i,3] + input$varGxL/(reactDT.list[['5']][i,3]*reactDT.list[['5']][i,4]) + reactDT.list[['5']][i,6]/(reactDT.list[['5']][i,3]*reactDT.list[['5']][i,4]*reactDT.list[['5']][i,5])), 3)
     }
   })
   
   
   # Update cost table as soon as input data that affect cost change
-  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT5$data, input$negen), totalLocs(reactDT5$data), totalPlots(reactDT5$data), totalLocsCost(reactDT5$data), totalPlotsCost(reactDT5$data), totalCost(reactDT5$data)), 
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT.list[['5']], input$negen), totalLocs(reactDT.list[['5']]), totalPlots(reactDT.list[['5']]), totalLocsCost(reactDT.list[['5']]), totalPlotsCost(reactDT.list[['5']]), totalCost(reactDT.list[['5']])), 
                                                                options = list(
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
@@ -1112,7 +1106,7 @@ if (tail(Scenarios,1) == 1)
         startCol = 1
       )
 
-      tmp_data <- reactDT5$data
+      tmp_data <- reactDT.list[['5']]
       colnames(tmp_data) = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Plot Cost($)', 'Loc Cost($)', 'Fixed Cost($)', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
       
       writeData(
@@ -1133,7 +1127,7 @@ if (tail(Scenarios,1) == 1)
       )
       
       #cost_summary <- cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data))
-      cost_summary <- cbind(totalYears(reactDT5$data, input$negen), totalLocs(reactDT5$data), totalPlots(reactDT5$data), totalLocsCost(reactDT5$data), totalPlotsCost(reactDT5$data), totalCost(reactDT5$data))
+      cost_summary <- cbind(totalYears(reactDT.list[['5']], input$negen), totalLocs(reactDT.list[['5']]), totalPlots(reactDT.list[['5']]), totalLocsCost(reactDT.list[['5']]), totalPlotsCost(reactDT.list[['5']]), totalCost(reactDT.list[['5']]))
       colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
       
       writeData(
@@ -1150,11 +1144,9 @@ if (tail(Scenarios,1) == 1)
   
 } else if (tail(Scenarios,1) == 6)
 {
-  reactDT6 <- reactiveValues(data = stages_current)
+  reactDT.list[['6']] <- stages_current
   
-  reactDT.list <<- c(reactDT.list, list(reactDT6$data)) # list(as.data.frame(reactDT1$data))) # append it in list of reactive values
-  
-  output$stages_summary6 = DT::renderDT(reactDT6$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  output$stages_summary6 = DT::renderDT(reactDT.list[['6']], options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary6')
   #
@@ -1165,16 +1157,16 @@ if (tail(Scenarios,1) == 1)
     v = info$value
     str(info)
     # Character string needs to be coerced to same type as target value. Here as.integer()
-    reactDT6$data[i, j] = DT::coerceValue(v, reactDT6$data[i, j])
+    reactDT.list[['6']][i, j] = DT::coerceValue(v, reactDT.list[['6']][i, j])
     # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
-    replaceData(proxy, reactDT6$data, resetPaging = FALSE)  # important
+    replaceData(proxy, reactDT.list[['6']], resetPaging = FALSE)  # important
   })
   
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn6, {
     
   try(
-    if (!validInput(reactDT6$data)) # (is.unsorted(rev(entries))) # 
+    if (!validInput(reactDT.list[['6']])) # (is.unsorted(rev(entries))) # 
     {
       # TODO pop-up message and handle exception
       shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
@@ -1183,24 +1175,24 @@ if (tail(Scenarios,1) == 1)
     else
     {
       result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                           isolate(reactDT6$data[,2]),isolate(reactDT6$data[,3]),
-                           isolate(reactDT6$data[,4]),isolate(reactDT6$data[,5]),
-                           isolate(reactDT6$data[,6]),isolate(input$varieties))
+                           isolate(reactDT.list[['6']][,2]),isolate(reactDT.list[['6']][,3]),
+                           isolate(reactDT.list[['6']][,4]),isolate(reactDT.list[['6']][,5]),
+                           isolate(reactDT.list[['6']][,6]),isolate(input$varieties))
       output$cyPlot6 <- renderPlot({
         plotScenario(result)
       })   # end of renderPlot
       
       # Update Mean Genetic Gain for each stage in summary table
       stages_current$mean <- meanGain(result)
-      reactDT6$data[,11] <- stages_current$mean    
+      reactDT.list[['6']][,11] <- stages_current$mean    
       
       # Update Mean Genetic Gain x Time for each stage in summary table
-      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT6$data)
-      reactDT6$data[,12] <- stages_current$meanxTime
+      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT.list[['6']])
+      reactDT.list[['6']][,12] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
-      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT6$data)
-      reactDT6$data[,13] <- stages_current$meanxCost
+      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT.list[['6']])
+      reactDT.list[['6']][,13] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -1222,7 +1214,7 @@ if (tail(Scenarios,1) == 1)
       rv$results_allxTime = removeScenarioResult(6, rv$results_allxTime)
       #
       # Store all results conditioned by Time in rv
-      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 6, scenarioDT = reactDT6$data)
+      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 6, scenarioDT = reactDT.list[['6']])
       #
       # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
       output$overviewTabxTime <- renderPlot({
@@ -1234,7 +1226,7 @@ if (tail(Scenarios,1) == 1)
       # First remove previous run entries
       rv$results_allxCost = removeScenarioResult(6, rv$results_allxCost)
       # Store all Gain results conditioned by Cost
-      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 6, scenarioDT = reactDT6$data)
+      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 6, scenarioDT = reactDT.list[['6']])
       #
       # Render grouped boxplots for Gain per Cost
       output$overviewTabxCost <- renderPlot({
@@ -1245,15 +1237,15 @@ if (tail(Scenarios,1) == 1)
   
   # Update H2 for every stage as soon as input data that affect H2 change
   observe({
-    for (i in 1:nrow(reactDT6$data))
+    for (i in 1:nrow(reactDT.list[['6']]))
     {
-      reactDT6$data[i,7] = updateH2(reactDT6$data[i,]) # round(input$varG/(input$varG + input$varGxY/reactDT6$data[i,3] + input$varGxL/(reactDT6$data[i,3]*reactDT6$data[i,4]) + reactDT6$data[i,6]/(reactDT6$data[i,3]*reactDT6$data[i,4]*reactDT6$data[i,6])), 3)
+      reactDT.list[['6']][i,7] = updateH2(reactDT.list[['6']][i,]) # round(input$varG/(input$varG + input$varGxY/reactDT.list[['6']][i,3] + input$varGxL/(reactDT.list[['6']][i,3]*reactDT.list[['6']][i,4]) + reactDT.list[['6']][i,6]/(reactDT.list[['6']][i,3]*reactDT.list[['6']][i,4]*reactDT.list[['6']][i,6])), 3)
     }
   })
   
   
   # Update cost table as soon as input data that affect cost change
-  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT6$data, input$negen), totalLocs(reactDT6$data), totalPlots(reactDT6$data), totalLocsCost(reactDT6$data), totalPlotsCost(reactDT6$data), totalCost(reactDT6$data)), 
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT.list[['6']], input$negen), totalLocs(reactDT.list[['6']]), totalPlots(reactDT.list[['6']]), totalLocsCost(reactDT.list[['6']]), totalPlotsCost(reactDT.list[['6']]), totalCost(reactDT.list[['6']])), 
                                                                options = list(
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
@@ -1334,7 +1326,7 @@ if (tail(Scenarios,1) == 1)
         startCol = 1
       )
 
-      tmp_data <- reactDT6$data
+      tmp_data <- reactDT.list[['6']]
       colnames(tmp_data) = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Plot Cost($)', 'Loc Cost($)', 'Fixed Cost($)', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
       
       writeData(
@@ -1355,7 +1347,7 @@ if (tail(Scenarios,1) == 1)
       )
       
       #cost_summary <- cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data))
-      cost_summary <- cbind(totalYears(reactDT6$data, input$negen), totalLocs(reactDT6$data), totalPlots(reactDT6$data), totalLocsCost(reactDT6$data), totalPlotsCost(reactDT6$data), totalCost(reactDT6$data))
+      cost_summary <- cbind(totalYears(reactDT.list[['6']], input$negen), totalLocs(reactDT.list[['6']]), totalPlots(reactDT.list[['6']]), totalLocsCost(reactDT.list[['6']]), totalPlotsCost(reactDT.list[['6']]), totalCost(reactDT.list[['6']]))
       colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
       
       writeData(
@@ -1373,11 +1365,9 @@ if (tail(Scenarios,1) == 1)
     
 } else if (tail(Scenarios,1) == 7)
 {
-  reactDT7 <- reactiveValues(data = stages_current)
+  reactDT.list[['7']] <- stages_current
   
-  reactDT.list <<- c(reactDT.list, list(reactDT7$data)) # list(as.data.frame(reactDT1$data))) # append it in list of reactive values
-  
-  output$stages_summary7 = DT::renderDT(reactDT7$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  output$stages_summary7 = DT::renderDT(reactDT.list[['7']], options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary7')
   #
@@ -1388,16 +1378,16 @@ if (tail(Scenarios,1) == 1)
     v = info$value
     str(info)
     # Character string needs to be coerced to same type as target value. Here as.integer()
-    reactDT7$data[i, j] = DT::coerceValue(v, reactDT7$data[i, j])
+    reactDT.list[['7']][i, j] = DT::coerceValue(v, reactDT.list[['7']][i, j])
     # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
-    replaceData(proxy, reactDT7$data, resetPaging = FALSE)  # important
+    replaceData(proxy, reactDT.list[['7']], resetPaging = FALSE)  # important
   })
   
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn7, {
     
   try(
-    if (!validInput(reactDT7$data)) # (is.unsorted(rev(entries))) # 
+    if (!validInput(reactDT.list[['7']])) # (is.unsorted(rev(entries))) # 
     {
       # TODO pop-up message and handle exception
       shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
@@ -1406,24 +1396,24 @@ if (tail(Scenarios,1) == 1)
     else
     {
       result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                           isolate(reactDT7$data[,2]),isolate(reactDT7$data[,3]),
-                           isolate(reactDT7$data[,4]),isolate(reactDT7$data[,5]),
-                           isolate(reactDT7$data[,6]),isolate(input$varieties))
+                           isolate(reactDT.list[['7']][,2]),isolate(reactDT.list[['7']][,3]),
+                           isolate(reactDT.list[['7']][,4]),isolate(reactDT.list[['7']][,5]),
+                           isolate(reactDT.list[['7']][,6]),isolate(input$varieties))
       output$cyPlot7 <- renderPlot({
         plotScenario(result)
       })   # end of renderPlot
       
       # Update Mean Genetic Gain for each stage in summary table
       stages_current$mean <- meanGain(result)
-      reactDT7$data[,11] <- stages_current$mean 
+      reactDT.list[['7']][,11] <- stages_current$mean 
       
       # Update Mean Genetic Gain x Time for each stage in summary table
-      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT7$data)
-      reactDT7$data[,12] <- stages_current$meanxTime
+      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT.list[['7']])
+      reactDT.list[['7']][,12] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
-      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT7$data)
-      reactDT7$data[,13] <- stages_current$meanxCost
+      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT.list[['7']])
+      reactDT.list[['7']][,13] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -1445,7 +1435,7 @@ if (tail(Scenarios,1) == 1)
       rv$results_allxTime = removeScenarioResult(7, rv$results_allxTime)
       #
       # Store all results conditioned by Time in rv
-      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 7, scenarioDT = reactDT7$data)
+      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 7, scenarioDT = reactDT.list[['7']])
       #
       # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
       output$overviewTabxTime <- renderPlot({
@@ -1457,7 +1447,7 @@ if (tail(Scenarios,1) == 1)
       # First remove previous run entries
       rv$results_allxCost = removeScenarioResult(7, rv$results_allxCost)
       # Store all Gain results conditioned by Cost
-      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 7, scenarioDT = reactDT7$data)
+      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 7, scenarioDT = reactDT.list[['7']])
       #
       # Render grouped boxplots for Gain per Cost
       output$overviewTabxCost <- renderPlot({
@@ -1468,15 +1458,15 @@ if (tail(Scenarios,1) == 1)
   
   # Update H2 for every stage as soon as input data that affect H2 change
   observe({
-    for (i in 1:nrow(reactDT7$data))
+    for (i in 1:nrow(reactDT.list[['7']]))
     {
-      reactDT7$data[i,7] = updateH2(reactDT7$data[i,]) 
+      reactDT.list[['7']][i,7] = updateH2(reactDT.list[['7']][i,]) 
     }
   })
   
   
   # Update cost table as soon as input data that affect cost change
-  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT7$data, input$negen), totalLocs(reactDT7$data), totalPlots(reactDT7$data), totalLocsCost(reactDT7$data), totalPlotsCost(reactDT7$data), totalCost(reactDT7$data)), 
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT.list[['7']], input$negen), totalLocs(reactDT.list[['7']]), totalPlots(reactDT.list[['7']]), totalLocsCost(reactDT.list[['7']]), totalPlotsCost(reactDT.list[['7']]), totalCost(reactDT.list[['7']])), 
                                                                options = list(
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
@@ -1556,7 +1546,7 @@ if (tail(Scenarios,1) == 1)
         startCol = 1
       )
 
-      tmp_data <- reactDT7$data
+      tmp_data <- reactDT.list[['7']]
       colnames(tmp_data) = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Plot Cost($)', 'Loc Cost($)', 'Fixed Cost($)', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
       
       writeData(
@@ -1577,7 +1567,7 @@ if (tail(Scenarios,1) == 1)
       )
       
       #cost_summary <- cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data))
-      cost_summary <- cbind(totalYears(reactDT7$data, input$negen), totalLocs(reactDT7$data), totalPlots(reactDT7$data), totalLocsCost(reactDT7$data), totalPlotsCost(reactDT7$data), totalCost(reactDT7$data))
+      cost_summary <- cbind(totalYears(reactDT.list[['7']], input$negen), totalLocs(reactDT.list[['7']]), totalPlots(reactDT.list[['7']]), totalLocsCost(reactDT.list[['7']]), totalPlotsCost(reactDT.list[['7']]), totalCost(reactDT.list[['7']]))
       colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
       
       writeData(
@@ -1595,11 +1585,9 @@ if (tail(Scenarios,1) == 1)
   
 } else if (tail(Scenarios,1) == 8)
 {
-  reactDT8 <- reactiveValues(data = stages_current)
+  reactDT.list[['8']] <- stages_current
   
-  reactDT.list <<- c(reactDT.list, list(reactDT8$data)) # list(as.data.frame(reactDT1$data))) # append it in list of reactive values
-  
-  output$stages_summary8 = DT::renderDT(reactDT8$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  output$stages_summary8 = DT::renderDT(reactDT.list[['8']], options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary8')
   #
@@ -1610,16 +1598,16 @@ if (tail(Scenarios,1) == 1)
     v = info$value
     str(info)
     # Character string needs to be coerced to same type as target value. Here as.integer()
-    reactDT8$data[i, j] = DT::coerceValue(v, reactDT8$data[i, j])
+    reactDT.list[['8']][i, j] = DT::coerceValue(v, reactDT.list[['8']][i, j])
     # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
-    replaceData(proxy, reactDT8$data, resetPaging = FALSE)  # important
+    replaceData(proxy, reactDT.list[['8']], resetPaging = FALSE)  # important
   })
   
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn8, {
     
   try(
-    if (!validInput(reactDT8$data)) # (is.unsorted(rev(entries))) # 
+    if (!validInput(reactDT.list[['8']])) # (is.unsorted(rev(entries))) # 
     {
       # TODO pop-up message and handle exception
       shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
@@ -1628,24 +1616,24 @@ if (tail(Scenarios,1) == 1)
     else
     {
       result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                           isolate(reactDT8$data[,2]),isolate(reactDT8$data[,3]),
-                           isolate(reactDT8$data[,4]),isolate(reactDT8$data[,5]),
-                           isolate(reactDT8$data[,6]),isolate(input$varieties))
+                           isolate(reactDT.list[['8']][,2]),isolate(reactDT.list[['8']][,3]),
+                           isolate(reactDT.list[['8']][,4]),isolate(reactDT.list[['8']][,5]),
+                           isolate(reactDT.list[['8']][,6]),isolate(input$varieties))
       output$cyPlot8 <- renderPlot({
         plotScenario(result)
       })   # end of renderPlot
       
       # Update Mean Genetic Gain for each stage in summary table
       stages_current$mean <- meanGain(result)
-      reactDT8$data[,11] <- stages_current$mean   
+      reactDT.list[['8']][,11] <- stages_current$mean   
       
       # Update Mean Genetic Gain x Time for each stage in summary table
-      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT8$data)
-      reactDT8$data[,12] <- stages_current$meanxTime
+      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT.list[['8']])
+      reactDT.list[['8']][,12] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
-      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT8$data)
-      reactDT8$data[,13] <- stages_current$meanxCost
+      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT.list[['8']])
+      reactDT.list[['8']][,13] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -1667,7 +1655,7 @@ if (tail(Scenarios,1) == 1)
       rv$results_allxTime = removeScenarioResult(8, rv$results_allxTime)
       #
       # Store all results conditioned by Time in rv
-      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 8, scenarioDT = reactDT8$data)
+      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 8, scenarioDT = reactDT.list[['8']])
       #
       # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
       output$overviewTabxTime <- renderPlot({
@@ -1679,7 +1667,7 @@ if (tail(Scenarios,1) == 1)
       # First remove previous run entries
       rv$results_allxCost = removeScenarioResult(8, rv$results_allxCost)
       # Store all Gain results conditioned by Cost
-      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 8, scenarioDT = reactDT8$data)
+      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 8, scenarioDT = reactDT.list[['8']])
       #
       # Render grouped boxplots for Gain per Cost
       output$overviewTabxCost <- renderPlot({
@@ -1690,15 +1678,15 @@ if (tail(Scenarios,1) == 1)
   
   # Update H2 for every stage as soon as input data that affect H2 change
   observe({
-    for (i in 1:nrow(reactDT8$data))
+    for (i in 1:nrow(reactDT.list[['8']]))
     {
-      reactDT8$data[i,7] = updateH2(reactDT8$data[i,]) 
+      reactDT.list[['8']][i,7] = updateH2(reactDT.list[['8']][i,]) 
     }
   })
   
   
   # Update cost table as soon as input data that affect cost change
-  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT8$data, input$negen), totalLocs(reactDT8$data), totalPlots(reactDT8$data), totalLocsCost(reactDT8$data), totalPlotsCost(reactDT8$data), totalCost(reactDT8$data)), 
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT.list[['8']], input$negen), totalLocs(reactDT.list[['8']]), totalPlots(reactDT.list[['8']]), totalLocsCost(reactDT.list[['8']]), totalPlotsCost(reactDT.list[['8']]), totalCost(reactDT.list[['8']])), 
                                                                options = list(
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
@@ -1778,7 +1766,7 @@ if (tail(Scenarios,1) == 1)
         startCol = 1
       )
 
-      tmp_data <- reactDT8$data
+      tmp_data <- reactDT.list[['8']]
       colnames(tmp_data) = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Plot Cost($)', 'Loc Cost($)', 'Fixed Cost($)', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
       
       writeData(
@@ -1799,7 +1787,7 @@ if (tail(Scenarios,1) == 1)
       )
       
       #cost_summary <- cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data))
-      cost_summary <- cbind(totalYears(reactDT8$data, input$negen), totalLocs(reactDT8$data), totalPlots(reactDT8$data), totalLocsCost(reactDT8$data), totalPlotsCost(reactDT8$data), totalCost(reactDT8$data))
+      cost_summary <- cbind(totalYears(reactDT.list[['8']], input$negen), totalLocs(reactDT.list[['8']]), totalPlots(reactDT.list[['8']]), totalLocsCost(reactDT.list[['8']]), totalPlotsCost(reactDT.list[['8']]), totalCost(reactDT.list[['8']]))
       colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
       
       writeData(
@@ -1817,11 +1805,9 @@ if (tail(Scenarios,1) == 1)
   
 } else if (tail(Scenarios,1) == 9)
 {
-  reactDT9 <- reactiveValues(data = stages_current)
+  reactDT.list[['9']] <- stages_current
   
-  reactDT.list <<- c(reactDT.list, list(reactDT9$data)) # list(as.data.frame(reactDT1$data))) # append it in list of reactive values
-  
-  output$stages_summary9 = DT::renderDT(reactDT9$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  output$stages_summary9 = DT::renderDT(reactDT.list[['9']], options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary9')
   #
@@ -1832,16 +1818,16 @@ if (tail(Scenarios,1) == 1)
     v = info$value
     str(info)
     # Character string needs to be coerced to same type as target value. Here as.integer()
-    reactDT9$data[i, j] = DT::coerceValue(v, reactDT9$data[i, j])
+    reactDT.list[['9']][i, j] = DT::coerceValue(v, reactDT.list[['9']][i, j])
     # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
-    replaceData(proxy, reactDT9$data, resetPaging = FALSE)  # important
+    replaceData(proxy, reactDT.list[['9']], resetPaging = FALSE)  # important
   })
   
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn9, {
     
   try(
-    if (!validInput(reactDT9$data)) # (is.unsorted(rev(entries))) # 
+    if (!validInput(reactDT.list[['9']])) # (is.unsorted(rev(entries))) # 
     {
       # TODO pop-up message and handle exception
       shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
@@ -1850,24 +1836,24 @@ if (tail(Scenarios,1) == 1)
     else
     {
       result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                           isolate(reactDT9$data[,2]),isolate(reactDT9$data[,3]),
-                           isolate(reactDT9$data[,4]),isolate(reactDT9$data[,5]),
-                           isolate(reactDT9$data[,6]),isolate(input$varieties))
+                           isolate(reactDT.list[['9']][,2]),isolate(reactDT.list[['9']][,3]),
+                           isolate(reactDT.list[['9']][,4]),isolate(reactDT.list[['9']][,5]),
+                           isolate(reactDT.list[['9']][,6]),isolate(input$varieties))
       output$cyPlot9 <- renderPlot({
         plotScenario(result)
       })   # end of renderPlot
       
       # Update Mean Genetic Gain for each stage in summary table
       stages_current$mean <- meanGain(result)
-      reactDT9$data[,11] <- stages_current$mean 
+      reactDT.list[['9']][,11] <- stages_current$mean 
       
       # Update Mean Genetic Gain x Time for each stage in summary table
-      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT9$data)
-      reactDT9$data[,12] <- stages_current$meanxTime
+      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT.list[['9']])
+      reactDT.list[['9']][,12] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
-      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT9$data)
-      reactDT9$data[,13] <- stages_current$meanxCost
+      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT.list[['9']])
+      reactDT.list[['9']][,13] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -1889,7 +1875,7 @@ if (tail(Scenarios,1) == 1)
       rv$results_allxTime = removeScenarioResult(9, rv$results_allxTime)
       #
       # Store all results conditioned by Time in rv
-      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 9, scenarioDT = reactDT9$data)
+      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 9, scenarioDT = reactDT.list[['9']])
       #
       # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
       output$overviewTabxTime <- renderPlot({
@@ -1901,7 +1887,7 @@ if (tail(Scenarios,1) == 1)
       # First remove previous run entries
       rv$results_allxCost = removeScenarioResult(9, rv$results_allxCost)
       # Store all Gain results conditioned by Cost
-      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 9, scenarioDT = reactDT9$data)
+      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 9, scenarioDT = reactDT.list[['9']])
       #
       # Render grouped boxplots for Gain per Cost
       output$overviewTabxCost <- renderPlot({
@@ -1912,15 +1898,15 @@ if (tail(Scenarios,1) == 1)
   
   # Update H2 for every stage as soon as input data that affect H2 change
   observe({
-    for (i in 1:nrow(reactDT9$data))
+    for (i in 1:nrow(reactDT.list[['9']]))
     {
-      reactDT9$data[i,7] = updateH2(reactDT9$data[i,]) 
+      reactDT.list[['9']][i,7] = updateH2(reactDT.list[['9']][i,]) 
     }
   })
   
   
   # Update cost table as soon as input data that affect cost change
-  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT9$data, input$negen), totalLocs(reactDT9$data), totalPlots(reactDT9$data), totalLocsCost(reactDT9$data), totalPlotsCost(reactDT9$data), totalCost(reactDT9$data)), 
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT.list[['9']], input$negen), totalLocs(reactDT.list[['9']]), totalPlots(reactDT.list[['9']]), totalLocsCost(reactDT.list[['9']]), totalPlotsCost(reactDT.list[['9']]), totalCost(reactDT.list[['9']])), 
                                                                options = list(
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
@@ -2001,7 +1987,7 @@ if (tail(Scenarios,1) == 1)
         startCol = 1
       )
       
-      tmp_data <- reactDT9$data
+      tmp_data <- reactDT.list[['9']]
       colnames(tmp_data) = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Plot Cost($)', 'Loc Cost($)', 'Fixed Cost($)', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
       
       writeData(
@@ -2022,7 +2008,7 @@ if (tail(Scenarios,1) == 1)
       )
       
       #cost_summary <- cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data))
-      cost_summary <- cbind(totalYears(reactDT9$data, input$negen), totalLocs(reactDT9$data), totalPlots(reactDT9$data), totalLocsCost(reactDT9$data), totalPlotsCost(reactDT9$data), totalCost(reactDT9$data))
+      cost_summary <- cbind(totalYears(reactDT.list[['9']], input$negen), totalLocs(reactDT.list[['9']]), totalPlots(reactDT.list[['9']]), totalLocsCost(reactDT.list[['9']]), totalPlotsCost(reactDT.list[['9']]), totalCost(reactDT.list[['9']]))
       colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
       
       writeData(
@@ -2040,11 +2026,9 @@ if (tail(Scenarios,1) == 1)
   
 } else if (tail(Scenarios,1) == 10)
 {
-  reactDT10 <- reactiveValues(data = stages_current)
+  reactDT.list[['10']] <- stages_current
   
-  reactDT.list <<- c(reactDT.list, list(reactDT10$data)) # list(as.data.frame(reactDT1$data))) # append it in list of reactive values
-  
-  output$stages_summary10 = DT::renderDT(reactDT10$data, options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
+  output$stages_summary10 = DT::renderDT(reactDT.list[['10']], options = sumset_DT$options, class = sumset_DT$class, rownames = sumset_DT$rownames, colnames = sumset_DT$colnames, editable = sumset_DT$editable, server = sumset_DT$server)
   # Update editable DT through a proxy DT on cell edit event
   proxy = dataTableProxy('stages_summary10')
   #
@@ -2055,16 +2039,16 @@ if (tail(Scenarios,1) == 1)
     v = info$value
     str(info)
     # Character string needs to be coerced to same type as target value. Here as.integer()
-    reactDT10$data[i, j] = DT::coerceValue(v, reactDT10$data[i, j])
+    reactDT.list[['10']][i, j] = DT::coerceValue(v, reactDT.list[['10']][i, j])
     # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
-    replaceData(proxy, reactDT10$data, resetPaging = FALSE)  # important
+    replaceData(proxy, reactDT.list[['10']], resetPaging = FALSE)  # important
   })
   
   # Execute runScenario() for the current settings
   observeEvent(input$update_btn10, {
     
   try(
-    if (!validInput(reactDT10$data)) # (is.unsorted(rev(entries))) # 
+    if (!validInput(reactDT.list[['10']])) # (is.unsorted(rev(entries))) # 
     {
       # TODO pop-up message and handle exception
       shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
@@ -2073,24 +2057,24 @@ if (tail(Scenarios,1) == 1)
     else
     {
       result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
-                           isolate(reactDT10$data[,2]),isolate(reactDT10$data[,3]),
-                           isolate(reactDT10$data[,4]),isolate(reactDT10$data[,5]),
-                           isolate(reactDT10$data[,6]),isolate(input$varieties))
+                           isolate(reactDT.list[['10']][,2]),isolate(reactDT.list[['10']][,3]),
+                           isolate(reactDT.list[['10']][,4]),isolate(reactDT.list[['10']][,5]),
+                           isolate(reactDT.list[['10']][,6]),isolate(input$varieties))
       output$cyPlot10 <- renderPlot({
         plotScenario(result)
       })   # end of renderPlot
       
       # Update Mean Genetic Gain for each stage in summary table
       stages_current$mean <- meanGain(result)
-      reactDT10$data[,11] <- stages_current$mean
+      reactDT.list[['10']][,11] <- stages_current$mean
       
       # Update Mean Genetic Gain x Time for each stage in summary table
-      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT10$data)
-      reactDT10$data[,12] <- stages_current$meanxTime
+      stages_current$meanxTime <-meanGainxTime(result, scenarioDT = reactDT.list[['10']])
+      reactDT.list[['10']][,12] <- stages_current$meanxTime
       
       # Update Mean Genetic Gain x Cost for each stage in summary table
-      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT10$data)
-      reactDT10$data[,13] <- stages_current$meanxCost
+      stages_current$meanxCost <- meanGainxCost(result, scenarioDT = reactDT.list[['10']])
+      reactDT.list[['10']][,13] <- stages_current$meanxCost
       
       # Update results_all entries
       # First remove previous run entries
@@ -2112,7 +2096,7 @@ if (tail(Scenarios,1) == 1)
       rv$results_allxTime = removeScenarioResult(10, rv$results_allxTime)
       #
       # Store all results conditioned by Time in rv
-      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 10, scenarioDT = reactDT10$data)
+      rv$results_allxTime = storeScenarioResultxTime(result = result, results_all = rv$results_allxTime, scenarioID = 10, scenarioDT = reactDT.list[['10']])
       #
       # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
       output$overviewTabxTime <- renderPlot({
@@ -2124,7 +2108,7 @@ if (tail(Scenarios,1) == 1)
       # First remove previous run entries
       rv$results_allxCost = removeScenarioResult(10, rv$results_allxCost)
       # Store all Gain results conditioned by Cost
-      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 10, scenarioDT = reactDT10$data)
+      rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = 10, scenarioDT = reactDT.list[['10']])
       #
       # Render grouped boxplots for Gain per Cost
       output$overviewTabxCost <- renderPlot({
@@ -2135,15 +2119,15 @@ if (tail(Scenarios,1) == 1)
   
   # Update H2 for every stage as soon as input data that affect H2 change
   observe({
-    for (i in 1:nrow(reactDT10$data))
+    for (i in 1:nrow(reactDT.list[['10']]))
     {
-      reactDT10$data[i,7] = updateH2(reactDT10$data[i,]) 
+      reactDT.list[['10']][i,7] = updateH2(reactDT.list[['10']][i,]) 
     }
   })
   
   
   # Update cost table as soon as input data that affect cost change
-  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT10$data, input$negen), totalLocs(reactDT10$data), totalPlots(reactDT10$data), totalLocsCost(reactDT10$data), totalPlotsCost(reactDT10$data), totalCost(reactDT10$data)), 
+  output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT.list[['10']], input$negen), totalLocs(reactDT.list[['10']]), totalPlots(reactDT.list[['10']]), totalLocsCost(reactDT.list[['10']]), totalPlotsCost(reactDT.list[['10']]), totalCost(reactDT.list[['10']])), 
                                                                options = list(
                                                                  searching = F, # no search box
                                                                  paginate = F,  # no num of pages
@@ -2224,7 +2208,7 @@ if (tail(Scenarios,1) == 1)
         startCol = 1
       )
 
-      tmp_data <- reactDT10$data
+      tmp_data <- reactDT.list[['10']]
       colnames(tmp_data) = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Plot Cost($)', 'Loc Cost($)', 'Fixed Cost($)', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
       
       writeData(
@@ -2245,7 +2229,7 @@ if (tail(Scenarios,1) == 1)
       )
       
       #cost_summary <- cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data))
-      cost_summary <- cbind(totalYears(reactDT10$data, input$negen), totalLocs(reactDT10$data), totalPlots(reactDT10$data), totalLocsCost(reactDT10$data), totalPlotsCost(reactDT10$data), totalCost(reactDT10$data))
+      cost_summary <- cbind(totalYears(reactDT.list[['10']], input$negen), totalLocs(reactDT.list[['10']]), totalPlots(reactDT.list[['10']]), totalLocsCost(reactDT.list[['10']]), totalPlotsCost(reactDT.list[['10']]), totalCost(reactDT.list[['10']]))
       colnames(cost_summary) <- c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost')
       
       writeData(
@@ -2263,6 +2247,6 @@ if (tail(Scenarios,1) == 1)
 } #endof if loop
 
 
-print(reactDT.list) #[[1]])
+#print(reactDT.list) #[[1]])
 
   

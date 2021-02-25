@@ -43,7 +43,7 @@ server <- function(input, output, clientData, session) {
   # initialize empty vector to stores status of chk_ranges for each scenario
   rangesVec <- vector()
   # initialize empty list to store data frames of reactiveValues created for each Scenario, e.g. reactDT1
-  reactDT.list <- list()
+  reactDT.list <- reactiveValues() # list()
 
   # ***************************************************** #
   # ********************* FUNCTIONS ********************* #
@@ -1170,7 +1170,8 @@ server <- function(input, output, clientData, session) {
           startCol = 1
         )
 
-        tmp_data <- reactDT.list[[i]] # stages_current # TODO :: call to reactDT1$data
+        # print(reactDT.list[[paste(i)]]) # 
+        tmp_data = reactDT.list[[paste(i)]] # stages_current # TODO :: call to reactDT1$data
         colnames(tmp_data) = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', 'h2', 'Plot Cost($)', 'Loc Cost($)', 'Fixed Cost($)', 'Genetic Gain', 'Gain per Year', 'Gain per $1000')
 
         writeData(
