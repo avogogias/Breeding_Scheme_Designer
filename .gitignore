@@ -1,4 +1,7 @@
 www/bootstrap.*
+p1.png
+p2.png
+p3.png
 rsconnect
 *.Rproj
 server_range.r

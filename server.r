@@ -1098,16 +1098,29 @@ server <- function(input, output, clientData, session) {
       )
       
       
-      # Save plots as images in Excel file ## Insert currently displayed plot in first row and col calculated by number of stages of summary tables
-      print(plotScenarioGroup(rv$results_all))
-      insertPlot(my_workbook, 1, xy = c(3 + ncol(sumxGain), 4), height = 3.5, fileType = "png", units = "in")
+      # Save plots as images in Excel file #          ---  NOT WORKING ON SHINY APPS SERVER  ---
+      # print(plotScenarioGroup(rv$results_all))
+      # insertPlot(my_workbook, 1, xy = c(3 + ncol(sumxGain), 4), height = 3.5, fileType = "png", units = "in")
+      # #
+      # print(plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)"))
+      # insertPlot(my_workbook, 1, xy = c(3 + ncol(sumxGain), 24), height = 3.5, fileType = "png", units = "in")
+      # #
+      # print(plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)"))
+      # insertPlot(my_workbook, 1, xy = c(3 + ncol(sumxGain), 44), height = 3.5, fileType = "png", units = "in")
       #
-      print(plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)"))
-      insertPlot(my_workbook, 1, xy = c(3 + ncol(sumxGain), 24), height = 3.5, fileType = "png", units = "in")
+      # 
+      p1 <- plotScenarioGroup(rv$results_all)
+      p2 <- plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
+      p3 <- plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
       #
-      print(plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)"))
-      insertPlot(my_workbook, 1, xy = c(3 + ncol(sumxGain), 44), height = 3.5, fileType = "png", units = "in")
-
+      # method using ggsave
+      ggsave("p1.png", plot = p1, scale = .8)  # Scale parameter resizes the object making text more legible
+      ggsave("p2.png", plot = p2, scale = .8)
+      ggsave("p3.png", plot = p3, scale = .8)
+      insertImage(my_workbook, 1, "p1.png", height = 4, startCol = 3 + ncol(sumxGain), startRow = 4, units = "in")
+      insertImage(my_workbook, 1, "p2.png", height = 4, startCol = 3 + ncol(sumxGain), startRow = 25, units = "in")
+      insertImage(my_workbook, 1, "p3.png", height = 4, startCol = 3 + ncol(sumxGain), startRow = 46, units = "in")
+      
       
       
       # save results of each scenario in different workbook tabs
