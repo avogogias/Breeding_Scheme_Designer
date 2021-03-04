@@ -19,6 +19,7 @@ server <- function(input, output, clientData, session) {
   
   # TV to use complementary to generated divID for identifying Scenarios ID
   Scenarios <<- c() #simple list of scenario ids, so will be [1,2,3] if three scenarios
+  Ranges <<- c() #simple list of range scenario ids, so will be [1,2,3] if three scenarios of ranges
   
   # Define default matrix values
   stage = c(1,2,3)
@@ -34,7 +35,7 @@ server <- function(input, output, clientData, session) {
   yt = cbind(stage,entries,years,locs,reps,error,h2,plotCost,locCost,fixedCost)
   
   # per-session reactive values object to store all results of this user session
-  rv <- reactiveValues(results_all = NULL, results_allxTime = NULL, results_allxCost = NULL, results_range = NULL)
+  rv <- reactiveValues(results_all = NULL, results_allxTime = NULL, results_allxCost = NULL, results_range = NULL, results_range_r = NULL)
   # defines a common reactive list to store all scenario input info (stages DT + other) to replace reactDT
   scenariosInput <- reactiveValues(stagesDT = list(), varG = list(), varGxL = list(), varGxY = list(), varieties = list()) # initially will store stages_current and updated accordingly
   # Using reactiveVales to add a server side set of variable observable and mutable at the same time
@@ -412,6 +413,93 @@ server <- function(input, output, clientData, session) {
       return(rr)
   }
   
+  # Previous function adjusted to separate tab for ranges not dependent on DT
+  # Ignore entries in first stage and instead run for a range of entries. Store the results in rv$results_range
+  runScenarioRange_r <- function(min_entries = input$entries_range_r[1], max_entries = input$entries_range_r[2], 
+                               min_years = input$years_range_r[1], max_years = input$years_range_r[2],
+                               min_locs = input$locs_range_r[1], max_locs = input$locs_range_r[2],
+                               min_reps = input$reps_range_r[1], max_reps = input$reps_range_r[2],
+                               # min_error = input$error_range_r[1], max_error = input$error_range_r[2],
+                               grain = input$grain_r,
+                               #TV scenarioDT = yti$data, 
+                               varG = input$varG_r, 
+                               varGxL = input$varGxL_r, 
+                               varGxY = input$varGxY_r, 
+                               varErr = input$varErr_r,
+                               varieties = input$varieties_r) 
+    # results_range = rv$results_range) 
+  {
+    #TV print(scenarioDT)
+    #TV stage = scenarioDT[,1]
+    #TV entries = scenarioDT[,2]
+    
+    min_entries = checkMinEntries(varieties, min_entries) 
+    # varieties must be less than min_entries
+    if (varieties > min_entries)
+      min_entries = varieties
+    years = NA #TV scenarioDT[,3] 
+    locs = NA #TV scenarioDT[,4]
+    reps = NA #TV scenarioDT[,5]
+    error = varErr #TV scenarioDT[,6]
+    it = 0 # counter of iterations between range min max
+    range_entries = rangeGrain(min_entries, max_entries, grain)
+    range_years = rangeGrain(min_years, max_years, grain)
+    range_locs = rangeGrain(min_locs, max_locs, grain)
+    range_reps = rangeGrain(min_reps, max_reps, grain)
+    #range_error = rangeGrain(min_error, max_error, grain)
+    #print(range_reps)
+    
+    # Show Progress Bar
+    withProgress(message = 'Calculating results', value = 0, {
+      rr = NULL
+      for (i in range_entries)
+      {
+        for (k in range_years)
+        {
+          for (l in range_locs)
+          {
+            for (j in range_reps)
+            {
+              # for (e in range_error)
+              # {
+              # update progress bar after a single iteration of the nested loop
+              # incProgress(1/(length(range_entries)*length(range_years)*length(range_locs)*length(range_reps)*length(range_error)), detail = paste("Iteration", it, "of", length(range_entries)*length(range_years)*length(range_locs)*length(range_reps)*length(range_error)))
+              incProgress(1/(length(range_entries)*length(range_years)*length(range_locs)*length(range_reps)), detail = paste("Iteration", it, "of", length(range_entries)*length(range_years)*length(range_locs)*length(range_reps)))
+              
+              it = it + 1
+              entries = i # replace first stage entries with range_entries
+              years = k
+              locs = l
+              reps = j
+             # error = e
+              
+              resultLite = runScenarioLite(varG,
+                                           varGxL,
+                                           varGxY,
+                                           entries,
+                                           years,
+                                           locs,
+                                           reps,
+                                           error,
+                                           varieties)
+              #print(resultLite) # WORKS
+              resultLite = as.data.frame(resultLite)             # convert to a df
+              colnames(resultLite) <- c("mean","sd")
+              # Create df with I/O data and bind this to rr from previous iterations
+            # rr<-rbind(rr, cbind(scenario = tail(Scenarios,1), fs_entries = i, fs_years = k, fs_locs = l, fs_reps = j, it, stage, entries, years, locs, reps, error, resultLite))
+              rr<-rbind(rr, cbind(scenario = tail(Ranges,1), entries, years, locs, reps, error, it, resultLite))
+              # }
+            }
+          }
+        }
+      }
+    })
+    
+    #print(rr)
+    #tail(rr)
+    return(rr)
+  }
+  
   # function takes 2 vectors and returns a matrix with a grid between paired min max elements
   rangeGrain <- function(min = input$range[1], max = input$range[2], grain = input$grain) {
     qrt = NULL
@@ -633,7 +721,37 @@ server <- function(input, output, clientData, session) {
     gp <- ggplotly(gp, tooltip="text")
     return(gp)
   }
-  
+
+  # Interactive X Y Heatmap
+  plotRangesHeatmap <- function(df = isolate(rv$results_range_r), myX = input$xAxis, myY = input$yAxis, myXl = input$xAxis, myYl = input$yAxis, title = paste("Gain by", input$xAxis, "by", input$yAxis)) { # title = paste("Gain by ", input$xAxis, " by ", input$yAxis)
+    df <- filter(df, as.numeric(unlist(df["scenario"])) %in% df["scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
+
+    # TODO apply more filters
+    myFilter = c("entries", "years", "locs", "reps")
+    toPlot = c(myX, myY)
+    # Remove toPlot elements from myFilter
+    myFilter = myFilter[!(myFilter %in% toPlot)]
+    
+    print(myFilter)
+    
+    for (i in myFilter)
+    {
+      df <- filter(df, as.numeric(unlist(df[i])) %in% df[i][1,]) # filter rows not on the first occurrence (min) of myFilter
+    }
+
+    print(df)
+    
+    arg <- match.call()
+    # Heatmap
+    gp = ggplot(df, aes_string(x = eval(arg$myX), y = eval(arg$myY)))+ 
+      geom_tile(aes(fill = mean)) +
+      scale_fill_gradient(low="white", high="blue") +
+      scale_x_continuous(myXl)+
+      scale_y_continuous(myYl)+
+      ggtitle(title)
+    gp <- ggplotly(gp)
+    return(gp)
+  }
   
   #*************************************
   #-------------------------------------  
@@ -966,6 +1084,38 @@ server <- function(input, output, clientData, session) {
       
     }) #endof try()
   }) # end of run button
+  
+  
+  # * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+  # Event listener for calculating results for ranges of parameters.
+  # * * * * * * * ** * * *   R A N G E S * * * * * * * * * * * * * * 
+  # * * * * * * * * * * * * * * * * * * *  * * * * * * * * * * * * * 
+  observeEvent(input$run_btn_r, {
+    
+    # Increment Scenarios counter list e.g. [1, 2, 3] for 3 scenarios, used in place of input$run_btn
+    if (length(Ranges) == 0){
+      Ranges <<- c(1)                # if no Scenario defines so far, make the first one "1"
+    }
+    else{
+      Ranges <<- c(Ranges,  tail(Ranges,1)+1)   # if a Scenario is added, just add a number to the last number in the "Scenarios" vector
+    }
+    
+    # Store results for different ranges of first stage entries
+    rv$results_range_r = rbind(rv$results_range_r, runScenarioRange_r())
+    print(rv$results_range_r)
+
+    # Plot interactive heatmap that updates as X and Y change
+    output$plotXY <- renderPlotly({       
+      plotRangesHeatmap(df = isolate(rv$results_range_r), 
+                        myX = input$xAxis, 
+                        myY = input$yAxis, 
+                        myXl = input$xAxis, 
+                        myYl = input$yAxis, 
+                        title = paste("Gain by ", input$xAxis, " by ", input$yAxis))
+    })
+    
+  }) # end of run ranges button
+  
   
   # Download Report
   output$download_all <- downloadHandler(

@@ -19,6 +19,7 @@ arma::fmat runScenario(float varG, // Genetic variance
                        arma::fvec reps, // Number of replications per location
                        arma::fvec error, // Plot error variance
                        arma::uword varieties, // Final number selected (varieties, parents, ...)
+                       bool nct=0, // Negatively correlated trait in multiplication stages modelled at first stage
                        arma::uword nRepeats=1000){ // Number of replicates of simulation
   arma::uword nStages = entries.n_elem; // Total number of stages
   arma::fmat output(nStages, nRepeats); // Output matrix for variety means
@@ -42,6 +43,9 @@ arma::fmat runScenario(float varG, // Genetic variance
     for(arma::uword s=1; s<nStages; ++s){
       // Select entries from previous stage
       arma::uvec rank = sort_index(p,"descend"); // Sort by phenotype
+      if(nct && s==1){
+        rank = sort_index(p,"ascend"); // Sort by phenotype ascending order for negatively correlated trait
+      }
       rank = rank(arma::span(0,entries(s)-1)); // Determine best genotypes by phenotype
       g = g(rank); // Make selections
       output(s-1,r) = mean(g(arma::span(0,varieties-1))); // Report mean of varieties (if selected now)
@@ -75,9 +79,10 @@ arma::fmat runScenarioLite(float varG, // Genetic variance
                            arma::fvec reps, // Number of replications per location
                            arma::fvec error, // Plot error variance
                            arma::uword varieties, // Final number selected (varieties, parents, ...)
+                           bool nct=0, // Negatively correlated trait in multiplication stages modelled at first stage
                            arma::uword nRepeats=1000){ // Number of replicates of simulation
   arma::fmat tmp = runScenario(varG,varGxL,varGxY,entries,
-                               years,locs,reps,error,varieties,
+                               years,locs,reps,error,varieties,nct,
                                nRepeats);
   return join_rows(mean(tmp,1), // Mean by stage
                    stddev(tmp,0,1)); // Standard deviation by stage

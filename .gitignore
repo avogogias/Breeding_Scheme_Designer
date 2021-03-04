@@ -2,6 +2,7 @@ www/bootstrap.*
 p1.png
 p2.png
 p3.png
+Engine_prev.cpp
 rsconnect
 *.Rproj
 server_range.r
