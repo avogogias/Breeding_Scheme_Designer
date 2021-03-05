@@ -1,10 +1,11 @@
 # Global settings for all DTs in senario tabs
 sumset_DT = list( options = list(
-  searching = F, # no search box
-  paginate = F,  # no num of pages
-  lengthChange = F, # no show entries
+  dom = 't', # only display the table, and nothing else
+  # searching = F, # no search box
+  # paginate = F,  # no num of pages
+  # lengthChange = F, # no show entries
   scrollX = T, # horizontal slider
-  ordering = F # suppressing sorting
+  ordering = F # suppressing sorting 
 ),
 class = "cell-border, compact, hover", 
 rownames = F, #TRUE,
@@ -141,13 +142,7 @@ if (tail(Scenarios,1) == 1)
   
   # Update cost table as soon as input data that affect cost change
   output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT.list[['1']], input$negen), totalLocs(reactDT.list[['1']]), totalPlots(reactDT.list[['1']]), totalLocsCost(reactDT.list[['1']]), totalPlotsCost(reactDT.list[['1']]), totalCost(reactDT.list[['1']])), 
-                                                               options = list(
-                                                                 searching = F, # no search box
-                                                                 paginate = F,  # no num of pages
-                                                                 lengthChange = F, # no show entries
-                                                                 scrollX = T, # horizontal slider
-                                                                 ordering = F # suppressing sorting
-                                                               ),
+                                                               options = sumset_DT$options,
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
                                                                server = F ) 
@@ -371,13 +366,7 @@ if (tail(Scenarios,1) == 1)
   
   # Update cost table as soon as input data that affect cost change
   output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT.list[['2']], input$negen), totalLocs(reactDT.list[['2']]), totalPlots(reactDT.list[['2']]), totalLocsCost(reactDT.list[['2']]), totalPlotsCost(reactDT.list[['2']]), totalCost(reactDT.list[['2']])), 
-                                                               options = list(
-                                                                 searching = F, # no search box
-                                                                 paginate = F,  # no num of pages
-                                                                 lengthChange = F, # no show entries
-                                                                 scrollX = T, # horizontal slider
-                                                                 ordering = F # suppressing sorting
-                                                               ),
+                                                               options = sumset_DT$options,
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
                                                                server = F )
@@ -588,13 +577,7 @@ if (tail(Scenarios,1) == 1)
   
   # Update cost table as soon as input data that affect cost change
   output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT.list[['3']], input$negen), totalLocs(reactDT.list[['3']]), totalPlots(reactDT.list[['3']]), totalLocsCost(reactDT.list[['3']]), totalPlotsCost(reactDT.list[['3']]), totalCost(reactDT.list[['3']])), 
-                                                               options = list(
-                                                                 searching = F, # no search box
-                                                                 paginate = F,  # no num of pages
-                                                                 lengthChange = F, # no show entries
-                                                                 scrollX = T, # horizontal slider
-                                                                 ordering = F # suppressing sorting
-                                                               ),
+                                                               options = sumset_DT$options,
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
                                                                server = F )
@@ -807,13 +790,7 @@ if (tail(Scenarios,1) == 1)
   
   # Update cost table as soon as input data that affect cost change
   output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT.list[['4']], input$negen), totalLocs(reactDT.list[['4']]), totalPlots(reactDT.list[['4']]), totalLocsCost(reactDT.list[['4']]), totalPlotsCost(reactDT.list[['4']]), totalCost(reactDT.list[['4']])), 
-                                                               options = list(
-                                                                 searching = F, # no search box
-                                                                 paginate = F,  # no num of pages
-                                                                 lengthChange = F, # no show entries
-                                                                 scrollX = T, # horizontal slider
-                                                                 ordering = F # suppressing sorting
-                                                               ),
+                                                               options = sumset_DT$options,
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
                                                                server = F )
@@ -1028,13 +1005,7 @@ if (tail(Scenarios,1) == 1)
   
   # Update cost table as soon as input data that affect cost change
   output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT.list[['5']], input$negen), totalLocs(reactDT.list[['5']]), totalPlots(reactDT.list[['5']]), totalLocsCost(reactDT.list[['5']]), totalPlotsCost(reactDT.list[['5']]), totalCost(reactDT.list[['5']])), 
-                                                               options = list(
-                                                                 searching = F, # no search box
-                                                                 paginate = F,  # no num of pages
-                                                                 lengthChange = F, # no show entries
-                                                                 scrollX = T, # horizontal slider
-                                                                 ordering = F # suppressing sorting
-                                                               ),
+                                                               options = sumset_DT$options,
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
                                                                server = F )
@@ -1246,13 +1217,7 @@ if (tail(Scenarios,1) == 1)
   
   # Update cost table as soon as input data that affect cost change
   output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT.list[['6']], input$negen), totalLocs(reactDT.list[['6']]), totalPlots(reactDT.list[['6']]), totalLocsCost(reactDT.list[['6']]), totalPlotsCost(reactDT.list[['6']]), totalCost(reactDT.list[['6']])), 
-                                                               options = list(
-                                                                 searching = F, # no search box
-                                                                 paginate = F,  # no num of pages
-                                                                 lengthChange = F, # no show entries
-                                                                 scrollX = T, # horizontal slider
-                                                                 ordering = F # suppressing sorting
-                                                               ),
+                                                               options = sumset_DT$options,
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
                                                                server = F )
@@ -1467,13 +1432,7 @@ if (tail(Scenarios,1) == 1)
   
   # Update cost table as soon as input data that affect cost change
   output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT.list[['7']], input$negen), totalLocs(reactDT.list[['7']]), totalPlots(reactDT.list[['7']]), totalLocsCost(reactDT.list[['7']]), totalPlotsCost(reactDT.list[['7']]), totalCost(reactDT.list[['7']])), 
-                                                               options = list(
-                                                                 searching = F, # no search box
-                                                                 paginate = F,  # no num of pages
-                                                                 lengthChange = F, # no show entries
-                                                                 scrollX = T, # horizontal slider
-                                                                 ordering = F # suppressing sorting
-                                                               ),
+                                                               options = sumset_DT$options,
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
                                                                server = F )
@@ -1687,13 +1646,7 @@ if (tail(Scenarios,1) == 1)
   
   # Update cost table as soon as input data that affect cost change
   output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT.list[['8']], input$negen), totalLocs(reactDT.list[['8']]), totalPlots(reactDT.list[['8']]), totalLocsCost(reactDT.list[['8']]), totalPlotsCost(reactDT.list[['8']]), totalCost(reactDT.list[['8']])), 
-                                                               options = list(
-                                                                 searching = F, # no search box
-                                                                 paginate = F,  # no num of pages
-                                                                 lengthChange = F, # no show entries
-                                                                 scrollX = T, # horizontal slider
-                                                                 ordering = F # suppressing sorting
-                                                               ),
+                                                               options = sumset_DT$options,
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
                                                                server = F )
@@ -1907,13 +1860,7 @@ if (tail(Scenarios,1) == 1)
   
   # Update cost table as soon as input data that affect cost change
   output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT.list[['9']], input$negen), totalLocs(reactDT.list[['9']]), totalPlots(reactDT.list[['9']]), totalLocsCost(reactDT.list[['9']]), totalPlotsCost(reactDT.list[['9']]), totalCost(reactDT.list[['9']])), 
-                                                               options = list(
-                                                                 searching = F, # no search box
-                                                                 paginate = F,  # no num of pages
-                                                                 lengthChange = F, # no show entries
-                                                                 scrollX = T, # horizontal slider
-                                                                 ordering = F # suppressing sorting
-                                                               ),
+                                                               options = sumset_DT$options,
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
                                                                server = F )
@@ -2128,13 +2075,7 @@ if (tail(Scenarios,1) == 1)
   
   # Update cost table as soon as input data that affect cost change
   output[[paste0("costDT", tail(Scenarios,1))]] = DT::renderDT(cbind(totalYears(reactDT.list[['10']], input$negen), totalLocs(reactDT.list[['10']]), totalPlots(reactDT.list[['10']]), totalLocsCost(reactDT.list[['10']]), totalPlotsCost(reactDT.list[['10']]), totalCost(reactDT.list[['10']])), 
-                                                               options = list(
-                                                                 searching = F, # no search box
-                                                                 paginate = F,  # no num of pages
-                                                                 lengthChange = F, # no show entries
-                                                                 scrollX = T, # horizontal slider
-                                                                 ordering = F # suppressing sorting
-                                                               ),
+                                                               options = sumset_DT$options,
                                                                rownames = F,
                                                                colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
                                                                server = F )

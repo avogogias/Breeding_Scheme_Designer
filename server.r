@@ -495,6 +495,7 @@ server <- function(input, output, clientData, session) {
       }
     })
     
+    colnames(rr) <- c("Scenario", "Entries", "Years", "Locs", "Reps", "Error", "IT", "Gain", "SD")
     #print(rr)
     #tail(rr)
     return(rr)
@@ -724,10 +725,13 @@ server <- function(input, output, clientData, session) {
 
   # Interactive X Y Heatmap
   plotRangesHeatmap <- function(df = isolate(rv$results_range_r), myX = input$xAxis, myY = input$yAxis, myXl = input$xAxis, myYl = input$yAxis, title = paste("Gain by", input$xAxis, "by", input$yAxis)) { # title = paste("Gain by ", input$xAxis, " by ", input$yAxis)
-    df <- filter(df, as.numeric(unlist(df["scenario"])) %in% df["scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
 
+    # df <- filter(df, as.numeric(unlist(df["scenario"])) %in% df["scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
+    df <- filter(df, as.numeric(unlist(df["Scenario"])) %in% df["Scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
+    
+    
     # TODO apply more filters
-    myFilter = c("entries", "years", "locs", "reps")
+    myFilter = c("Entries", "Years", "Locs", "Reps")  # c("entries", "years", "locs", "reps")
     toPlot = c(myX, myY)
     # Remove toPlot elements from myFilter
     myFilter = myFilter[!(myFilter %in% toPlot)]
@@ -744,7 +748,8 @@ server <- function(input, output, clientData, session) {
     arg <- match.call()
     # Heatmap
     gp = ggplot(df, aes_string(x = eval(arg$myX), y = eval(arg$myY)))+ 
-      geom_tile(aes(fill = mean)) +
+      # geom_tile(aes(fill = mean)) +
+      geom_tile(aes(fill = Gain)) +
       scale_fill_gradient(low="white", high="blue") +
       scale_x_continuous(myXl)+
       scale_y_continuous(myYl)+
@@ -762,9 +767,10 @@ server <- function(input, output, clientData, session) {
   # Render stages DT with default data entries
   output$stages_table = DT::renderDT(yti$data, 
                                      options = list(
-                                       searching = F, # no search box
-                                       paginate = F,  # no num of pages
-                                       lengthChange = F, # no show entries
+                                       dom = 't', # only display the table, and nothing else
+                                       # searching = F, # no search box
+                                       # paginate = F,  # no num of pages
+                                       # lengthChange = F, # no show entries
                                        scrollX = T, # horizontal slider
                                        ordering = F # suppressing sorting 
                                      ),
@@ -781,9 +787,10 @@ server <- function(input, output, clientData, session) {
   # Render a DT table with total costs (Years, Locs, Plots) calculated based on stages input
   output$cost_table = DT::renderDT(cbind(totalYears(yti$data), totalLocs(yti$data), totalPlots(yti$data), totalLocsCost(yti$data), totalPlotsCost(yti$data), totalCost(yti$data)), 
                                    options = list(
-                                     searching = F, # no search box
-                                     paginate = F,  # no num of pages
-                                     lengthChange = F, # no show entries
+                                     dom = 't', # only display the table, and nothing else
+                                     # searching = F, # no search box
+                                     # paginate = F,  # no num of pages
+                                     # lengthChange = F, # no show entries
                                      scrollX = T, # horizontal slider
                                      ordering = F # suppressing sorting 
                                    ),
@@ -1100,6 +1107,46 @@ server <- function(input, output, clientData, session) {
       Ranges <<- c(Ranges,  tail(Ranges,1)+1)   # if a Scenario is added, just add a number to the last number in the "Scenarios" vector
     }
     
+    # Create a drop-down list at first Run
+    if (tail(Ranges,1) == 1)
+    {
+      insertUI(
+        selector = "#plot_ranges_placeholder",
+        ui = tags$div(class = "div_plot_ranges_r", checked = NA, 
+
+                   plotlyOutput('plotXY'), # updated based on X Y input
+                   
+                   # tags$br(),
+                   
+                   # Make divs appear in one line and centered
+                   div( class = 'centerAlign',    
+                     # Drop down list to select input for X axis
+                     div(style="display:inline-block", # class = 'centerAlign', 
+                         selectInput(inputId = 'xAxis', label =  "Set X Axis:",
+                                     choices =  c("Entries", "Years", "Locs", "Reps"),
+                                     selected = "Entries",
+                                     multiple = FALSE,
+                                     selectize = TRUE,
+                                     width = '90px'
+                         )
+                     ),
+                     # Drop down list to select input for Y axis
+                     div(style="display:inline-block", # class = 'centerAlign',    
+                         selectInput(inputId = 'yAxis', label =  "Set Y Axis:",
+                                     choices =  c("Entries", "Years", "Locs", "Reps"),
+                                     selected = "Years",
+                                     multiple = FALSE,
+                                     selectize = TRUE,
+                                     width = '90px'
+                         )
+                     )
+                   )
+                   
+          ) # endof div plot ranges          
+          
+      )
+    }
+    
     # Store results for different ranges of first stage entries
     rv$results_range_r = rbind(rv$results_range_r, runScenarioRange_r())
     print(rv$results_range_r)
@@ -1111,7 +1158,7 @@ server <- function(input, output, clientData, session) {
                         myY = input$yAxis, 
                         myXl = input$xAxis, 
                         myYl = input$yAxis, 
-                        title = paste("Gain by ", input$xAxis, " by ", input$yAxis))
+                        title = paste("Gain by", input$xAxis, "by", input$yAxis))
     })
     
   }) # end of run ranges button

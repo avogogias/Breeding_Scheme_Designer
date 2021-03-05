@@ -1,8 +1,13 @@
 library(shinyBS)
 library(shinyjs)
 library(shinyalert)
+require(plotly)
 
 ui <- fluidPage(title = "Breeding Scheme Designer",
+                
+                # tags$head(tags$style(HTML(".centerAlign{display: flex; justify-content: center;}"))),  # WORKS
+                tags$head(tags$style(HTML(".centerAlign{margin-left: 50px;}"))),
+                
                 
                 # theme = "bootstrap.css", # CSS theme file could be added here
                 withMathJax(), # display mathematical equations using LaTeX format
@@ -29,7 +34,7 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                       # textInput("divID", "Enter a unique ID for your scenario:", ""),
                       # helpText("Leave the text input blank for automatically unique IDs."),
                       
-                      tags$h4("Variance"),
+                      tags$h4("Variances"),
                       
                       # Make divs appear in one line
                       bootstrapPage(
@@ -54,36 +59,41 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                       bsTooltip("varGxY", "Genotype-by-year interaction variance.",
                                 "right", "hover", NULL),
                       
-                      numericInput("negen", "Multiplication Time (Years)",
-                                  min = 0, max = 100, value = 4, step = 1, width = '80px'),
-                      # sliderInput("negen", "Crossing/Selfing Years",
-                      #             min = 0, max = 10, value = 4, width = '240px'), 
-                      # Add tooltip with instructions/info
-                      bsTooltip("negen", "GNumber of early generation years. This phase of the breeding program is modeled without selection.",
-                                "right", "hover", NULL),
-                    
-                      
-                      tags$h4("Yield Trials"),
-                      div( # CUSTOMISE div CSS style for DT
-                        DT::DTOutput("stages_table"),
-                        style = "font-size: 85%; width: 100%"
+                      div(
+                        tags$h4("Multiplication Time"),
+                        numericInput("negen", "Years:",
+                                    min = 0, max = 100, value = 4, step = 1, width = '80px'),
+                        # sliderInput("negen", "Crossing/Selfing Years",
+                        #             min = 0, max = 10, value = 4, width = '240px'), 
+                        # Add tooltip with instructions/info
+                        bsTooltip("negen", "GNumber of early generation years. This phase of the breeding program is modeled without selection.",
+                                  "right", "hover", NULL)
                       ),
-                      # Add tooltip with instructions/info
-                      # bsTooltip("stages_table", "Number of entries. Must be smaller than or equal to the number of entries in the previous stage.
-                      #                           Number of years. Increasing this value will increase heritability by decreasing variation due to GxY, GxL(Y) and plot error.
-                      #                           Number of locations. Increasing this value will increase heritability by decreasing variation due to GxL(Y) and plot error.
-                      #                           Number of replications. Increasing this value will increase heritability by decreasing variation due to plot error.",
-                      #                           "right", "hover", NULL),
-                      actionButton("add_btn", "Add"), # Add stage
-                      actionButton("delete_btn", "Delete"), # Delete last stage
-                      
-                      numericInput("varieties", "Selected Parents",
-                                   min = 1, max = 100, value = 1, step = 1, width = '80px'), 
-                      # Add tooltip with instructions/info
-                      bsTooltip("varieties", "The final number of selected entries. Must be smaller than or equal to the number of entries in the last stage.",
-                                "right", "hover", NULL),
                       
                       
+                      div( # CUSTOMISE div CSS style for DT
+                        tags$h4("Yield Trials"),
+                        DT::DTOutput("stages_table"),
+                        style = "font-size: 85%; width: 100%",
+                        # Add tooltip with instructions/info
+                        # bsTooltip("stages_table", "Number of entries. Must be smaller than or equal to the number of entries in the previous stage.
+                        #                           Number of years. Increasing this value will increase heritability by decreasing variation due to GxY, GxL(Y) and plot error.
+                        #                           Number of locations. Increasing this value will increase heritability by decreasing variation due to GxL(Y) and plot error.
+                        #                           Number of replications. Increasing this value will increase heritability by decreasing variation due to plot error.",
+                        #                           "right", "hover", NULL),
+                        actionButton("add_btn", "Add"), # Add stage
+                        actionButton("delete_btn", "Delete"), # Delete last stage
+                        
+                        tags$br(),
+                        
+                        tags$h4("Selected Parents"),
+                        numericInput("varieties", NULL,
+                                     min = 1, max = 100, value = 1, step = 1, width = '80px'), 
+                        # Add tooltip with instructions/info
+                        bsTooltip("varieties", "The final number of selected entries. Must be smaller than or equal to the number of entries in the last stage.",
+                                  "right", "hover", NULL)
+                      ),
+
                       # tags$h4("Costs:"),
                       # Make cost input divs appear in one line
                       # bootstrapPage(
@@ -175,7 +185,7 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                                            tags$br(),
                                            tags$p("Users can:"),
                                            tags$ol(
-                                             tags$li("Define the input parameters of breeding scenarios with multiple stages."),
+                                             tags$li("Define the input parameters of breeding-cycle scenarios with multiple stages."),
                                              tags$li("Calculate parameters such as expected genetic gain, heritability, gain per year, gain per cost etc."),
                                              tags$li("Compare results between different scenarios (stage-by-stage)."),
                                              tags$li("Estimate the cost of scenarios and compare gain per cost."),
@@ -187,7 +197,8 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                                              tags$li("To create a new breeding scenario, fill in the input fields on the left sidebar and press the Run button at the bottom."),
                                              tags$li("Repeat the same process to create more breeding scenarios."),
                                              tags$li("Results for each scenario will be displayed in different \"Scenario\" tabs at the area on the right."),
-                                             tags$li("To compare between different scenarios, click on the \"Overview\" tab.")
+                                             tags$li("To compare between different scenarios, click on the \"Overview\" tab."),
+                                             tags$li("Results for ranges of input parameters can be explored at the \"Ranges\" tab at the bottom left corner.")
                                            )
                                   ), # endof About
                                   tabPanel(title = "Glossary",
@@ -226,8 +237,8 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                          sidebarLayout(
                            sidebarPanel(
                              width = 4,
-                             tags$h3("Set ranges"),
-                      
+                             tags$h3("Explore ranges of parameters"),
+                             # tags$br(),
                              tags$h4("Variances"),
                              
                              # Make divs appear in one line
@@ -275,16 +286,16 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                                          value = c(1,5)),
                              # Input: Specification of range within an interval ----
                              sliderInput("reps_range_r", "Reps:",
-                                         min = 1, max = 30,
-                                         value = c(1,10)),
+                                         min = 1, max = 10,
+                                         value = c(1,5)),
                              # Input: Specification of error within an interval ----
                              # sliderInput("error_range_r", "Plot Error Variance:",
                              #             min = 1, max = 30,
                              #             value = c(1,10)),
                              
-                             sliderInput("grain_r", "Samples in Range", min = 2, max = 5, value = 2, step = 1, width = '30%'),
+                             sliderInput("grain_r", "Samples in Range:", min = 2, max = 5, value = 2, step = 1, width = '30%'),
                              
-                             numericInput("varieties_r", "Selected Parents",
+                             numericInput("varieties_r", "Selected Parents:",
                                           min = 1, max = 100, value = 1, step = 1, width = '80px'), 
                              # Add tooltip with instructions/info
                              bsTooltip("varieties_r", "The final number of selected entries. Must be smaller than or equal to the minimum number of entries.",
@@ -294,29 +305,9 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                            ),
                            mainPanel(
 
-                             tags$div(class = "div_plot_ranges_r", checked = NA, 
-                                      tags$h3("Set axes to display plot"),
-                                      # Drop down list to select input for X axis
-                                      selectInput(inputId = 'xAxis', label =  "x axis:",
-                                                  choices =  c("entries", "years", "locs", "reps"),
-                                                  selected = "entries",
-                                                  multiple = FALSE,
-                                                  selectize = TRUE
-                                      ),
-                                      # Drop down list to select input for Y axis
-                                      selectInput(inputId = 'yAxis', label =  "y axis:",
-                                                  choices =  c("entries", "years", "locs", "reps"),
-                                                  selected = "years",
-                                                  multiple = FALSE,
-                                                  selectize = TRUE
-                                      ),
-                                      
-                                      # actionButton("plot_btn", "Plot"),
-                                      
-                                      plotlyOutput('plotXY'), # will be generated based on X Y input above
+                             tags$div(id = "plot_ranges_placeholder"),
+                             
 
-                                      
-                             ) # endof div plot ranges
                              
                            )
                          )
