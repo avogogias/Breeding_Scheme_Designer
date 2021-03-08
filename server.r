@@ -724,7 +724,8 @@ server <- function(input, output, clientData, session) {
   }
 
   # Interactive X Y Heatmap
-  plotRangesHeatmap <- function(df = isolate(rv$results_range_r), myX = input$xAxis, myY = input$yAxis, myXl = input$xAxis, myYl = input$yAxis, title = paste("Gain by", input$xAxis, "by", input$yAxis)) { # title = paste("Gain by ", input$xAxis, " by ", input$yAxis)
+  plotRangesHeatmap <- function(df = isolate(rv$results_range_r), myX = input$xAxis, myY = input$yAxis, myXl = input$xAxis, myYl = input$yAxis, title = paste("Gain by", input$xAxis, "by", input$yAxis)) 
+    { # title = paste("Gain by ", input$xAxis, " by ", input$yAxis)
 
     # df <- filter(df, as.numeric(unlist(df["scenario"])) %in% df["scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
     df <- filter(df, as.numeric(unlist(df["Scenario"])) %in% df["Scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
@@ -757,6 +758,60 @@ server <- function(input, output, clientData, session) {
     gp <- ggplotly(gp)
     return(gp)
   }
+  
+  
+  # Interactive X Treatment Line Plot - - TODO
+  plotRangesLine <- function(df = isolate(rv$results_range_r), myX = input$xAxisLine, myT = input$treatment, myXl = input$xAxisLine, title = paste("Gain by", input$xAxisLine, "by", input$treatment)) 
+  { 
+    # df <- transform(df, myT = as.character(myT)) # use categorical colour instead of ordered
+    tLegent = myT
+    
+    df <- filter(df, as.numeric(unlist(df["Scenario"])) %in% df["Scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
+    myFilter = c("Entries", "Years", "Locs", "Reps")  
+    toPlot = c(myX, myT)
+    # Remove toPlot elements from myFilter
+    myFilter = myFilter[!(myFilter %in% toPlot)]
+    
+    print(myFilter)
+    
+    for (i in myFilter)
+    {
+      df <- filter(df, as.numeric(unlist(df[i])) %in% df[i][1,]) # filter rows not on the first occurrence (min) of myFilter
+    }
+    
+    print(df)
+    
+    myX <- as.numeric(unlist(df[myX]))
+    myT <- as.factor(unlist(df[myT]))
+    #print(df)
+    #print(sapply(df, mode))
+    #print(myX)
+    print("plotMeanGrid() called")
+    
+    yMin = min(df$Gain)-1.01*max(df$SD)
+    yMax = max(df$Gain)+1.01*max(df$SD)
+    
+    gp = ggplot(df,aes(x=myX,y=Gain,group=myT,color=myT))+
+      geom_ribbon(aes(x=myX,ymin=Gain-SD,ymax=Gain+SD,
+                      fill=myT),alpha=0.1,linetype=0)+
+      geom_line(size=1)+
+      guides(alpha=FALSE)+
+      scale_color_brewer(palette="Set1")+ #(palette="Spectral")+
+      scale_fill_brewer(palette="Set1")+ #(palette="Spectral")+ # palette="Set1")+
+      # theme_bw()+
+      # theme(legend.justification = c(0.02, 0.96), 
+      #       legend.background = element_blank(),
+      #       legend.box.background = element_rect(colour = "black"),
+      #       legend.position = c(0.02, 0.96))+
+      scale_x_continuous(myXl)+
+      scale_y_continuous("Gain",
+                         limits=c(yMin,yMax))+
+      labs(colour = tLegent, fill = tLegent)
+      ggtitle(title)
+    #gp <- ggplotly(gp)
+    return(gp)
+  }  
+  
   
   #*************************************
   #-------------------------------------  
@@ -1122,7 +1177,7 @@ server <- function(input, output, clientData, session) {
                    div( class = 'centerAlign',    
                      # Drop down list to select input for X axis
                      div(style="display:inline-block", # class = 'centerAlign', 
-                         selectInput(inputId = 'xAxis', label =  "Set X Axis:",
+                         selectInput(inputId = 'xAxis', label =  "X Axis:",
                                      choices =  c("Entries", "Years", "Locs", "Reps"),
                                      selected = "Entries",
                                      multiple = FALSE,
@@ -1132,7 +1187,7 @@ server <- function(input, output, clientData, session) {
                      ),
                      # Drop down list to select input for Y axis
                      div(style="display:inline-block", # class = 'centerAlign',    
-                         selectInput(inputId = 'yAxis', label =  "Set Y Axis:",
+                         selectInput(inputId = 'yAxis', label =  "Y Axis:",
                                      choices =  c("Entries", "Years", "Locs", "Reps"),
                                      selected = "Years",
                                      multiple = FALSE,
@@ -1140,7 +1195,41 @@ server <- function(input, output, clientData, session) {
                                      width = '90px'
                          )
                      )
-                   )
+                   ),
+                   
+                   plotOutput('plotXT'),
+                   
+                   # Make divs appear in one line and centered
+                   div( class = 'centerAlign',    
+                        # Drop down list to select input for X axis
+                        div(style="display:inline-block", # class = 'centerAlign', 
+                            selectInput(inputId = 'xAxisLine', label =  "X Axis:",
+                                        choices =  c("Entries", "Years", "Locs", "Reps"),
+                                        selected = "Entries",
+                                        multiple = FALSE,
+                                        selectize = TRUE,
+                                        width = '90px'
+                            )
+                        ),
+                        # Drop down list to select input for Y axis
+                        div(style="display:inline-block", # class = 'centerAlign',    
+                            selectInput(inputId = 'treatment', label =  "Treatment:",
+                                        choices =  c("Entries", "Years", "Locs", "Reps"),
+                                        selected = "Years",
+                                        multiple = FALSE,
+                                        selectize = TRUE,
+                                        width = '90px'
+                            )
+                        )
+                   ),
+                   
+                   tags$br(),
+                   tags$br(),
+                   tags$br(),
+                   tags$br(),
+                   tags$br(),
+                   tags$br(),
+                   
                    
           ) # endof div plot ranges          
           
@@ -1159,6 +1248,15 @@ server <- function(input, output, clientData, session) {
                         myXl = input$xAxis, 
                         myYl = input$yAxis, 
                         title = paste("Gain by", input$xAxis, "by", input$yAxis))
+    })
+    
+    output$plotXT <- renderPlot({
+      plotRangesLine(df = isolate(rv$results_range_r), 
+                     myX = input$xAxisLine, 
+                     myT = input$treatment, 
+                     myXl = input$xAxisLine, 
+                     title = paste("Gain by", input$xAxisLine, "by", input$treatment))
+      
     })
     
   }) # end of run ranges button
