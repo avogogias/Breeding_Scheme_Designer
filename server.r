@@ -533,7 +533,7 @@ server <- function(input, output, clientData, session) {
   }
   
   # function that checks if varieties is smaller than Entries in last stage and smaller than min_entries in range
-  validVarieties <- function(scenarioDT = yti$data, varieties = input$varieties, min_entries = input$entries_range[1]) {
+  validVarieties <- function(scenarioDT = yti$data, varieties = input$varieties) { #, min_entries = input$entries_range[1]) {
     entries = scenarioDT[,2]
     last_entries = tail(entries, 1)
     if (varieties > last_entries )

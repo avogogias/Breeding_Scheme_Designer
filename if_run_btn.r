@@ -63,6 +63,12 @@ if (tail(Scenarios,1) == 1)
       shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
       stop("Invalid input: entries should not increase in later stages.")
     }
+    else if (!validVarieties(reactDT.list[['1']]))
+    {
+      # TODO pop-up message and handle exception
+      shinyalert("Oops!", "The number of selected parents should be less than the number of entries in the last stage.", type = "error")
+      stop("Invalid input: varieties should be less than entries in last stage.")
+    }
     else
     {
       result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
@@ -292,6 +298,12 @@ if (tail(Scenarios,1) == 1)
       shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
       stop("Invalid input: entries should not increase in later stages.")
     }
+    else if (!validVarieties(reactDT.list[['2']]))
+    {
+      # TODO pop-up message and handle exception
+      shinyalert("Oops!", "The number of selected parents should be less than the number of entries in the last stage.", type = "error")
+      stop("Invalid input: varieties should be less than entries in last stage.")
+    }
     else
     {
       result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
@@ -504,6 +516,12 @@ if (tail(Scenarios,1) == 1)
       shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
       stop("Invalid input: entries should not increase in later stages.")
     }
+    else if (!validVarieties(reactDT.list[['3']]))
+    {
+      # TODO pop-up message and handle exception
+      shinyalert("Oops!", "The number of selected parents should be less than the number of entries in the last stage.", type = "error")
+      stop("Invalid input: varieties should be less than entries in last stage.")
+    }
     else
     {
       result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
@@ -715,6 +733,12 @@ if (tail(Scenarios,1) == 1)
       # TODO pop-up message and handle exception
       shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
       stop("Invalid input: entries should not increase in later stages.")
+    }
+    else if (!validVarieties(reactDT.list[['4']]))
+    {
+      # TODO pop-up message and handle exception
+      shinyalert("Oops!", "The number of selected parents should be less than the number of entries in the last stage.", type = "error")
+      stop("Invalid input: varieties should be less than entries in last stage.")
     }
     else
     {
@@ -931,6 +955,12 @@ if (tail(Scenarios,1) == 1)
       shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
       stop("Invalid input: entries should not increase in later stages.")
     }
+    else if (!validVarieties(reactDT.list[['5']]))
+    {
+      # TODO pop-up message and handle exception
+      shinyalert("Oops!", "The number of selected parents should be less than the number of entries in the last stage.", type = "error")
+      stop("Invalid input: varieties should be less than entries in last stage.")
+    }
     else
     {
       result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
@@ -1142,6 +1172,12 @@ if (tail(Scenarios,1) == 1)
       # TODO pop-up message and handle exception
       shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
       stop("Invalid input: entries should not increase in later stages.")
+    }
+    else if (!validVarieties(reactDT.list[['6']]))
+    {
+      # TODO pop-up message and handle exception
+      shinyalert("Oops!", "The number of selected parents should be less than the number of entries in the last stage.", type = "error")
+      stop("Invalid input: varieties should be less than entries in last stage.")
     }
     else
     {
@@ -1358,6 +1394,12 @@ if (tail(Scenarios,1) == 1)
       shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
       stop("Invalid input: entries should not increase in later stages.")
     }
+    else if (!validVarieties(reactDT.list[['7']]))
+    {
+      # TODO pop-up message and handle exception
+      shinyalert("Oops!", "The number of selected parents should be less than the number of entries in the last stage.", type = "error")
+      stop("Invalid input: varieties should be less than entries in last stage.")
+    }
     else
     {
       result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
@@ -1571,6 +1613,12 @@ if (tail(Scenarios,1) == 1)
       # TODO pop-up message and handle exception
       shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
       stop("Invalid input: entries should not increase in later stages.")
+    }
+    else if (!validVarieties(reactDT.list[['8']]))
+    {
+      # TODO pop-up message and handle exception
+      shinyalert("Oops!", "The number of selected parents should be less than the number of entries in the last stage.", type = "error")
+      stop("Invalid input: varieties should be less than entries in last stage.")
     }
     else
     {
@@ -1786,6 +1834,12 @@ if (tail(Scenarios,1) == 1)
       shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
       stop("Invalid input: entries should not increase in later stages.")
     }
+    else if (!validVarieties(reactDT.list[['9']]))
+    {
+      # TODO pop-up message and handle exception
+      shinyalert("Oops!", "The number of selected parents should be less than the number of entries in the last stage.", type = "error")
+      stop("Invalid input: varieties should be less than entries in last stage.")
+    }
     else
     {
       result = runScenario(isolate(input$varG),isolate(input$varGxL),isolate(input$varGxY),
@@ -2000,6 +2054,12 @@ if (tail(Scenarios,1) == 1)
       # TODO pop-up message and handle exception
       shinyalert("Oops!", "The number of entries should not increase in next stages.", type = "error")
       stop("Invalid input: entries should not increase in later stages.")
+    }
+    else if (!validVarieties(reactDT.list[['10']]))
+    {
+      # TODO pop-up message and handle exception
+      shinyalert("Oops!", "The number of selected parents should be less than the number of entries in the last stage.", type = "error")
+      stop("Invalid input: varieties should be less than entries in last stage.")
     }
     else
     {
