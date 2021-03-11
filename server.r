@@ -897,13 +897,13 @@ server <- function(input, output, clientData, session) {
     #print(myX)
     print("plotMeanGrid() called")
     
-    # yMin = min(df$Gain)-1.01*max(df$SD)
-    # yMax = max(df$Gain)+1.01*max(df$SD)
-    yMin = min(df[[param]])-1.01*max(df$SD)
-    yMax = max(df[[param]])+1.01*max(df$SD)
+    yMin = min(df$Gain)-1.01*max(df$SD)
+    yMax = max(df$Gain)+1.01*max(df$SD)
+    # yMin = min(df[[param]])-1.01*max(df$SD)
+    # yMax = max(df[[param]])+1.01*max(df$SD)
     
-    # gp = ggplot(df,aes(x=myX,y=Gain,group=myT,color=myT))+
-    gp = ggplot(df,aes_string(x=myX,y=param,group=myT,color=myT))+
+    gp = ggplot(df,aes(x=myX,y=Gain,group=myT,color=myT))+
+    # gp = ggplot(df,aes_string(x=myX,y=param,group=myT,color=myT))+
          geom_ribbon(aes(x=myX,ymin=Gain-SD,ymax=Gain+SD,
                       fill=myT),alpha=0.1,linetype=0)+
       geom_line(size=1)+
@@ -916,8 +916,8 @@ server <- function(input, output, clientData, session) {
       #       legend.box.background = element_rect(colour = "black"),
       #       legend.position = c(0.02, 0.96))+
       scale_x_continuous(myXl)+
-      # scale_y_continuous("Gain",
-      scale_y_continuous(param,
+      scale_y_continuous("Gain",
+      # scale_y_continuous(param,
                          limits=c(yMin,yMax))+
       labs(colour = tLegent, fill = tLegent)
       ggtitle(title)
@@ -1420,15 +1420,14 @@ server <- function(input, output, clientData, session) {
                         title = paste("Gain per Cost by", input$xAxis, "by", input$yAxis))
     })
     
-    output$plotXTCost <- renderPlot({
-      plotRangesLine(df = isolate(rv$results_range_r),
-                     param = 'GainXCost',
-                     myX = input$xAxisLine,
-                     myT = input$treatment,
-                     myXl = input$xAxisLine,
-                     title = paste("Gain per Cost by", input$xAxisLine, "by", input$treatment))
-
-    })
+    # output$plotXTCost <- renderPlot({
+    #   plotRangesLine(df = isolate(rv$results_range_r),
+    #                  param = 'GainXCost',
+    #                  myX = input$xAxisLine,
+    #                  myT = input$treatment,
+    #                  myXl = input$xAxisLine,
+    #                  title = paste("Gain per Cost by", input$xAxisLine, "by", input$treatment))
+    #})
     
   }) # end of run ranges button
   
