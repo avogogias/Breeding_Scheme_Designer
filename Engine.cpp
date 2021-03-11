@@ -18,7 +18,7 @@ arma::fmat runScenario(float varG, // Genetic variance
                        arma::fvec locs, // Number of locations per stage
                        arma::fvec reps, // Number of replications per location
                        arma::fvec error, // Plot error variance
-                       arma::uword varieties, // Final number selected (varieties, parents, ...)
+                       arma::uword varieties, // Final number selected (varieties, parents, ...) // TV arma::fvec varieties, // Selected parents per stage - TV
                        bool nct=0, // Negatively correlated trait in multiplication stages modelled at first stage
                        arma::uword nRepeats=1000){ // Number of replicates of simulation
   arma::uword nStages = entries.n_elem; // Total number of stages
@@ -49,6 +49,7 @@ arma::fmat runScenario(float varG, // Genetic variance
       rank = rank(arma::span(0,entries(s)-1)); // Determine best genotypes by phenotype
       g = g(rank); // Make selections
       output(s-1,r) = mean(g(arma::span(0,varieties-1))); // Report mean of varieties (if selected now)
+      //TV output(s-1,r) = mean(g(arma::span(0,varieties(s)-1)));
       
       // Assign new phenotypes
       e.set_size(entries(s)); // Reduce non-genetic effects vector to current size
@@ -62,6 +63,7 @@ arma::fmat runScenario(float varG, // Genetic variance
     // Varieties
     arma::uvec rank = sort_index(p,"descend"); // Sort by phenotype
     rank = rank(arma::span(0,varieties-1)); // Determine best genotypes by phenotype
+    //TV rank = rank(arma::span(0,varieties(nStages-1)-1));
     output(nStages-1,r) = mean(g(rank)); // Report mean of varieties
   }
   
@@ -77,8 +79,8 @@ arma::fmat runScenarioLite(float varG, // Genetic variance
                            arma::fvec years, // Number of evaluation years per stage
                            arma::fvec locs, // Number of locations per stage
                            arma::fvec reps, // Number of replications per location
-                           arma::fvec error, // Plot error variance
-                           arma::uword varieties, // Final number selected (varieties, parents, ...)
+                           arma::fvec error, // Plot error variance 
+                           arma::uword varieties, // Final number selected (varieties, parents, ...)  // TV    arma::fvec varieties, // Selected parents per stage - TV
                            bool nct=0, // Negatively correlated trait in multiplication stages modelled at first stage
                            arma::uword nRepeats=1000){ // Number of replicates of simulation
   arma::fmat tmp = runScenario(varG,varGxL,varGxY,entries,

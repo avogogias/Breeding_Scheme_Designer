@@ -271,29 +271,30 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                                        "right", "hover", NULL),
                              
                              tags$h4("Ranges"),
+                            
+                             tags$div( 
+                              DT::DTOutput("ranges_table"),
+                              style = "font-size: 85%; width: 100%"
+                             ),
                              
-                             # Input: Specification of range within an interval ----
-                             sliderInput("entries_range_r", "Entries:",
-                                         min = 100, max = 5000,
-                                         value = c(100,1000)),
-                             # Input: Specification of range within an interval ----
-                             sliderInput("years_range_r", "Years:",
-                                         min = 1, max = 10,
-                                         value = c(1,5)),
-                             # Input: Specification of range within an interval ----
-                             sliderInput("locs_range_r", "Locs:",
-                                         min = 1, max = 10,
-                                         value = c(1,5)),
-                             # Input: Specification of range within an interval ----
-                             sliderInput("reps_range_r", "Reps:",
-                                         min = 1, max = 10,
-                                         value = c(1,5)),
-                             # Input: Specification of error within an interval ----
-                             # sliderInput("error_range_r", "Plot Error Variance:",
-                             #             min = 1, max = 30,
-                             #             value = c(1,10)),
-                             
-                             sliderInput("grain_r", "Samples in Range:", min = 2, max = 5, value = 2, step = 1, width = '30%'),
+                             # # Input: Specification of range within an interval ----
+                             # sliderInput("entries_range_r", "Entries:",
+                             #             min = 100, max = 5000,
+                             #             value = c(100,1000)),
+                             # # Input: Specification of range within an interval ----
+                             # sliderInput("years_range_r", "Years:",
+                             #             min = 1, max = 10,
+                             #             value = c(1,5)),
+                             # # Input: Specification of range within an interval ----
+                             # sliderInput("locs_range_r", "Locs:",
+                             #             min = 1, max = 10,
+                             #             value = c(1,5)),
+                             # # Input: Specification of range within an interval ----
+                             # sliderInput("reps_range_r", "Reps:",
+                             #             min = 1, max = 10,
+                             #             value = c(1,5)),
+                             # 
+                             # sliderInput("grain_r", "Samples in Range:", min = 2, max = 5, value = 2, step = 1, width = '30%'),
                              
                              numericInput("varieties_r", "Selected Parents:",
                                           min = 1, max = 100, value = 1, step = 1, width = '80px'), 

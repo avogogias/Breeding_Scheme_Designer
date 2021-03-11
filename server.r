@@ -32,7 +32,18 @@ server <- function(input, output, clientData, session) {
   plotCost = c(10,10,10)
   locCost = c(1000,1000,1000)
   fixedCost = c(1000,1000,1000)
-  yt = cbind(stage,entries,years,locs,reps,error,h2,plotCost,locCost,fixedCost)
+  # varieties = c(1,1,1)
+  yt = cbind(stage,entries,years,locs,reps,error,h2,plotCost,locCost,fixedCost) #,varieties)
+  
+  # Ranges DT has 3 cols for min max and samples
+  entries_r = c(100,1000,2)
+  years_r = c(1,5,2)
+  locs_r = c(1,5,2)
+  reps_r = c(1,5,2)
+  plotCost_r = 10 
+  locCost_r = 1000
+  fixedCost_r = 1000
+  rt = rbind(entries_r, years_r, locs_r, reps_r)
   
   # per-session reactive values object to store all results of this user session
   rv <- reactiveValues(results_all = NULL, results_allxTime = NULL, results_allxCost = NULL, results_range = NULL, results_range_r = NULL)
@@ -40,6 +51,8 @@ server <- function(input, output, clientData, session) {
   scenariosInput <- reactiveValues(stagesDT = list(), varG = list(), varGxL = list(), varGxY = list(), varieties = list()) # initially will store stages_current and updated accordingly
   # Using reactiveVales to add a server side set of variable observable and mutable at the same time
   yti <- reactiveValues(data = yt)
+  
+  rti <- reactiveValues(data = rt)
   
   # initialize empty vector to stores status of chk_ranges for each scenario
   rangesVec <- vector()
@@ -415,7 +428,7 @@ server <- function(input, output, clientData, session) {
   
   # Previous function adjusted to separate tab for ranges not dependent on DT
   # Ignore entries in first stage and instead run for a range of entries. Store the results in rv$results_range
-  runScenarioRange_r <- function(min_entries = input$entries_range_r[1], max_entries = input$entries_range_r[2], 
+  runScenarioRange_r_slider <- function(min_entries = input$entries_range_r[1], max_entries = input$entries_range_r[2], 
                                min_years = input$years_range_r[1], max_years = input$years_range_r[2],
                                min_locs = input$locs_range_r[1], max_locs = input$locs_range_r[2],
                                min_reps = input$reps_range_r[1], max_reps = input$reps_range_r[2],
@@ -487,6 +500,94 @@ server <- function(input, output, clientData, session) {
               colnames(resultLite) <- c("mean","sd")
               # Create df with I/O data and bind this to rr from previous iterations
             # rr<-rbind(rr, cbind(scenario = tail(Scenarios,1), fs_entries = i, fs_years = k, fs_locs = l, fs_reps = j, it, stage, entries, years, locs, reps, error, resultLite))
+              rr<-rbind(rr, cbind(scenario = tail(Ranges,1), entries, years, locs, reps, error, it, resultLite))
+              # }
+            }
+          }
+        }
+      }
+    })
+    
+    colnames(rr) <- c("Scenario", "Entries", "Years", "Locs", "Reps", "Error", "IT", "Gain", "SD")
+    #print(rr)
+    #tail(rr)
+    return(rr)
+  }
+  
+  # Uses Ranges DT instead of sliders to also include samples set for each parameter
+  runScenarioRange_r <- function(rangesDT = rti$data, 
+                                 varG = input$varG_r, 
+                                 varGxL = input$varGxL_r, 
+                                 varGxY = input$varGxY_r, 
+                                 varErr = input$varErr_r,
+                                 varieties = input$varieties_r) 
+  {
+    min_entries = rangesDT[1,1]
+    max_entries = rangesDT[1,2]
+    sample_entries = rangesDT[1,3]
+    min_years = rangesDT[2,1]
+    max_years = rangesDT[2,2]
+    sample_years = rangesDT[2,3]
+    min_locs = rangesDT[3,1]
+    max_locs = rangesDT[3,2]
+    sample_locs = rangesDT[3,3]
+    min_reps = rangesDT[4,1]
+    max_reps = rangesDT[4,2]
+    sample_reps = rangesDT[4,3]
+    
+    min_entries = checkMinEntries(varieties, min_entries) 
+    # varieties must be less than min_entries
+    if (varieties > min_entries)
+      min_entries = varieties
+    
+    years = NA #TV scenarioDT[,3] 
+    locs = NA #TV scenarioDT[,4]
+    reps = NA #TV scenarioDT[,5]
+    error = varErr #TV scenarioDT[,6]
+    it = 0 # counter of iterations between range min max
+    range_entries = rangeGrain(min_entries, max_entries, sample_entries)
+    range_years = rangeGrain(min_years, max_years, sample_years)
+    range_locs = rangeGrain(min_locs, max_locs, sample_locs)
+    range_reps = rangeGrain(min_reps, max_reps, sample_reps)
+
+    # Show Progress Bar
+    withProgress(message = 'Calculating results', value = 0, {
+      rr = NULL
+      for (i in range_entries)
+      {
+        for (k in range_years)
+        {
+          for (l in range_locs)
+          {
+            for (j in range_reps)
+            {
+              # for (e in range_error)
+              # {
+              # update progress bar after a single iteration of the nested loop
+              # incProgress(1/(length(range_entries)*length(range_years)*length(range_locs)*length(range_reps)*length(range_error)), detail = paste("Iteration", it, "of", length(range_entries)*length(range_years)*length(range_locs)*length(range_reps)*length(range_error)))
+              incProgress(1/(length(range_entries)*length(range_years)*length(range_locs)*length(range_reps)), detail = paste("Iteration", it, "of", length(range_entries)*length(range_years)*length(range_locs)*length(range_reps)))
+              
+              it = it + 1
+              entries = i # replace first stage entries with range_entries
+              years = k
+              locs = l
+              reps = j
+              # error = e
+              
+              resultLite = runScenarioLite(varG,
+                                           varGxL,
+                                           varGxY,
+                                           entries,
+                                           years,
+                                           locs,
+                                           reps,
+                                           error,
+                                           varieties)
+              #print(resultLite) # WORKS
+              resultLite = as.data.frame(resultLite)             # convert to a df
+              colnames(resultLite) <- c("mean","sd")
+              # Create df with I/O data and bind this to rr from previous iterations
+              # rr<-rbind(rr, cbind(scenario = tail(Scenarios,1), fs_entries = i, fs_years = k, fs_locs = l, fs_reps = j, it, stage, entries, years, locs, reps, error, resultLite))
               rr<-rbind(rr, cbind(scenario = tail(Ranges,1), entries, years, locs, reps, error, it, resultLite))
               # }
             }
@@ -831,7 +932,7 @@ server <- function(input, output, clientData, session) {
                                      ),
                                      class = "cell-border, compact, hover", 
                                      rownames = F, #TRUE,
-                                     colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', toString(withMathJax('$$h^2$$')), 'Plot Cost($)', 'Loc Cost($)', 'Fixed Cost($)'),
+                                     colnames = c('Stage', 'Entries', 'Years', 'Locs', 'Reps', 'Plot Error Variance', toString(withMathJax('$$h^2$$')), 'Plot Cost($)', 'Loc Cost($)', 'Fixed Cost($)'), # 'Selected Parents'),
                                      filter = "none",
                                      escape = FALSE,
                                      autoHideNavigation = TRUE,
@@ -853,7 +954,25 @@ server <- function(input, output, clientData, session) {
                                    colnames = c('Total Years', 'Total Locs', 'Total Plots', 'Total Locs Cost', 'Total Plots Cost', 'Total Cost'),
                                    server = F )
   
-  
+  # Render ranges DT 
+  output$ranges_table = DT::renderDT(rti$data, 
+                                     options = list(
+                                       dom = 't', # only display the table, and nothing else
+                                       # searching = F, # no search box
+                                       # paginate = F,  # no num of pages
+                                       # lengthChange = F, # no show entries
+                                       scrollX = T, # horizontal slider
+                                       ordering = F # suppressing sorting 
+                                     ),
+                                     class = "cell-border, compact, hover", 
+                                     rownames = c('Entries', 'Years', 'Locs', 'Reps'),
+                                     colnames = c('Min', 'Max', 'Samples'), 
+                                     filter = "none",
+                                     escape = FALSE,
+                                     autoHideNavigation = TRUE,
+                                     selection = "none",
+                                     editable = list(target = "cell", disable = list(columns = c(0))),
+                                     server = TRUE) # server = F doesn't work with replaceData() cell editing  
   
   #*************************************
   #-------------------------------------  
@@ -875,6 +994,21 @@ server <- function(input, output, clientData, session) {
     yti$data[i, j] = DT::coerceValue(v, yti$data[i, j])
     # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
     replaceData(proxy, yti$data, resetPaging = FALSE)  # important 
+  })
+  
+  # Update editable DT ranges_table through a proxy DT on cell edit event
+  proxy = dataTableProxy('ranges_table')
+  #
+  observeEvent(input$ranges_table_cell_edit, {
+    info = input$ranges_table_cell_edit
+    i = info$row
+    j = info$col # +1 required when rownames = F in DT
+    v = info$value
+    str(info)
+    # Character string needs to be coerced to same type as target value. Here as.integer()
+    rti$data[i, j] = DT::coerceValue(v, rti$data[i, j])
+    # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
+    replaceData(proxy, rti$data, resetPaging = FALSE)  # important 
   })
   
   ### Reset table
@@ -920,10 +1054,10 @@ server <- function(input, output, clientData, session) {
     plotCost = isolate(yti$data[,8])
     locCost = isolate(yti$data[,9])
     fixedCost = isolate(yti$data[,10])
-    varieties = isolate(input$varieties)
+    varieties = isolate(input$varieties) # isolate(yti$data[,11])  
     
     # store settings for summary plot TODO : append column with mean genetic gain for each stage
-    stages_current = data.frame(stages, entries, years, locs, reps, error, h2, plotCost, locCost, fixedCost)
+    stages_current = data.frame(stages, entries, years, locs, reps, error, h2, plotCost, locCost, fixedCost) #, varieties)
 
     # validate stage entries input
     # checkEntries()
