@@ -219,6 +219,7 @@ server <- function(input, output, clientData, session) {
     return(gc)
   }
   
+
   # function creates a new Tab in the UI for a given ScenarioID
   createTab <- function(scenarioID = 1, withRanges = rangesVec) {
     myTabs = lapply(1: scenarioID, function(i){
@@ -426,7 +427,7 @@ server <- function(input, output, clientData, session) {
       return(rr)
   }
   
-  # Previous function adjusted to separate tab for ranges not dependent on DT
+  # Previous function adjusted to separate tab for ranges not dependent on DT ------------------------------- NOT USED -----------------
   # Ignore entries in first stage and instead run for a range of entries. Store the results in rv$results_range
   runScenarioRange_r_slider <- function(min_entries = input$entries_range_r[1], max_entries = input$entries_range_r[2], 
                                min_years = input$years_range_r[1], max_years = input$years_range_r[2],
@@ -520,7 +521,10 @@ server <- function(input, output, clientData, session) {
                                  varGxL = input$varGxL_r, 
                                  varGxY = input$varGxY_r, 
                                  varErr = input$varErr_r,
-                                 varieties = input$varieties_r) 
+                                 varieties = input$varieties_r,
+                                 plotCost = input$plotCost_r,
+                                 locCost = input$locCost_r,
+                                 fixedCost = input$fixedCost_r) 
   {
     min_entries = rangesDT[1,1]
     max_entries = rangesDT[1,2]
@@ -586,17 +590,23 @@ server <- function(input, output, clientData, session) {
               #print(resultLite) # WORKS
               resultLite = as.data.frame(resultLite)             # convert to a df
               colnames(resultLite) <- c("mean","sd")
+
+              # calculate mean gain per cost and bind it to rr
+              meanGainxCost_r = plotCost * prod(entries,years,locs,reps) + locCost * prod(years,locs) + fixedCost  
+              meanGainxCost_r = resultLite$mean / meanGainxCost_r
+
               # Create df with I/O data and bind this to rr from previous iterations
               # rr<-rbind(rr, cbind(scenario = tail(Scenarios,1), fs_entries = i, fs_years = k, fs_locs = l, fs_reps = j, it, stage, entries, years, locs, reps, error, resultLite))
-              rr<-rbind(rr, cbind(scenario = tail(Ranges,1), entries, years, locs, reps, error, it, resultLite))
-              # }
+              rr<-rbind(rr, cbind(scenario = tail(Ranges,1), entries, years, locs, reps, error, it, resultLite, meanGainxCost_r))
+              # }              
+              
             }
           }
         }
       }
     })
     
-    colnames(rr) <- c("Scenario", "Entries", "Years", "Locs", "Reps", "Error", "IT", "Gain", "SD")
+    colnames(rr) <- c("Scenario", "Entries", "Years", "Locs", "Reps", "Error", "IT", "Gain", "SD", "GainXCost")
     #print(rr)
     #tail(rr)
     return(rr)
@@ -610,7 +620,7 @@ server <- function(input, output, clientData, session) {
       {
         qrt = c(qrt, round(seq(min[i], max[i], by = (max[i]-min[i])/(grain-1)))) 
       }
-      else qrt = c(qrt, max(min[i], max[1]))
+      else qrt = c(qrt, min(min[i], max[1]))
     }
     return(qrt)
   } 
@@ -973,6 +983,7 @@ server <- function(input, output, clientData, session) {
                                      selection = "none",
                                      editable = list(target = "cell", disable = list(columns = c(0))),
                                      server = TRUE) # server = F doesn't work with replaceData() cell editing  
+
   
   #*************************************
   #-------------------------------------  

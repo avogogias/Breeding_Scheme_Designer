@@ -270,6 +270,30 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                              bsTooltip("varErr_r", "Plot error variance.",
                                        "right", "hover", NULL),
                              
+                             
+                             # tags$br(),
+                             tags$h4("Costs"),
+                             
+                             # Make divs appear in one line
+                             bootstrapPage(
+                               # Set Plot Cost
+                               div(style="display:inline-block",numericInput("plotCost_r", "Plot Cost:",
+                                                                             min = 0, max = 100, value = 10, step = 0.5, width = '80px')),
+                               # Set Loc Cost 
+                               div(style="display:inline-block",numericInput("locCost_r", "Loc Cost:",
+                                                                             min = 0, max = 100, value = 1000, step = 1, width = '80px')),
+                               # Set Fixed Cost 
+                               div(style="display:inline-block",numericInput("fixedCost_r", "Fixed Cost:",
+                                                                             min = 0, max = 100, value = 1, step = 0.1, width = '80px'))
+                             ),
+                             
+                             bsTooltip("plotCost_r", "The cost of a single plot.",
+                                       "right", "hover", NULL),
+                             bsTooltip("locCost_r", "The cost of a single location.",
+                                       "right", "hover", NULL),
+                             bsTooltip("fixedCost_r", "Any fixed cost.",
+                                       "right", "hover", NULL),
+
                              tags$h4("Ranges"),
                             
                              tags$div( 
@@ -301,6 +325,7 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                              # Add tooltip with instructions/info
                              bsTooltip("varieties_r", "The final number of selected entries. Must be smaller than or equal to the minimum number of entries.",
                                        "right", "hover", NULL),
+
                              
                              actionButton("run_btn_r", "Run")
                            ),
