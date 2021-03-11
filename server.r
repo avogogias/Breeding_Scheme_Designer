@@ -835,15 +835,13 @@ server <- function(input, output, clientData, session) {
   }
 
   # Interactive X Y Heatmap
-  plotRangesHeatmap <- function(df = isolate(rv$results_range_r), myX = input$xAxis, myY = input$yAxis, myXl = input$xAxis, myYl = input$yAxis, title = paste("Gain by", input$xAxis, "by", input$yAxis)) 
-    { # title = paste("Gain by ", input$xAxis, " by ", input$yAxis)
+  plotRangesHeatmap <- function(df = isolate(rv$results_range_r), param = 'Gain', myX = input$xAxis, myY = input$yAxis, myXl = input$xAxis, myYl = input$yAxis, title = paste("Gain by", input$xAxis, "by", input$yAxis)) 
+    { 
 
-    # df <- filter(df, as.numeric(unlist(df["scenario"])) %in% df["scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
     df <- filter(df, as.numeric(unlist(df["Scenario"])) %in% df["Scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
     
-    
-    # TODO apply more filters
-    myFilter = c("Entries", "Years", "Locs", "Reps")  # c("entries", "years", "locs", "reps")
+    # more filters
+    myFilter = c("Entries", "Years", "Locs", "Reps")
     toPlot = c(myX, myY)
     # Remove toPlot elements from myFilter
     myFilter = myFilter[!(myFilter %in% toPlot)]
@@ -860,8 +858,8 @@ server <- function(input, output, clientData, session) {
     arg <- match.call()
     # Heatmap
     gp = ggplot(df, aes_string(x = eval(arg$myX), y = eval(arg$myY)))+ 
-      # geom_tile(aes(fill = mean)) +
-      geom_tile(aes(fill = Gain)) +
+      # geom_tile(aes(fill = Gain)) +
+      geom_tile(aes_string(fill = param)) +
       scale_fill_gradient(low="white", high="blue") +
       scale_x_continuous(myXl)+
       scale_y_continuous(myYl)+
@@ -872,7 +870,7 @@ server <- function(input, output, clientData, session) {
   
   
   # Interactive X Treatment Line Plot - - TODO
-  plotRangesLine <- function(df = isolate(rv$results_range_r), myX = input$xAxisLine, myT = input$treatment, myXl = input$xAxisLine, title = paste("Gain by", input$xAxisLine, "by", input$treatment)) 
+  plotRangesLine <- function(df = isolate(rv$results_range_r), param = 'Gain', myX = input$xAxisLine, myT = input$treatment, myXl = input$xAxisLine, title = paste("Gain by", input$xAxisLine, "by", input$treatment)) 
   { 
     # df <- transform(df, myT = as.character(myT)) # use categorical colour instead of ordered
     tLegent = myT
@@ -899,11 +897,14 @@ server <- function(input, output, clientData, session) {
     #print(myX)
     print("plotMeanGrid() called")
     
-    yMin = min(df$Gain)-1.01*max(df$SD)
-    yMax = max(df$Gain)+1.01*max(df$SD)
+    # yMin = min(df$Gain)-1.01*max(df$SD)
+    # yMax = max(df$Gain)+1.01*max(df$SD)
+    yMin = min(df[[param]])-1.01*max(df$SD)
+    yMax = max(df[[param]])+1.01*max(df$SD)
     
-    gp = ggplot(df,aes(x=myX,y=Gain,group=myT,color=myT))+
-      geom_ribbon(aes(x=myX,ymin=Gain-SD,ymax=Gain+SD,
+    # gp = ggplot(df,aes(x=myX,y=Gain,group=myT,color=myT))+
+    gp = ggplot(df,aes_string(x=myX,y=param,group=myT,color=myT))+
+         geom_ribbon(aes(x=myX,ymin=Gain-SD,ymax=Gain+SD,
                       fill=myT),alpha=0.1,linetype=0)+
       geom_line(size=1)+
       guides(alpha=FALSE)+
@@ -915,7 +916,8 @@ server <- function(input, output, clientData, session) {
       #       legend.box.background = element_rect(colour = "black"),
       #       legend.position = c(0.02, 0.96))+
       scale_x_continuous(myXl)+
-      scale_y_continuous("Gain",
+      # scale_y_continuous("Gain",
+      scale_y_continuous(param,
                          limits=c(yMin,yMax))+
       labs(colour = tLegent, fill = tLegent)
       ggtitle(title)
@@ -1368,6 +1370,10 @@ server <- function(input, output, clientData, session) {
                         )
                    ),
                    
+                   plotlyOutput('plotXYCost'),
+                   
+                   plotOutput('plotXTCost'),
+                   
                    tags$br(),
                    tags$br(),
                    tags$br(),
@@ -1402,6 +1408,26 @@ server <- function(input, output, clientData, session) {
                      myXl = input$xAxisLine, 
                      title = paste("Gain by", input$xAxisLine, "by", input$treatment))
       
+    })
+    
+    output$plotXYCost <- renderPlotly({       
+      plotRangesHeatmap(df = isolate(rv$results_range_r),
+                        param = 'GainXCost',
+                        myX = input$xAxis, 
+                        myY = input$yAxis, 
+                        myXl = input$xAxis, 
+                        myYl = input$yAxis, 
+                        title = paste("Gain per Cost by", input$xAxis, "by", input$yAxis))
+    })
+    
+    output$plotXTCost <- renderPlot({
+      plotRangesLine(df = isolate(rv$results_range_r),
+                     param = 'GainXCost',
+                     myX = input$xAxisLine,
+                     myT = input$treatment,
+                     myXl = input$xAxisLine,
+                     title = paste("Gain per Cost by", input$xAxisLine, "by", input$treatment))
+
     })
     
   }) # end of run ranges button
