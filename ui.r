@@ -86,7 +86,7 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                         
                         tags$br(),
                         
-                        tags$h4("Selected Parents"),
+                        tags$h4("Final Entries"),
                         numericInput("varieties", NULL,
                                      min = 1, max = 100, value = 1, step = 1, width = '80px'), 
                         # Add tooltip with instructions/info
@@ -129,8 +129,11 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                       #   style = "font-size: 85%; width: 100%"
                       # ),
   
-                      
-                      checkboxInput("chk_ranges", "Set Ranges", FALSE),
+                      # Hidden checkbox for setting ranges at first stage of program.
+                      # This will remain disabled or become available for every stage.
+                      # Also control for diabling ranges for selected params should be supported.
+                      #
+                      div(style="visibility:hidden", checkboxInput("chk_ranges", "Set Ranges", FALSE)),
                       
                       # Only show this panel if the chk_ranges is checked
                       conditionalPanel(
@@ -217,7 +220,7 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                                              tags$li(tags$b("Reps:"), "Number of replications. Increasing this value will increase heritability by decreasing variation due to plot error."),
                                              tags$li(tags$b("Plot Error Variance:"), "Plot error variance affects the heritability and it can be used to adjust its calculated value when heritability of a trait is known."),
                                              tags$li(tags$b("Heritability:"), " Proportion of phenotypic variance attributable to additive genetic effects. Calculated using a function that takes into account the variances, years, locs, reps and plot error variance of yield trials at each stage."),
-                                             tags$li(tags$b("Selected Parents:"), "The final number of selected entries. Must be smaller than or equal to the number of entries in the last stage."),
+                                             tags$li(tags$b("Final Entries:"), "The final number of selected entries. Must be smaller than or equal to the number of entries in the last stage."),
                                              tags$li(tags$b("Samples in Range:"), "The number of samples or intervals to be considered for each set of ranges."),
                                              tags$li(tags$b("Genetic Gain:"), "the change in the breeding/genetic value which is occuring for a particular trait of interest in a period of time.")
                                            ),
@@ -278,13 +281,13 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                              bootstrapPage(
                                # Set Plot Cost
                                div(style="display:inline-block",numericInput("plotCost_r", "Plot Cost:",
-                                                                             min = 0, max = 100, value = 10, step = 0.5, width = '80px')),
+                                                                             min = 0, max = 1000, value = 10, step = 0.5, width = '80px')),
                                # Set Loc Cost 
                                div(style="display:inline-block",numericInput("locCost_r", "Loc Cost:",
-                                                                             min = 0, max = 100, value = 1000, step = 1, width = '80px')),
+                                                                             min = 0, max = 100000, value = 1000, step = 10, width = '80px')),
                                # Set Fixed Cost 
                                div(style="display:inline-block",numericInput("fixedCost_r", "Fixed Cost:",
-                                                                             min = 0, max = 100, value = 1, step = 0.1, width = '80px'))
+                                                                             min = 0, max = 100000, value = 1000, step = 10, width = '80px'))
                              ),
                              
                              bsTooltip("plotCost_r", "The cost of a single plot.",
@@ -322,7 +325,7 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                              
                              bootstrapPage(
                                # Set Plot Cost
-                               div(style="display:inline-block",numericInput("varieties_r", "Selected Entries:",
+                               div(style="display:inline-block",numericInput("varieties_r", "Final Entries:",
                                           min = 1, max = 100, value = 1, step = 1, width = '80px')),
                                div(style="display:inline-block",numericInput("nRepeats", "Repeats:",
                                           min = 1, max = 2000, value = 100, step = 1, width = '80px'))
