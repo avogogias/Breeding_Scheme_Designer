@@ -7,6 +7,7 @@ library(data.table)
 library(dplyr)
 library(plotly)
 library(openxlsx)
+#library(gridExtra)
 
 sourceCpp("Engine.cpp")
 
@@ -524,7 +525,8 @@ server <- function(input, output, clientData, session) {
                                  varieties = input$varieties_r,
                                  plotCost = input$plotCost_r,
                                  locCost = input$locCost_r,
-                                 fixedCost = input$fixedCost_r) 
+                                 fixedCost = input$fixedCost_r,
+                                 nRepeats = input$nRepeats) 
   {
     min_entries = rangesDT[1,1]
     max_entries = rangesDT[1,2]
@@ -586,7 +588,8 @@ server <- function(input, output, clientData, session) {
                                            locs,
                                            reps,
                                            error,
-                                           varieties)
+                                           varieties,
+                                           nRepeats = nRepeats)
               #print(resultLite) # WORKS
               resultLite = as.data.frame(resultLite)             # convert to a df
               colnames(resultLite) <- c("mean","sd")
@@ -1315,8 +1318,15 @@ server <- function(input, output, clientData, session) {
       insertUI(
         selector = "#plot_ranges_placeholder",
         ui = tags$div(class = "div_plot_ranges_r", checked = NA, 
-
-                   plotlyOutput('plotXY'), # updated based on X Y input
+        fluidRow(
+           splitLayout(cellWidths = c("50%", "50%"), 
+                       plotlyOutput('plotXY'), 
+                       plotlyOutput('plotXYCost')),
+           
+  #                 plotlyOutput('plotXY'), # updated based on X Y input
+  #                 plotlyOutput('plotXYCost'),
+                   
+                   # grid.arrange(plotlyOutput('plotXY'), plotlyOutput('plotXYCost'), nrow = 1),
                    
                    # tags$br(),
                    
@@ -1342,8 +1352,11 @@ server <- function(input, output, clientData, session) {
                                      width = '90px'
                          )
                      )
-                   ),
-                   
+                   )
+        ),   # END OF FLUIDROW
+                   # splitLayout(cellWidths = c("50%", "50%"), 
+                   #             plotlyOutput('plotXΤ'), 
+                   #             plotlyOutput('plotXΤCost')),
                    plotOutput('plotXT'),
                    
                    # Make divs appear in one line and centered
@@ -1370,9 +1383,9 @@ server <- function(input, output, clientData, session) {
                         )
                    ),
                    
-                   plotlyOutput('plotXYCost'),
-                   
-                   plotOutput('plotXTCost'),
+
+                   # plotlyOutput('plotXYCost'),
+                   # plotOutput('plotXTCost'),
                    
                    tags$br(),
                    tags$br(),
@@ -1420,14 +1433,14 @@ server <- function(input, output, clientData, session) {
                         title = paste("Gain per Cost by", input$xAxis, "by", input$yAxis))
     })
     
-    # output$plotXTCost <- renderPlot({
-    #   plotRangesLine(df = isolate(rv$results_range_r),
-    #                  param = 'GainXCost',
-    #                  myX = input$xAxisLine,
-    #                  myT = input$treatment,
-    #                  myXl = input$xAxisLine,
-    #                  title = paste("Gain per Cost by", input$xAxisLine, "by", input$treatment))
-    #})
+    output$plotXTCost <- renderPlot({
+      plotRangesLine(df = isolate(rv$results_range_r),
+                     param = 'GainXCost',
+                     myX = input$xAxisLine,
+                     myT = input$treatment,
+                     myXl = input$xAxisLine,
+                     title = paste("Gain per Cost by", input$xAxisLine, "by", input$treatment))
+    })
     
   }) # end of run ranges button
   

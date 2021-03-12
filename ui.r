@@ -5,8 +5,8 @@ require(plotly)
 
 ui <- fluidPage(title = "Breeding Scheme Designer",
                 
-                # tags$head(tags$style(HTML(".centerAlign{display: flex; justify-content: center;}"))),  # WORKS
-                tags$head(tags$style(HTML(".centerAlign{margin-left: 50px;}"))),
+                tags$head(tags$style(HTML(".centerAlign{display: flex; justify-content: center;}"))),  # WORKS
+                tags$head(tags$style(HTML(".leftAlign{margin-left: 50px;}"))),
                 
                 
                 # theme = "bootstrap.css", # CSS theme file could be added here
@@ -320,10 +320,17 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                              # 
                              # sliderInput("grain_r", "Samples in Range:", min = 2, max = 5, value = 2, step = 1, width = '30%'),
                              
-                             numericInput("varieties_r", "Selected Parents:",
-                                          min = 1, max = 100, value = 1, step = 1, width = '80px'), 
+                             bootstrapPage(
+                               # Set Plot Cost
+                               div(style="display:inline-block",numericInput("varieties_r", "Selected Entries:",
+                                          min = 1, max = 100, value = 1, step = 1, width = '80px')),
+                               div(style="display:inline-block",numericInput("nRepeats", "Repeats:",
+                                          min = 1, max = 2000, value = 100, step = 1, width = '80px'))
+                             ),
                              # Add tooltip with instructions/info
                              bsTooltip("varieties_r", "The final number of selected entries. Must be smaller than or equal to the minimum number of entries.",
+                                       "right", "hover", NULL),
+                             bsTooltip("nRepeats", "The number of repetitions. Higher number takes more time to compute but gives more accurate results.",
                                        "right", "hover", NULL),
 
                              
