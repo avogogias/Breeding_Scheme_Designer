@@ -26,7 +26,7 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                   tabPanel("App", fluid = TRUE,
                   sidebarLayout(
                     sidebarPanel(
-                      width = 4,
+                      width = 5, #4,
                       tags$h3("Create a new scenario"),
                       
                       # Currently scenario ID are generated automatically. Alternatively,
@@ -34,41 +34,47 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                       # textInput("divID", "Enter a unique ID for your scenario:", ""),
                       # helpText("Leave the text input blank for automatically unique IDs."),
                       
-                      tags$h4("Variances"),
                       
-                      # Make divs appear in one line
-                      bootstrapPage(
-                        # Set Genetic Variance 
-                        div(style="display:inline-block",numericInput("varG", "Genetic:",
-                                                                      min = 0, max = 100, value = 1, step = 0.1, width = '80px')),
-                        # Set GxL(Y) Variance 
-                        div(style="display:inline-block",numericInput("varGxL", "GxL(Y):",
-                                                                      min = 0, max = 100, value = 1, step = 0.1, width = '80px')),
-                        # Set GxY Variance 
-                        div(style="display:inline-block",numericInput("varGxY", "GxY:",
-                                                                      min = 0, max = 100, value = 1, step = 0.1, width = '80px'))
-                      ),
+                      fluidRow(
+                        column(7,
+                          tags$h4("Variances"),
+                          # Make divs appear in one line
+                          bootstrapPage(
+                            # Set Genetic Variance 
+                            div(style="display:inline-block",numericInput("varG", "Genetic:",
+                                                                          min = 0, max = 100, value = 1, step = 0.1, width = '80px')),
+                            # Set GxL(Y) Variance 
+                            div(style="display:inline-block",numericInput("varGxL", "GxL(Y):",
+                                                                          min = 0, max = 100, value = 1, step = 0.1, width = '80px')),
+                            # Set GxY Variance 
+                            div(style="display:inline-block",numericInput("varGxY", "GxY:",
+                                                                          min = 0, max = 100, value = 1, step = 0.1, width = '80px'))
+                          ),
+                          # Add tooltip with instructions/info
+                          bsTooltip("varG", "Genetic variance. The variance between entries in the first stage of yield trials.",
+                                    "right", "hover", NULL),
+                          # Add tooltip with instructions/info
+                          bsTooltip("varGxL", "Genotype-by-location nested in year interaction variance. This value is equivalent to the sum of genotype-by-location interaction variance and genotype-by-location-by-year interaction varaince.",
+                                    "right", "hover", NULL),
+                          # Add tooltip with instructions/info
+                          bsTooltip("varGxY", "Genotype-by-year interaction variance.",
+                                    "right", "hover", NULL),
+                        ),
+                      column(5,
+                        div(
+                          tags$h4("Multiplication Time"),
+                          numericInput("negen", "Years:",
+                                      min = 0, max = 100, value = 4, step = 1, width = '80px'),
+                          # sliderInput("negen", "Crossing/Selfing Years",
+                          #             min = 0, max = 10, value = 4, width = '240px'), 
+                          # Add tooltip with instructions/info
+                          bsTooltip("negen", "GNumber of early generation years. This phase of the breeding program is modeled without selection.",
+                                    "right", "hover", NULL)
+                        )
                       
-                      # Add tooltip with instructions/info
-                      bsTooltip("varG", "Genetic variance. The variance between entries in the first stage of yield trials.",
-                                "right", "hover", NULL),
-                      # Add tooltip with instructions/info
-                      bsTooltip("varGxL", "Genotype-by-location nested in year interaction variance. This value is equivalent to the sum of genotype-by-location interaction variance and genotype-by-location-by-year interaction varaince.",
-                                "right", "hover", NULL),
-                      # Add tooltip with instructions/info
-                      bsTooltip("varGxY", "Genotype-by-year interaction variance.",
-                                "right", "hover", NULL),
+                      )
+                    ), # endof fluidrow
                       
-                      div(
-                        tags$h4("Multiplication Time"),
-                        numericInput("negen", "Years:",
-                                    min = 0, max = 100, value = 4, step = 1, width = '80px'),
-                        # sliderInput("negen", "Crossing/Selfing Years",
-                        #             min = 0, max = 10, value = 4, width = '240px'), 
-                        # Add tooltip with instructions/info
-                        bsTooltip("negen", "GNumber of early generation years. This phase of the breeding program is modeled without selection.",
-                                  "right", "hover", NULL)
-                      ),
                       
                       
                       div( # CUSTOMISE div CSS style for DT
@@ -81,9 +87,11 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                         #                           Number of locations. Increasing this value will increase heritability by decreasing variation due to GxL(Y) and plot error.
                         #                           Number of replications. Increasing this value will increase heritability by decreasing variation due to plot error.",
                         #                           "right", "hover", NULL),
+                        
+                        fluidRow( column( DT::DTOutput("varieties_table"), width = 2, style = "text-align:right; width: 20%")), 
+                        tags$br(),
                         actionButton("add_btn", "Add"), # Add stage
                         actionButton("delete_btn", "Delete"), # Delete last stage
-                        
                         tags$br(),
                         
                         tags$h4("Final Entries"),
@@ -172,6 +180,7 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                     ), # endof SidebarPanel
                     # Show plots and charts 
                     mainPanel(
+                      width = 7,
                       # uiOutput('mytabs') # old
                       # #splitLayout(,)
                       tabsetPanel(id = "my_tabs",
@@ -340,7 +349,7 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                              actionButton("run_btn_r", "Run")
                            ),
                            mainPanel(
-
+                             width = 8,
                              tags$div(id = "plot_ranges_placeholder"),
                              
 

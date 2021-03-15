@@ -55,6 +55,9 @@ server <- function(input, output, clientData, session) {
   
   rti <- reactiveValues(data = rt)
   
+  fin = cbind(fin_stage = c("Final"), fin_entries = c(1))
+  fini <- reactiveValues(data = fin)
+  
   # initialize empty vector to stores status of chk_ranges for each scenario
   rangesVec <- vector()
   # initialize empty list to store data frames of reactiveValues created for each Scenario, e.g. reactDT1
@@ -989,6 +992,26 @@ server <- function(input, output, clientData, session) {
                                      editable = list(target = "cell", disable = list(columns = c(0))),
                                      server = TRUE) # server = F doesn't work with replaceData() cell editing  
 
+  
+  # Render varieties DT with single cell
+  output$varieties_table = DT::renderDT(fini$data, 
+                                     options = list(
+                                       dom = 't', # only display the table, and nothing else
+                                       # searching = F, # no search box
+                                       # paginate = F,  # no num of pages
+                                       # lengthChange = F, # no show entries
+                                       scrollX = F, # horizontal slider
+                                       ordering = F # suppressing sorting 
+                                     ),
+                                     class = "cell-border, compact, hover", 
+                                     rownames = F, #TRUE,
+                                     colnames = c("Stage","Entries"),
+                                     filter = "none",
+                                     escape = FALSE,
+                                     autoHideNavigation = TRUE,
+                                     selection = "none",
+                                     editable = list(target = "cell", disable = list(columns = c(0))),
+                                     server = TRUE) # server = F doesn't work with replaceData() cell editing  
   
   #*************************************
   #-------------------------------------  
