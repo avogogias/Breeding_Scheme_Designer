@@ -94,12 +94,12 @@ ui <- fluidPage(title = "Breeding Scheme Designer",
                         actionButton("delete_btn", "Delete"), # Delete last stage
                         tags$br(),
                         
-                        tags$h4("Final Entries"),
-                        numericInput("varieties", NULL,
-                                     min = 1, max = 100, value = 1, step = 1, width = '80px'), 
-                        # Add tooltip with instructions/info
-                        bsTooltip("varieties", "The final number of selected entries. Must be smaller than or equal to the number of entries in the last stage.",
-                                  "right", "hover", NULL)
+                        # tags$h4("Final Entries"),
+                        # numericInput("varieties", NULL,
+                        #              min = 1, max = 100, value = 1, step = 1, width = '80px'), 
+                        # # Add tooltip with instructions/info
+                        # bsTooltip("varieties", "The final number of selected entries. Must be smaller than or equal to the number of entries in the last stage.",
+                        #           "right", "hover", NULL)
                       ),
 
                       # tags$h4("Costs:"),

@@ -55,8 +55,8 @@ server <- function(input, output, clientData, session) {
   
   rti <- reactiveValues(data = rt)
   
-  fin = cbind(fin_stage = c("Final"), fin_entries = c(1))
-  fini <- reactiveValues(data = fin)
+  fin = cbind(stage = c("Final"), entries = c(1))
+  yti$varieties <- fin
   
   # initialize empty vector to stores status of chk_ranges for each scenario
   rangesVec <- vector()
@@ -370,7 +370,8 @@ server <- function(input, output, clientData, session) {
                                varG = input$varG, 
                                varGxL = input$varGxL, 
                                varGxY = input$varGxY, 
-                               varieties = input$varieties) 
+                               varieties = as.numeric(yti$varieties[1,2]))
+                               #varieties = input$varieties) 
                                # results_range = rv$results_range) 
     {
       print(scenarioDT)
@@ -650,7 +651,7 @@ server <- function(input, output, clientData, session) {
   }
   
   # function that checks if varieties is smaller than Entries in last stage and smaller than min_entries in range
-  validVarieties <- function(scenarioDT = yti$data, varieties = input$varieties) { #, min_entries = input$entries_range[1]) {
+  validVarieties <- function(scenarioDT = yti$data, varieties = as.numeric(yti$varieties[1,2])) { # input$varieties) { #, min_entries = input$entries_range[1]) {
     entries = scenarioDT[,2]
     last_entries = tail(entries, 1)
     if (varieties > last_entries )
@@ -994,7 +995,7 @@ server <- function(input, output, clientData, session) {
 
   
   # Render varieties DT with single cell
-  output$varieties_table = DT::renderDT(fini$data, 
+  output$varieties_table = DT::renderDT(yti$varieties, 
                                      options = list(
                                        dom = 't', # only display the table, and nothing else
                                        # searching = F, # no search box
@@ -1050,6 +1051,21 @@ server <- function(input, output, clientData, session) {
     replaceData(proxy, rti$data, resetPaging = FALSE)  # important 
   })
   
+  # Update editable DT varieties_table through a proxy DT on cell edit event
+  proxy = dataTableProxy('varieties_table')
+  #
+  observeEvent(input$varieties_table_cell_edit, {
+    info = input$varieties_table_cell_edit
+    i = info$row
+    j = info$col + 1 # +1 required when rownames = F in DT
+    v = info$value
+    str(info)
+    # Character string needs to be coerced to same type as target value. Here as.integer()
+    yti$varieties[i, j] = DT::coerceValue(v, yti$varieties[i, j])
+    # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
+    replaceData(proxy, yti$varieties, resetPaging = FALSE)  # important 
+  })
+  
   ### Reset table
   #TV  observeEvent(reset(), {
   #TV  yti$data <- yt # your default data
@@ -1093,7 +1109,11 @@ server <- function(input, output, clientData, session) {
     plotCost = isolate(yti$data[,8])
     locCost = isolate(yti$data[,9])
     fixedCost = isolate(yti$data[,10])
-    varieties = isolate(input$varieties) # isolate(yti$data[,11])  
+    varieties = isolate(as.numeric(yti$varieties[1,2])) # isolate(input$varieties) # isolate(yti$data[,11])  
+    
+    print(varieties)
+    print(mode(varieties))
+    print(mode(input$varieties))
     
     # store settings for summary plot TODO : append column with mean genetic gain for each stage
     stages_current = data.frame(stages, entries, years, locs, reps, error, h2, plotCost, locCost, fixedCost) #, varieties)
@@ -1661,7 +1681,8 @@ server <- function(input, output, clientData, session) {
           cols = c(1, 1, 8, 1)
         )
 
-        mtx <- matrix(c(input$varG, input$varGxL, input$varGxY, input$negen, input$varieties), nrow = 1, ncol = 5)
+        # mtx <- matrix(c(input$varG, input$varGxL, input$varGxY, input$negen, input$varieties), nrow = 1, ncol = 5)
+        mtx <- matrix(c(input$varG, input$varGxL, input$varGxY, input$negen, as.numeric(yti$varieties[1,2])), nrow = 1, ncol = 5)
         colnames(mtx) <- c("Genetic Variance", "GxL(Y)", "GxY", "Multiplication Time(Y)", "Selected Parents")
 
         writeData(
