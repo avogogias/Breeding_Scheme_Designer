@@ -37,10 +37,10 @@ server <- function(input, output, clientData, session) {
   yt = cbind(stage,entries,years,locs,reps,error,h2,plotCost,locCost,fixedCost) #,varieties)
   
   # Ranges DT has 3 cols for min max and samples
-  entries_r = c(100,1000,2)
-  years_r = c(1,5,2)
-  locs_r = c(1,5,2)
-  reps_r = c(1,5,2)
+  entries_r = c(100,1000,3)
+  years_r = c(1,5,3)
+  locs_r = c(1,5,3)
+  reps_r = c(1,5,3)
   plotCost_r = 10 
   locCost_r = 1000
   fixedCost_r = 1000
@@ -1355,6 +1355,10 @@ server <- function(input, output, clientData, session) {
       Ranges <<- c(Ranges,  tail(Ranges,1)+1)   # if a Scenario is added, just add a number to the last number in the "Scenarios" vector
     }
     
+    # Store results for different ranges of first stage entries
+    rv$results_range_r = rbind(rv$results_range_r, runScenarioRange_r())
+    # print(rv$results_range_r)
+    
     # Create a drop-down list at first Run
     if (tail(Ranges,1) == 1)
     {
@@ -1394,8 +1398,28 @@ server <- function(input, output, clientData, session) {
                                      selectize = TRUE,
                                      width = '90px'
                          )
+                     ),
+                     # Dynamic drop down list 1
+                     div(style="display:inline-block", # class = 'centerAlign',    
+                         selectInput(inputId = 'subSel1', label =  "",
+                                     choices = "",
+                                     selected = "",
+                                     multiple = FALSE,
+                                     selectize = TRUE,
+                                     width = '90px'
+                         )
+                     ),
+                     # Dynamic drop down list 2
+                     div(style="display:inline-block", # class = 'centerAlign',    
+                         selectInput(inputId = 'subSel2', label =  "",
+                                     choices =  "",
+                                     selected = "",
+                                     multiple = FALSE,
+                                     selectize = TRUE,
+                                     width = '90px'
+                         )
                      )
-                   )
+                   ) # endof parent div
         ),   # END OF FLUIDROW
                    # splitLayout(cellWidths = c("50%", "50%"), 
                    #             plotlyOutput('plotXΤ'), 
@@ -1443,9 +1467,6 @@ server <- function(input, output, clientData, session) {
       )
     }
     
-    # Store results for different ranges of first stage entries
-    rv$results_range_r = rbind(rv$results_range_r, runScenarioRange_r())
-    print(rv$results_range_r)
 
     # Plot interactive heatmap that updates as X and Y change
     output$plotXY <- renderPlotly({       
@@ -1484,8 +1505,35 @@ server <- function(input, output, clientData, session) {
                      myXl = input$xAxisLine,
                      title = paste("Gain per Cost by", input$xAxisLine, "by", input$treatment))
     })
+
     
+    
+    observeEvent(input$xAxis,{
+      # TODO: should check what is selected in yAxis and from the remaining 2 vars show the first
+      ops = c("Entries", "Years", "Locs", "Reps")
+      sel_ops = c(input$xAxis, input$yAxis)
+      ops = ops[!(ops %in% sel_ops)]
+      
+      updateSelectInput(session, "subSel1", ops[1],
+                       choices =  rv$results_range_r[ops[1]]) 
+      updateSelectInput(session, "subSel2", ops[2],
+                       choices =  rv$results_range_r[ops[2]]) 
+    })
+    observeEvent(input$yAxis,{
+      # TODO: should check what is selected in xAxis and from the remaining 2 vars show the second
+      ops = c("Entries", "Years", "Locs", "Reps")
+      sel_ops = c(input$xAxis, input$yAxis)
+      ops = ops[!(ops %in% sel_ops)]
+      
+      updateSelectInput(session, "subSel1", ops[1],
+                        choices =  rv$results_range_r[ops[1]])
+      updateSelectInput(session, "subSel2", ops[2],
+                        choices =  rv$results_range_r[ops[2]]) 
+    })
+        
   }) # end of run ranges button
+  
+
   
   
   # Download Report
