@@ -886,7 +886,7 @@ server <- function(input, output, clientData, session) {
   
   
   # Interactive X Treatment Line Plot - - TODO
-  plotRangesLine <- function(df = isolate(rv$results_range_r), param = 'Gain', myX = input$xAxisLine, myT = input$treatment, myXl = input$xAxisLine, title = paste("Gain by", input$xAxisLine, "by", input$treatment)) 
+  plotRangesLine <- function(df = isolate(rv$results_range_r), param = 'Gain', myX = input$xAxisLine, myT = input$treatment, myXl = input$xAxisLine, subSel3 = input$subSel3, subSel4 = input$subSel4, title = paste("Gain by", input$xAxisLine, "by", input$treatment)) 
   { 
     # df <- transform(df, myT = as.character(myT)) # use categorical colour instead of ordered
     tLegent = myT
@@ -899,10 +899,18 @@ server <- function(input, output, clientData, session) {
     
     print(myFilter)
     
-    for (i in myFilter)
-    {
-      df <- filter(df, as.numeric(unlist(df[i])) %in% df[i][1,]) # filter rows not on the first occurrence (min) of myFilter
-    }
+    # for (i in myFilter)
+    # {
+    #   df <- filter(df, as.numeric(unlist(df[i])) %in% df[i][1,]) # filter rows not on the first occurrence (min) of myFilter
+    # }
+    
+    subSel3 = as.numeric(subSel3)
+    subSel4 = as.numeric(subSel4)
+    print(subSel3)
+    print(subSel4)
+    
+    df <- filter(df, as.numeric(unlist(df[myFilter[1]])) %in% subSel3) # Filter what is not selected in first dynamic selectInput subSel1
+    df <- filter(df, as.numeric(unlist(df[myFilter[2]])) %in% subSel4) # Filter what is not selected in second dynamic selectInput subSel2
     
     print(df)
     
@@ -1450,6 +1458,26 @@ server <- function(input, output, clientData, session) {
                                         selectize = TRUE,
                                         width = '90px'
                             )
+                        ),
+                        # Dynamic drop down list 1
+                        div(style="display:inline-block", # class = 'centerAlign',    
+                            selectInput(inputId = 'subSel3', label =  "",
+                                        choices = "",
+                                        selected = "",
+                                        multiple = FALSE,
+                                        selectize = TRUE,
+                                        width = '90px'
+                            )
+                        ),
+                        # Dynamic drop down list 2
+                        div(style="display:inline-block", # class = 'centerAlign',    
+                            selectInput(inputId = 'subSel4', label =  "",
+                                        choices =  "",
+                                        selected = "",
+                                        multiple = FALSE,
+                                        selectize = TRUE,
+                                        width = '90px'
+                            )
                         )
                    ),
                    
@@ -1468,9 +1496,7 @@ server <- function(input, output, clientData, session) {
           ) # endof div plot ranges          
           
       )
-    } else { # After first time Run is pressed:
-      # TODO: trigger xAxis or yAxis events to update subSet1 and subSet2 contents
-    }
+    } 
     
 
     # Plot interactive heatmap that updates as X and Y change
@@ -1532,10 +1558,7 @@ server <- function(input, output, clientData, session) {
       updateSelectInput(session, "subSel2", ops[2],
                         choices =  df[ops[2]]) 
     })
-    
     # * * * * * * * * * * * * * * * * * * * * * * * *  * * * * 
-    # Event listeners for dynamic selectInput drop down lists.
-    # * * * * * * * * * *   R A N G E S  * * * * * * * * * * *   
     observeEvent(input$yAxis,{
       # TODO: should check what is selected in xAxis and from the remaining 2 vars show the second
       ops = c("Entries", "Years", "Locs", "Reps")
@@ -1548,6 +1571,37 @@ server <- function(input, output, clientData, session) {
       updateSelectInput(session, "subSel1", ops[1],
                         choices =  df[ops[1]])
       updateSelectInput(session, "subSel2", ops[2],
+                        choices =  df[ops[2]]) 
+    })
+    # * * * * * * * * * * * * * * * * * * * * * * * *  * * * * 
+    # * * * * * * * * * *    x L I N E   * * * * * * * * * * *   
+    observeEvent(input$xAxisLine,{
+      # TODO: should check what is selected in xAxis and from the remaining 2 vars show the second
+      ops = c("Entries", "Years", "Locs", "Reps")
+      sel_ops = c(input$xAxisLine, input$treatment)
+      ops = ops[!(ops %in% sel_ops)]
+      
+      df <- rv$results_range_r
+      df <- filter(df, as.numeric(unlist(df["Scenario"])) %in% df["Scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
+      
+      updateSelectInput(session, "subSel3", ops[1],
+                        choices =  df[ops[1]])
+      updateSelectInput(session, "subSel4", ops[2],
+                        choices =  df[ops[2]]) 
+    })
+    # * * * * * * * * * *   T R E A T M E N T  * * * * * * * * * * *   
+    observeEvent(input$treatment,{
+      # TODO: should check what is selected in xAxis and from the remaining 2 vars show the second
+      ops = c("Entries", "Years", "Locs", "Reps")
+      sel_ops = c(input$xAxisLine, input$treatment)
+      ops = ops[!(ops %in% sel_ops)]
+      
+      df <- rv$results_range_r
+      df <- filter(df, as.numeric(unlist(df["Scenario"])) %in% df["Scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
+      
+      updateSelectInput(session, "subSel3", ops[1],
+                        choices =  df[ops[1]])
+      updateSelectInput(session, "subSel4", ops[2],
                         choices =  df[ops[2]]) 
     })
     
