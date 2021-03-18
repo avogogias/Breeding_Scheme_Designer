@@ -1468,6 +1468,8 @@ server <- function(input, output, clientData, session) {
           ) # endof div plot ranges          
           
       )
+    } else { # After first time Run is pressed:
+      # TODO: trigger xAxis or yAxis events to update subSet1 and subSet2 contents
     }
     
 
@@ -1510,39 +1512,46 @@ server <- function(input, output, clientData, session) {
     # })
 
 
-  }) # end of run ranges button
+    # }) # end of run ranges button - Moved below after observers
   
-  
-  # * * * * * * * * * * * * * * * * * * * * * * * *  * * * * 
-  # Event listeners for dynamic selectInput drop down lists.
-  # * * * * * * * * * *   R A N G E S  * * * * * * * * * * * 
-  observeEvent(input$xAxis,{
-    # TODO: should check what is selected in yAxis and from the remaining 2 vars show the first
-    ops = c("Entries", "Years", "Locs", "Reps")
-    sel_ops = c(input$xAxis, input$yAxis)
-    ops = ops[!(ops %in% sel_ops)]
     
-    updateSelectInput(session, "subSel1", ops[1],
-                      choices =  rv$results_range_r[ops[1]]) 
-    updateSelectInput(session, "subSel2", ops[2],
-                      choices =  rv$results_range_r[ops[2]]) 
-  })
-  
-  # * * * * * * * * * * * * * * * * * * * * * * * *  * * * * 
-  # Event listeners for dynamic selectInput drop down lists.
-  # * * * * * * * * * *   R A N G E S  * * * * * * * * * * *   
-  observeEvent(input$yAxis,{
-    # TODO: should check what is selected in xAxis and from the remaining 2 vars show the second
-    ops = c("Entries", "Years", "Locs", "Reps")
-    sel_ops = c(input$xAxis, input$yAxis)
-    ops = ops[!(ops %in% sel_ops)]
+    # * * * * * * * * * * * * * * * * * * * * * * * *  * * * * 
+    # Event listeners for dynamic selectInput drop down lists.
+    # * * * * * * * * * *   R A N G E S  * * * * * * * * * * * 
+    observeEvent(input$xAxis,{
+      # TODO: should check what is selected in yAxis and from the remaining 2 vars show the first
+      ops = c("Entries", "Years", "Locs", "Reps")
+      sel_ops = c(input$xAxis, input$yAxis)
+      ops = ops[!(ops %in% sel_ops)]
+      
+      df <- rv$results_range_r
+      df <- filter(df, as.numeric(unlist(df["Scenario"])) %in% df["Scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
+      
+      updateSelectInput(session, "subSel1", ops[1],
+                        choices =  df[ops[1]]) 
+      updateSelectInput(session, "subSel2", ops[2],
+                        choices =  df[ops[2]]) 
+    })
     
-    updateSelectInput(session, "subSel1", ops[1],
-                      choices =  rv$results_range_r[ops[1]])
-    updateSelectInput(session, "subSel2", ops[2],
-                      choices =  rv$results_range_r[ops[2]]) 
-  })
-  
+    # * * * * * * * * * * * * * * * * * * * * * * * *  * * * * 
+    # Event listeners for dynamic selectInput drop down lists.
+    # * * * * * * * * * *   R A N G E S  * * * * * * * * * * *   
+    observeEvent(input$yAxis,{
+      # TODO: should check what is selected in xAxis and from the remaining 2 vars show the second
+      ops = c("Entries", "Years", "Locs", "Reps")
+      sel_ops = c(input$xAxis, input$yAxis)
+      ops = ops[!(ops %in% sel_ops)]
+      
+      df <- rv$results_range_r
+      df <- filter(df, as.numeric(unlist(df["Scenario"])) %in% df["Scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
+      
+      updateSelectInput(session, "subSel1", ops[1],
+                        choices =  df[ops[1]])
+      updateSelectInput(session, "subSel2", ops[2],
+                        choices =  df[ops[2]]) 
+    })
+    
+  }) # end of run ranges button  | NOTE : observers included so that they are triggered every time the Run button is pressed to update entries
   
   # Download Report
   output$download_all <- downloadHandler(
