@@ -842,7 +842,7 @@ server <- function(input, output, clientData, session) {
   }
 
   # Interactive X Y Heatmap
-  plotRangesHeatmap <- function(df = isolate(rv$results_range_r), param = 'Gain', myX = input$xAxis, myY = input$yAxis, myXl = input$xAxis, myYl = input$yAxis, title = paste("Gain by", input$xAxis, "by", input$yAxis)) 
+  plotRangesHeatmap <- function(df = isolate(rv$results_range_r), param = 'Gain', myX = input$xAxis, myY = input$yAxis, myXl = input$xAxis, myYl = input$yAxis, subSel1 = input$subSel1, subSel2 = input$subSel2, title = paste("Gain by", input$xAxis, "by", input$yAxis)) 
     { 
 
     df <- filter(df, as.numeric(unlist(df["Scenario"])) %in% df["Scenario"][length(df[,1]),]) # filter rows which do not belong to the last scenario
@@ -855,10 +855,19 @@ server <- function(input, output, clientData, session) {
     
     print(myFilter)
     
-    for (i in myFilter)
-    {
-      df <- filter(df, as.numeric(unlist(df[i])) %in% df[i][1,]) # filter rows not on the first occurrence (min) of myFilter
-    }
+    # for (i in myFilter)
+    # {
+    #   df <- filter(df, as.numeric(unlist(df[i])) %in% df[i][1,]) # filter rows not on the first occurrence (min) of myFilter
+    # }
+    
+    subSel1 = as.numeric(subSel1)
+    subSel2 = as.numeric(subSel2)
+    print(subSel1)
+    print(subSel2)
+    
+    df <- filter(df, as.numeric(unlist(df[myFilter[1]])) %in% subSel1) # Filter what is not selected in first dynamic selectInput subSel1
+    df <- filter(df, as.numeric(unlist(df[myFilter[2]])) %in% subSel2) # Filter what is not selected in second dynamic selectInput subSel2
+    
 
     print(df)
     
@@ -1369,13 +1378,7 @@ server <- function(input, output, clientData, session) {
            splitLayout(cellWidths = c("50%", "50%"), 
                        plotlyOutput('plotXY'), 
                        plotlyOutput('plotXYCost')),
-           
-  #                 plotlyOutput('plotXY'), # updated based on X Y input
-  #                 plotlyOutput('plotXYCost'),
-                   
-                   # grid.arrange(plotlyOutput('plotXY'), plotlyOutput('plotXYCost'), nrow = 1),
-                   
-                   # tags$br(),
+                       # grid.arrange(plotlyOutput('plotXY'), plotlyOutput('plotXYCost'), nrow = 1),
                    
                    # Make divs appear in one line and centered
                    div( class = 'centerAlign',    
@@ -1497,43 +1500,48 @@ server <- function(input, output, clientData, session) {
                         title = paste("Gain per Cost by", input$xAxis, "by", input$yAxis))
     })
     
-    output$plotXTCost <- renderPlot({
-      plotRangesLine(df = isolate(rv$results_range_r),
-                     param = 'GainXCost',
-                     myX = input$xAxisLine,
-                     myT = input$treatment,
-                     myXl = input$xAxisLine,
-                     title = paste("Gain per Cost by", input$xAxisLine, "by", input$treatment))
-    })
+    # output$plotXTCost <- renderPlot({
+    #   plotRangesLine(df = isolate(rv$results_range_r),
+    #                  param = 'GainXCost',
+    #                  myX = input$xAxisLine,
+    #                  myT = input$treatment,
+    #                  myXl = input$xAxisLine,
+    #                  title = paste("Gain per Cost by", input$xAxisLine, "by", input$treatment))
+    # })
 
-    
-    
-    observeEvent(input$xAxis,{
-      # TODO: should check what is selected in yAxis and from the remaining 2 vars show the first
-      ops = c("Entries", "Years", "Locs", "Reps")
-      sel_ops = c(input$xAxis, input$yAxis)
-      ops = ops[!(ops %in% sel_ops)]
-      
-      updateSelectInput(session, "subSel1", ops[1],
-                       choices =  rv$results_range_r[ops[1]]) 
-      updateSelectInput(session, "subSel2", ops[2],
-                       choices =  rv$results_range_r[ops[2]]) 
-    })
-    observeEvent(input$yAxis,{
-      # TODO: should check what is selected in xAxis and from the remaining 2 vars show the second
-      ops = c("Entries", "Years", "Locs", "Reps")
-      sel_ops = c(input$xAxis, input$yAxis)
-      ops = ops[!(ops %in% sel_ops)]
-      
-      updateSelectInput(session, "subSel1", ops[1],
-                        choices =  rv$results_range_r[ops[1]])
-      updateSelectInput(session, "subSel2", ops[2],
-                        choices =  rv$results_range_r[ops[2]]) 
-    })
-        
+
   }) # end of run ranges button
   
-
+  
+  # * * * * * * * * * * * * * * * * * * * * * * * *  * * * * 
+  # Event listeners for dynamic selectInput drop down lists.
+  # * * * * * * * * * *   R A N G E S  * * * * * * * * * * * 
+  observeEvent(input$xAxis,{
+    # TODO: should check what is selected in yAxis and from the remaining 2 vars show the first
+    ops = c("Entries", "Years", "Locs", "Reps")
+    sel_ops = c(input$xAxis, input$yAxis)
+    ops = ops[!(ops %in% sel_ops)]
+    
+    updateSelectInput(session, "subSel1", ops[1],
+                      choices =  rv$results_range_r[ops[1]]) 
+    updateSelectInput(session, "subSel2", ops[2],
+                      choices =  rv$results_range_r[ops[2]]) 
+  })
+  
+  # * * * * * * * * * * * * * * * * * * * * * * * *  * * * * 
+  # Event listeners for dynamic selectInput drop down lists.
+  # * * * * * * * * * *   R A N G E S  * * * * * * * * * * *   
+  observeEvent(input$yAxis,{
+    # TODO: should check what is selected in xAxis and from the remaining 2 vars show the second
+    ops = c("Entries", "Years", "Locs", "Reps")
+    sel_ops = c(input$xAxis, input$yAxis)
+    ops = ops[!(ops %in% sel_ops)]
+    
+    updateSelectInput(session, "subSel1", ops[1],
+                      choices =  rv$results_range_r[ops[1]])
+    updateSelectInput(session, "subSel2", ops[2],
+                      choices =  rv$results_range_r[ops[2]]) 
+  })
   
   
   # Download Report
