@@ -1056,7 +1056,7 @@ server <- function(input, output, clientData, session) {
   })
   
   # Update editable DT ranges_table through a proxy DT on cell edit event
-  proxy = dataTableProxy('ranges_table')
+  proxy1 = dataTableProxy('ranges_table')
   #
   observeEvent(input$ranges_table_cell_edit, {
     info = input$ranges_table_cell_edit
@@ -1067,11 +1067,11 @@ server <- function(input, output, clientData, session) {
     # Character string needs to be coerced to same type as target value. Here as.integer()
     rti$data[i, j] = DT::coerceValue(v, rti$data[i, j])
     # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
-    replaceData(proxy, rti$data, resetPaging = FALSE)  # important 
+    replaceData(proxy1, rti$data, resetPaging = FALSE)  # important 
   })
   
   # Update editable DT varieties_table through a proxy DT on cell edit event
-  proxy1 = dataTableProxy('varieties_table') # BUG FIX use a different proxy name to avoid mendling with cell edits of the other DTs causing "No matching records found"
+  proxy2 = dataTableProxy('varieties_table') # BUG FIX use a different proxy name to avoid mendling with cell edits of the other DTs causing "No matching records found"
   #
   observeEvent(input$varieties_table_cell_edit, {
     info = input$varieties_table_cell_edit
@@ -1082,7 +1082,7 @@ server <- function(input, output, clientData, session) {
     # Character string needs to be coerced to same type as target value. Here as.integer()
     yti$varieties[i, j] = DT::coerceValue(v, yti$varieties[i, j])
     # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
-    replaceData(proxy1, yti$varieties, resetPaging = FALSE)  # important 
+    replaceData(proxy2, yti$varieties, resetPaging = FALSE)  # important 
   })
   
   ### Reset table
