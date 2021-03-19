@@ -55,7 +55,7 @@ server <- function(input, output, clientData, session) {
   
   rti <- reactiveValues(data = rt)
   
-  fin = data.frame(stage = c("Final"), entries = c(1))
+  fin = data.frame(stage_r = c("Final"), entries_r = c(1))
   print(paste("The type of final entries DT is : ", mode(fin)))
   yti$varieties <- fin
   
@@ -1071,7 +1071,7 @@ server <- function(input, output, clientData, session) {
   })
   
   # Update editable DT varieties_table through a proxy DT on cell edit event
-  proxy = dataTableProxy('varieties_table')
+  proxy1 = dataTableProxy('varieties_table') # BUG FIX use a different proxy name to avoid mendling with cell edits of the other DTs causing "No matching records found"
   #
   observeEvent(input$varieties_table_cell_edit, {
     info = input$varieties_table_cell_edit
@@ -1082,7 +1082,7 @@ server <- function(input, output, clientData, session) {
     # Character string needs to be coerced to same type as target value. Here as.integer()
     yti$varieties[i, j] = DT::coerceValue(v, yti$varieties[i, j])
     # Produces invalid JSON response when renderDT (server = F), because replaceData() calls reloadData()
-    replaceData(proxy, yti$varieties, resetPaging = FALSE)  # important 
+    replaceData(proxy1, yti$varieties, resetPaging = FALSE)  # important 
   })
   
   ### Reset table
