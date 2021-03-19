@@ -55,7 +55,8 @@ server <- function(input, output, clientData, session) {
   
   rti <- reactiveValues(data = rt)
   
-  fin = cbind(stage = c("Final"), entries = c(1))
+  fin = data.frame(stage = c("Final"), entries = c(1))
+  print(paste("The type of final entries DT is : ", mode(fin)))
   yti$varieties <- fin
   
   # initialize empty vector to stores status of chk_ranges for each scenario
@@ -919,7 +920,8 @@ server <- function(input, output, clientData, session) {
     #print(df)
     #print(sapply(df, mode))
     #print(myX)
-    print("plotMeanGrid() called")
+    print("plotRangesLine() called")
+    print(df$SD)
     
     yMin = min(df$Gain)-1.01*max(df$SD)
     yMax = max(df$Gain)+1.01*max(df$SD)
@@ -1105,7 +1107,7 @@ server <- function(input, output, clientData, session) {
   })
   
   observeEvent(input$delete_btn, {
-    if (length(yti$data[,1])>1) # TV for >1 need to stop R coercing a matrix or array to the lowest possible number of dimensions
+    if (length(yti$data[,1])>1) # TV for >1 need to stop R coerce coercing a matrix or array to the lowest possible number of dimensions
       yti$data = yti$data[1:length(yti$data[,1])-1,,drop=F]
   })
   
@@ -1461,21 +1463,22 @@ server <- function(input, output, clientData, session) {
                         ),
                         # Dynamic drop down list 1
                         div(style="display:inline-block", # class = 'centerAlign',    
-                            selectInput(inputId = 'subSel3', label =  "",
+                            selectizeInput(inputId = 'subSel3', label =  "",
                                         choices = "",
                                         selected = "",
                                         multiple = FALSE,
-                                        selectize = TRUE,
                                         width = '90px'
+                                        # options = list(
+                                        #   hideSelected = T # https://github.com/selectize/selectize.js/blob/master/docs/usage.md
+                                        # )
                             )
                         ),
                         # Dynamic drop down list 2
                         div(style="display:inline-block", # class = 'centerAlign',    
-                            selectInput(inputId = 'subSel4', label =  "",
+                            selectizeInput(inputId = 'subSel4', label =  "",
                                         choices =  "",
                                         selected = "",
                                         multiple = FALSE,
-                                        selectize = TRUE,
                                         width = '90px'
                             )
                         )
@@ -1491,6 +1494,9 @@ server <- function(input, output, clientData, session) {
                    tags$br(),
                    tags$br(),
                    tags$br(),
+                   tags$br(),
+                   tags$br(),
+                   tags$br()
                    
                    
           ) # endof div plot ranges          
@@ -1514,6 +1520,8 @@ server <- function(input, output, clientData, session) {
                      myX = input$xAxisLine, 
                      myT = input$treatment, 
                      myXl = input$xAxisLine, 
+                     subSel3 = input$subSel3, 
+                     subSel4 = input$subSel4,
                      title = paste("Gain by", input$xAxisLine, "by", input$treatment))
       
     })
