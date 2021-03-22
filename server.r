@@ -435,91 +435,91 @@ server <- function(input, output, clientData, session) {
   
   # Previous function adjusted to separate tab for ranges not dependent on DT ------------------------------- NOT USED -----------------
   # Ignore entries in first stage and instead run for a range of entries. Store the results in rv$results_range
-  runScenarioRange_r_slider <- function(min_entries = input$entries_range_r[1], max_entries = input$entries_range_r[2], 
-                               min_years = input$years_range_r[1], max_years = input$years_range_r[2],
-                               min_locs = input$locs_range_r[1], max_locs = input$locs_range_r[2],
-                               min_reps = input$reps_range_r[1], max_reps = input$reps_range_r[2],
-                               # min_error = input$error_range_r[1], max_error = input$error_range_r[2],
-                               grain = input$grain_r,
-                               #TV scenarioDT = yti$data, 
-                               varG = input$varG_r, 
-                               varGxL = input$varGxL_r, 
-                               varGxY = input$varGxY_r, 
-                               varErr = input$varErr_r,
-                               varieties = input$varieties_r) 
-    # results_range = rv$results_range) 
-  {
-    #TV print(scenarioDT)
-    #TV stage = scenarioDT[,1]
-    #TV entries = scenarioDT[,2]
-    
-    min_entries = checkMinEntries(varieties, min_entries) 
-    # varieties must be less than min_entries
-    if (varieties > min_entries)
-      min_entries = varieties
-    years = NA #TV scenarioDT[,3] 
-    locs = NA #TV scenarioDT[,4]
-    reps = NA #TV scenarioDT[,5]
-    error = varErr #TV scenarioDT[,6]
-    it = 0 # counter of iterations between range min max
-    range_entries = rangeGrain(min_entries, max_entries, grain)
-    range_years = rangeGrain(min_years, max_years, grain)
-    range_locs = rangeGrain(min_locs, max_locs, grain)
-    range_reps = rangeGrain(min_reps, max_reps, grain)
-    #range_error = rangeGrain(min_error, max_error, grain)
-    #print(range_reps)
-    
-    # Show Progress Bar
-    withProgress(message = 'Calculating results', value = 0, {
-      rr = NULL
-      for (i in range_entries)
-      {
-        for (k in range_years)
-        {
-          for (l in range_locs)
-          {
-            for (j in range_reps)
-            {
-              # for (e in range_error)
-              # {
-              # update progress bar after a single iteration of the nested loop
-              # incProgress(1/(length(range_entries)*length(range_years)*length(range_locs)*length(range_reps)*length(range_error)), detail = paste("Iteration", it, "of", length(range_entries)*length(range_years)*length(range_locs)*length(range_reps)*length(range_error)))
-              incProgress(1/(length(range_entries)*length(range_years)*length(range_locs)*length(range_reps)), detail = paste("Iteration", it, "of", length(range_entries)*length(range_years)*length(range_locs)*length(range_reps)))
-              
-              it = it + 1
-              entries = i # replace first stage entries with range_entries
-              years = k
-              locs = l
-              reps = j
-             # error = e
-              
-              resultLite = runScenarioLite(varG,
-                                           varGxL,
-                                           varGxY,
-                                           entries,
-                                           years,
-                                           locs,
-                                           reps,
-                                           error,
-                                           varieties)
-              #print(resultLite) # WORKS
-              resultLite = as.data.frame(resultLite)             # convert to a df
-              colnames(resultLite) <- c("mean","sd")
-              # Create df with I/O data and bind this to rr from previous iterations
-            # rr<-rbind(rr, cbind(scenario = tail(Scenarios,1), fs_entries = i, fs_years = k, fs_locs = l, fs_reps = j, it, stage, entries, years, locs, reps, error, resultLite))
-              rr<-rbind(rr, cbind(scenario = tail(Ranges,1), entries, years, locs, reps, error, it, resultLite))
-              # }
-            }
-          }
-        }
-      }
-    })
-    
-    colnames(rr) <- c("Scenario", "Entries", "Years", "Locs", "Reps", "Error", "IT", "Gain", "SD")
-    #print(rr)
-    #tail(rr)
-    return(rr)
-  }
+  # runScenarioRange_r_slider <- function(min_entries = input$entries_range_r[1], max_entries = input$entries_range_r[2], 
+  #                              min_years = input$years_range_r[1], max_years = input$years_range_r[2],
+  #                              min_locs = input$locs_range_r[1], max_locs = input$locs_range_r[2],
+  #                              min_reps = input$reps_range_r[1], max_reps = input$reps_range_r[2],
+  #                              # min_error = input$error_range_r[1], max_error = input$error_range_r[2],
+  #                              grain = input$grain_r,
+  #                              #TV scenarioDT = yti$data, 
+  #                              varG = input$varG_r, 
+  #                              varGxL = input$varGxL_r, 
+  #                              varGxY = input$varGxY_r, 
+  #                              varErr = input$varErr_r,
+  #                              varieties = input$varieties_r) 
+  #   # results_range = rv$results_range) 
+  # {
+  #   #TV print(scenarioDT)
+  #   #TV stage = scenarioDT[,1]
+  #   #TV entries = scenarioDT[,2]
+  #   
+  #   min_entries = checkMinEntries(varieties, min_entries) 
+  #   # varieties must be less than min_entries
+  #   if (varieties > min_entries)
+  #     min_entries = varieties
+  #   years = NA #TV scenarioDT[,3] 
+  #   locs = NA #TV scenarioDT[,4]
+  #   reps = NA #TV scenarioDT[,5]
+  #   error = varErr #TV scenarioDT[,6]
+  #   it = 0 # counter of iterations between range min max
+  #   range_entries = rangeGrain(min_entries, max_entries, grain)
+  #   range_years = rangeGrain(min_years, max_years, grain)
+  #   range_locs = rangeGrain(min_locs, max_locs, grain)
+  #   range_reps = rangeGrain(min_reps, max_reps, grain)
+  #   #range_error = rangeGrain(min_error, max_error, grain)
+  #   #print(range_reps)
+  #   
+  #   # Show Progress Bar
+  #   withProgress(message = 'Calculating results', value = 0, {
+  #     rr = NULL
+  #     for (i in range_entries)
+  #     {
+  #       for (k in range_years)
+  #       {
+  #         for (l in range_locs)
+  #         {
+  #           for (j in range_reps)
+  #           {
+  #             # for (e in range_error)
+  #             # {
+  #             # update progress bar after a single iteration of the nested loop
+  #             # incProgress(1/(length(range_entries)*length(range_years)*length(range_locs)*length(range_reps)*length(range_error)), detail = paste("Iteration", it, "of", length(range_entries)*length(range_years)*length(range_locs)*length(range_reps)*length(range_error)))
+  #             incProgress(1/(length(range_entries)*length(range_years)*length(range_locs)*length(range_reps)), detail = paste("Iteration", it, "of", length(range_entries)*length(range_years)*length(range_locs)*length(range_reps)))
+  #             
+  #             it = it + 1
+  #             entries = i # replace first stage entries with range_entries
+  #             years = k
+  #             locs = l
+  #             reps = j
+  #            # error = e
+  #             
+  #             resultLite = runScenarioLite(varG,
+  #                                          varGxL,
+  #                                          varGxY,
+  #                                          entries,
+  #                                          years,
+  #                                          locs,
+  #                                          reps,
+  #                                          error,
+  #                                          varieties)
+  #             #print(resultLite) # WORKS
+  #             resultLite = as.data.frame(resultLite)             # convert to a df
+  #             colnames(resultLite) <- c("mean","sd")
+  #             # Create df with I/O data and bind this to rr from previous iterations
+  #           # rr<-rbind(rr, cbind(scenario = tail(Scenarios,1), fs_entries = i, fs_years = k, fs_locs = l, fs_reps = j, it, stage, entries, years, locs, reps, error, resultLite))
+  #             rr<-rbind(rr, cbind(scenario = tail(Ranges,1), entries, years, locs, reps, error, it, resultLite))
+  #             # }
+  #           }
+  #         }
+  #       }
+  #     }
+  #   })
+  #   
+  #   colnames(rr) <- c("Scenario", "Entries", "Years", "Locs", "Reps", "Error", "IT", "Gain", "SD")
+  #   #print(rr)
+  #   #tail(rr)
+  #   return(rr)
+  # }
   
   # Uses Ranges DT instead of sliders to also include samples set for each parameter
   runScenarioRange_r <- function(rangesDT = rti$data, 
@@ -546,11 +546,22 @@ server <- function(input, output, clientData, session) {
     max_reps = rangesDT[4,2]
     sample_reps = rangesDT[4,3]
     
-    min_entries = checkMinEntries(varieties, min_entries) 
-    # varieties must be less than min_entries
+    # Evaluation of range inputs is permissive allowing mistakes but it generates a warning message and updates input parameters to be valid.
     if (varieties > min_entries)
+    {
+      shinyalert("Warning!", "Invalid input: Final Entries should not be larger than Min Entries. Otherwise they replace Min Entries.", type = "warning")
       min_entries = varieties
+    }
+    if (varieties > max_entries)
+      max_entries = varieties
     
+    # try(
+    if (min_entries > max_entries || min_years > max_years || min_locs > max_locs || min_reps > max_reps)
+    {
+      shinyalert("Warning!", "Invalid input: Min should not be larger than Max for any parameter. Otherwise the simulation will try to run only for the smallest value of that parameter.", type = "warning")
+      #    stop("Invalid input: min should not be more than max.")
+    }
+
     years = NA #TV scenarioDT[,3] 
     locs = NA #TV scenarioDT[,4]
     reps = NA #TV scenarioDT[,5]
