@@ -6,11 +6,7 @@ The tool helps define scenarios with multiple stages of selection.
 
 <img width="668" alt="Breeding_scheme_designer" src="https://user-images.githubusercontent.com/8427251/134358626-ee38189a-fe40-4cac-bf6d-4cb5b630703f.png">
 
-In the screenshot above: a comparison between boxplots of three breeding scenarios with three stages each. 
-
-<img width="608" alt="ranges" src="https://user-images.githubusercontent.com/8427251/134371478-7acde81b-543e-4b13-a2f2-f09b94a57412.png">
-
-In the screenshot above: the solution space for a combination of input parameters within ranges.
+In the screenshot above, you can see a comparison between boxplots of three breeding scenarios with three stages each. 
 
 ## Testing & Evaluation
 
@@ -21,7 +17,21 @@ This tool has been tested with a small group of breeders from different teams an
 
 The software can be executed through RStudio.
 
-1. 
+Make sure that the following library dependencies (r packages) are first installed:
+
+1. shiny 
+2. DT
+3. Rcpp
+4. RcppArmadillo
+5. ggplot2 
+6. shinyjs
+7. data.table
+8. dplyr
+9. plotly
+10. openxlsx
+11. shinyBS
+12. shinyalert
+
 
 Also an instance of the software is deployed online in a shinyapps.io server
 
@@ -37,4 +47,3 @@ https://alphagenes.shinyapps.io/cycle_scenarios/
 
 * Repo owner or admin : Thanasis Vogogias
 * Other community or team contact: Chris Gaynor
-
