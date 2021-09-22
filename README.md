@@ -14,8 +14,7 @@ Figure 2: heatmaps help to explore the solution space for combinations of input 
 
 ## Testing & Evaluation
 
-This tool has been tested with a small group of breeders from different teams and it is now available as part of the EiB toolbox.
-
+This tool has been tested with a small group of breeders from different teams and it is now available as part of the EiB toolbox. Some documents realated to the user study can be found in /eval directory of the project.
 
 ## Set Up
 
@@ -36,18 +35,9 @@ Make sure that the following library dependencies (r packages) are first install
 11. shinyBS
 12. shinyalert
 
+An instance of the tool is deployed online in the shinyapps.io server: https://alphagenes.shinyapps.io/cycle_scenarios/
 
-Also an instance of the software is deployed online in a shinyapps.io server
+## Authorship
 
-https://alphagenes.shinyapps.io/cycle_scenarios/
-
-### Contribution guidelines ###
-
-* Writing tests
-* Code review
-* Other guidelines
-
-### Who do I talk to? ###
-
-* Repo owner or admin : Thanasis Vogogias
+* Repo owner/admin : Thanasis Vogogias
 * Other community or team contact: Chris Gaynor
