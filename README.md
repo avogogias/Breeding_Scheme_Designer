@@ -1,6 +1,15 @@
-# README #
+# Breeding Scheme Designer #
 
-This README would normally document whatever steps are necessary to get your application up and running.
+The Breeding Scheme Designer is a tool to explore trade offs between different evaluation strategies in breeding programs using stochastic simulation. Comparisons of different scenarios with respect to genetic gain and genetic gain per dollar invested are enabled.
+
+So, the purpose for developing this tool was to help simulate the full cycle of a breeding program to help estimate parameters such as heritability and the expected genetic gain, to help understand how breeder's equation terms interact and to enable comparisons between different strategies and understand trade-offs between multiple resource allocation scenarios and their effect to the expected genetic gain.
+
+The tool helps define scenarios with multiple stages of selection, and here in this screenshot you can see a comparison between boxplots of three breeding scenarios with three stages each. 
+
+
+
+This tool has been tested with a small group of breeders from different teams and it is now available as part of the EiB toolbox.
+
 
 ### What is this repository for? ###
 
