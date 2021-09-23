@@ -4,11 +4,11 @@ The Breeding Scheme Designer is a tool to explore trade offs between different e
 
 The tool helps define scenarios with multiple stages of selection. 
 
-<img width="680" alt="Breeding_scheme_designer" src="https://user-images.githubusercontent.com/8427251/134358626-ee38189a-fe40-4cac-bf6d-4cb5b630703f.png">
+<img width="800" alt="Breeding_scheme_designer" src="https://user-images.githubusercontent.com/8427251/134358626-ee38189a-fe40-4cac-bf6d-4cb5b630703f.png">
 
 Figure 1: a comparison between boxplots of three breeding scenarios with three stages each. 
 
-<img width="680" alt="ranges" src="https://user-images.githubusercontent.com/8427251/134371478-7acde81b-543e-4b13-a2f2-f09b94a57412.png">
+<img width="800" alt="ranges" src="https://user-images.githubusercontent.com/8427251/134371478-7acde81b-543e-4b13-a2f2-f09b94a57412.png">
 
 Figure 2: heatmaps help to explore the solution space for combinations of input parameters set for different ranges.
 
