@@ -1,0 +1,27 @@
+Title: Breeding Scheme Designer
+Version: 2.0.0
+Description: A Shiny GUI tool for comparing breeding strategies and calculating
+    expected genetic gain using deterministic simulation. Supports multiple
+    concurrent scenarios with interactive plotly charts for comparison.
+Authors@R: c(
+    person("Thanasis", "Vogogias", role = c("aut", "cre")),
+    person("Chris", "Gaynor", role = "ctb"))
+License: MIT
+Depends:
+    R (>= 3.5.0)
+Imports:
+    shiny,
+    DT,
+    shinyBS,
+    Rcpp,
+    RcppArmadillo,
+    ggplot2,
+    shinyjs,
+    data.table,
+    dplyr,
+    plotly,
+    openxlsx,
+    shinyalert
+Suggests:
+    testthat (>= 3.0.0)
+Encoding: UTF-8
