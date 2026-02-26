@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -13,6 +14,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.eib.breedingdesigner.model.*
 import kotlin.math.abs
 
@@ -50,19 +52,33 @@ fun HeatmapChart(
         )
         Spacer(Modifier.height(4.dp))
 
-        Canvas(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(200.dp)
-        ) {
-            drawHeatmap(data, xVals, yVals, minG, range, onSurface)
+        // Heatmap: Y-axis labels on the left, canvas grid on the right
+        Row(Modifier.fillMaxWidth().height(200.dp)) {
+            // Y-axis labels column (low→high, bottom→top, so reversed)
+            Column(
+                modifier = Modifier.width(28.dp).fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceAround
+            ) {
+                yVals.reversed().forEach { v ->
+                    Text(
+                        "$v",
+                        fontSize = 9.sp,
+                        textAlign = TextAlign.End,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            Canvas(modifier = Modifier.weight(1f).fillMaxHeight()) {
+                drawHeatmap(data, xVals, yVals, minG, range, onSurface)
+            }
         }
 
         // X-axis labels
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 32.dp, end = 8.dp),
+                .padding(start = 28.dp, end = 0.dp),
             horizontalArrangement = Arrangement.SpaceAround
         ) {
             xVals.forEach { v ->
@@ -84,16 +100,16 @@ fun HeatmapChart(
 }
 
 private fun DrawScope.drawHeatmap(
-    data:   Map<Pair<Int, Int>, RangePoint>,
-    xVals:  List<Int>,
-    yVals:  List<Int>,
-    minG:   Double,
-    range:  Double,
-    axis:   Color
+    data:  Map<Pair<Int, Int>, RangePoint>,
+    xVals: List<Int>,
+    yVals: List<Int>,
+    minG:  Double,
+    range: Double,
+    axis:  Color
 ) {
-    val padL = 36f; val padR = 8f; val padT = 8f; val padB = 20f
-    val w = (size.width - padL - padR) / xVals.size
-    val h = (size.height - padT - padB) / yVals.size
+    if (xVals.isEmpty() || yVals.isEmpty()) return
+    val w = size.width  / xVals.size
+    val h = size.height / yVals.size
 
     yVals.forEachIndexed { yi, yVal ->
         xVals.forEachIndexed { xi, xVal ->
@@ -101,28 +117,17 @@ private fun DrawScope.drawHeatmap(
             val t    = ((pt.meanGain - minG) / range).toFloat().coerceIn(0f, 1f)
             val fill = gainColor(t)
 
-            val left = padL + xi * w
-            val top  = padT + (yVals.size - 1 - yi) * h   // flip y so low values at bottom
+            val left = xi * w
+            val top  = (yVals.size - 1 - yi) * h  // flip: high values at top
 
-            drawRect(fill, topLeft = Offset(left, top), size = Size(w - 1, h - 1))
-            drawRect(axis.copy(alpha = 0.25f), topLeft = Offset(left, top),
-                size = Size(w - 1, h - 1), style = Stroke(0.5f))
+            drawRect(fill, topLeft = Offset(left, top), size = Size(w - 1f, h - 1f))
+            drawRect(
+                axis.copy(alpha = 0.2f),
+                topLeft = Offset(left, top),
+                size = Size(w - 1f, h - 1f),
+                style = Stroke(0.5f)
+            )
         }
-    }
-
-    // Y-axis labels
-    yVals.forEachIndexed { yi, yVal ->
-        val ty = padT + (yVals.size - 1 - yi) * h + h / 2
-        drawContext.canvas.nativeCanvas.drawText(
-            "$yVal",
-            padL - 4f,
-            ty + 4f,  // approximate vertical centering
-            android.graphics.Paint().apply {
-                textSize = 28f
-                color = android.graphics.Color.DKGRAY
-                textAlign = android.graphics.Paint.Align.RIGHT
-            }
-        )
     }
 }
 
