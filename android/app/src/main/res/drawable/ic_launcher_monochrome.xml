@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 13 monochrome icon (themed icons) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:strokeColor="?android:attr/colorControlNormal"
+        android:strokeWidth="4"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M54,88 L54,30" />
+    <path
+        android:fillColor="?android:attr/colorControlNormal"
+        android:pathData="M54,30 Q46,23 42,16 L46,17 Q50,26 54,30 Z" />
+    <path
+        android:fillColor="?android:attr/colorControlNormal"
+        android:pathData="M54,30 Q62,23 66,16 L62,17 Q58,26 54,30 Z" />
+    <path
+        android:fillColor="?android:attr/colorControlNormal"
+        android:pathData="M54,46 Q45,40 40,33 L45,34 Q49,43 54,46 Z" />
+    <path
+        android:fillColor="?android:attr/colorControlNormal"
+        android:pathData="M54,46 Q63,40 68,33 L63,34 Q59,43 54,46 Z" />
+    <path
+        android:fillColor="?android:attr/colorControlNormal"
+        android:pathData="M54,62 Q44,56 38,49 L44,50 Q48,59 54,62 Z" />
+    <path
+        android:fillColor="?android:attr/colorControlNormal"
+        android:pathData="M54,62 Q64,56 70,49 L64,50 Q60,59 54,62 Z" />
+    <path
+        android:strokeColor="?android:attr/colorControlNormal"
+        android:strokeWidth="3"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M34,78 L48,60 L58,67 L72,48" />
+    <path
+        android:fillColor="?android:attr/colorControlNormal"
+        android:pathData="M70,42 L78,50 L72,48 L70,42 Z" />
+</vector>
