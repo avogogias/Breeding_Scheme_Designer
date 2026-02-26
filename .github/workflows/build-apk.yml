@@ -125,6 +125,8 @@ jobs:
             - Design multi-stage yield trial programs
             - Run deterministic breeding simulations
             - Visualise genetic gain with interactive box plots
+            - **Ranges mode** – sweep first-stage parameters (entries/years/locs/reps) over a grid and view heatmaps & sensitivity line charts
+            - **Compare (Overview)** – grouped box plots at each breeding stage across all scenarios (Gain / Gain per Year / Gain per Cost)
             - Compare up to 5 breeding scenarios side-by-side
             - Cost analysis (gain per year, gain per dollar)
             - Fully offline – no internet required
