@@ -46,6 +46,11 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
+      # ── JVM unit tests (no Android device required) ──────────────────────
+      - name: Run unit tests
+        working-directory: android
+        run: ./gradlew testDebugUnitTest --no-daemon
+
       # ── Build debug APK (installable without key) ────────────────────────
       - name: Build debug APK
         working-directory: android

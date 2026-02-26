@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.eib.breedingdesigner.model.*
 import com.eib.breedingdesigner.simulation.BreedingSimulator
+import com.eib.breedingdesigner.simulation.RangesSimulator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -120,6 +121,46 @@ class ScenarioViewModel : ViewModel() {
     }
 
     fun clearError() = _state.update { it.copy(errorMessage = null) }
+
+    // ─── Ranges ───────────────────────────────────────────────────────────────
+
+    private val _rangesState = MutableStateFlow(RangesState())
+    val rangesState: StateFlow<RangesState> = _rangesState.asStateFlow()
+
+    fun updateRangesConfig(cfg: RangesConfig) = _rangesState.update { it.copy(config = cfg) }
+    fun updateRangesXAxis(axis: RangeAxis)    = _rangesState.update { it.copy(xAxis = axis) }
+    fun updateRangesYAxis(axis: RangeAxis)    = _rangesState.update { it.copy(yAxis = axis) }
+    fun updateRangesXLine(axis: RangeAxis)    = _rangesState.update { it.copy(xAxisLine = axis) }
+    fun updateRangesTreatment(axis: RangeAxis)= _rangesState.update { it.copy(treatmentAxis = axis) }
+
+    fun updateRangesFixed(axis: RangeAxis, value: Int) = _rangesState.update { s ->
+        s.copy(fixedValues = s.fixedValues + (axis to value))
+    }
+
+    fun runRanges() {
+        val cfg = _rangesState.value.config
+        _rangesState.update { it.copy(isRunning = true, errorMsg = null) }
+        viewModelScope.launch {
+            try {
+                val result = withContext(Dispatchers.Default) { RangesSimulator.run(cfg) }
+                _rangesState.update { s ->
+                    // Reset fixed values to minimum of each axis after a new run
+                    val fixed = s.defaultFixed(result, s.xAxis, s.yAxis)
+                    s.copy(isRunning = false, result = result, fixedValues = fixed)
+                }
+            } catch (e: Exception) {
+                _rangesState.update { it.copy(isRunning = false, errorMsg = e.message ?: "Unknown error") }
+            }
+        }
+    }
+
+    fun clearRangesError() = _rangesState.update { it.copy(errorMsg = null) }
+
+    private fun RangesState.defaultFixed(
+        result: RangeResult,
+        xAxis: RangeAxis,
+        yAxis: RangeAxis
+    ): Map<RangeAxis, Int> = result.defaultFixed(xAxis, yAxis)
 
     // ─── Validation ───────────────────────────────────────────────────────────
 

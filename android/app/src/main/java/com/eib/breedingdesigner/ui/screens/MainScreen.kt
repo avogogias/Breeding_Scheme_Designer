@@ -14,11 +14,18 @@ import com.eib.breedingdesigner.viewmodel.ScenarioViewModel
 private sealed class Screen(val route: String, val label: String, val icon: ImageVector) {
     object Setup   : Screen("setup",   "Setup",   Icons.Default.Tune)
     object Results : Screen("results", "Results", Icons.Default.BarChart)
+    object Ranges  : Screen("ranges",  "Ranges",  Icons.Default.GridView)
     object Compare : Screen("compare", "Compare", Icons.Default.CompareArrows)
     object Help    : Screen("help",    "Help",    Icons.Default.HelpOutline)
 }
 
-private val screens = listOf(Screen.Setup, Screen.Results, Screen.Compare, Screen.Help)
+private val screens = listOf(
+    Screen.Setup,
+    Screen.Results,
+    Screen.Ranges,
+    Screen.Compare,
+    Screen.Help
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,7 +33,6 @@ fun MainScreen(vm: ScenarioViewModel = viewModel()) {
     val state by vm.state.collectAsState()
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Setup) }
 
-    // Scenario tab bar (top) when more than one scenario exists
     val scenarios = state.scenarios
 
     Scaffold(
@@ -47,18 +53,21 @@ fun MainScreen(vm: ScenarioViewModel = viewModel()) {
                         }
                     }
                 )
-                // Scenario tabs
-                if (scenarios.size > 1) {
+                // Scenario tabs (only shown in Setup / Results screens)
+                if (scenarios.size > 1 &&
+                    (currentScreen == Screen.Setup || currentScreen == Screen.Results)) {
                     ScrollableTabRow(
-                        selectedTabIndex = scenarios.indexOfFirst { it.id == state.activeScenarioId }.coerceAtLeast(0),
+                        selectedTabIndex = scenarios
+                            .indexOfFirst { it.id == state.activeScenarioId }
+                            .coerceAtLeast(0),
                         edgePadding = 0.dp,
                         containerColor = MaterialTheme.colorScheme.primaryContainer
                     ) {
-                        scenarios.forEachIndexed { _, sc ->
+                        scenarios.forEach { sc ->
                             Tab(
                                 selected = sc.id == state.activeScenarioId,
-                                onClick = { vm.setActive(sc.id) },
-                                text = { Text(sc.name, maxLines = 1) }
+                                onClick  = { vm.setActive(sc.id) },
+                                text     = { Text(sc.name, maxLines = 1) }
                             )
                         }
                     }
@@ -81,7 +90,7 @@ fun MainScreen(vm: ScenarioViewModel = viewModel()) {
         Box(Modifier.padding(padding).fillMaxSize()) {
             when (currentScreen) {
                 Screen.Setup   -> SetupScreen(
-                    vm = vm,
+                    vm         = vm,
                     scenarioId = state.activeScenarioId,
                     onRunClicked = {
                         vm.runSimulation(state.activeScenarioId)
@@ -89,6 +98,7 @@ fun MainScreen(vm: ScenarioViewModel = viewModel()) {
                     }
                 )
                 Screen.Results -> ResultsScreen(vm, state.activeScenarioId)
+                Screen.Ranges  -> RangesScreen(vm)
                 Screen.Compare -> CompareScreen(vm)
                 Screen.Help    -> HelpScreen()
             }
