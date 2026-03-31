@@ -229,7 +229,7 @@ server <- function(input, output, clientData, session) {
   createTab <- function(scenarioID = 1, withRanges = rangesVec) {
     myTabs = lapply(1: scenarioID, function(i){
       tabPanel(paste0('Scenario', i),
-               plotOutput(paste0('cyPlot', i)),
+               plotlyOutput(paste0('cyPlot', i)),
                # input settings used for this scenario
                DT::DTOutput(paste0('stages_summary', i)),
                # update scenario button
@@ -739,21 +739,48 @@ server <- function(input, output, clientData, session) {
   # -------------------------------
   #********************************
   
-  # function plots the results of a scenario
+  # function plots the results of a scenario as an interactive plotly boxplot
   plotScenario <- function(result = result) {
-    boxplot(t(result),
-            xlab="Stage",
-            ylab="Mean Genetic Value")
+    df <- data.frame(
+      Stage = factor(rep(1:nrow(result), each = ncol(result))),
+      Value = as.vector(t(result))
+    )
+    p <- plot_ly(df, x = ~Stage, y = ~Value, type = "box",
+                 marker = list(color = 'rgba(31,119,180,0.7)'),
+                 line = list(color = 'rgba(31,119,180,1)')) %>%
+      layout(
+        xaxis = list(title = "Stage"),
+        yaxis = list(title = "Mean Genetic Value"),
+        showlegend = FALSE
+      )
+    return(p)
   }
   
-  # function plots the results of all scenarios
+  # function plots the results of all scenarios as interactive plotly grouped boxplot
   plotScenarioGroup <- function(results_all = rv$results_all, ylabel = "Gain", gtitle = "Genetic Gain by Stage") {
-    ggplot(as.data.frame(t(results_all)),aes(x=factor(Stage),y=Value,fill=factor(Scenario)))+
-      geom_boxplot()+
-      xlab("Stage")+
-      ylab(ylabel)+
-      scale_fill_discrete(name="Scenario")+
-      ggtitle(gtitle) + 
+    df <- as.data.frame(t(results_all))
+    df$Stage <- factor(df$Stage)
+    df$Scenario <- factor(df$Scenario)
+
+    p <- plot_ly(df, x = ~Stage, y = ~Value, color = ~Scenario, type = "box") %>%
+      layout(
+        title = list(text = gtitle, font = list(size = 14)),
+        xaxis = list(title = "Stage"),
+        yaxis = list(title = ylabel),
+        boxmode = "group",
+        legend = list(title = list(text = "Scenario"))
+      )
+    return(p)
+  }
+
+  # Static ggplot2 version for Excel export (ggsave requires ggplot objects)
+  plotScenarioGroupStatic <- function(results_all = rv$results_all, ylabel = "Gain", gtitle = "Genetic Gain by Stage") {
+    ggplot(as.data.frame(t(results_all)), aes(x = factor(Stage), y = Value, fill = factor(Scenario))) +
+      geom_boxplot() +
+      xlab("Stage") +
+      ylab(ylabel) +
+      scale_fill_discrete(name = "Scenario") +
+      ggtitle(gtitle) +
       theme(plot.title = element_text(size = 14, face = "bold"))
   }
   
@@ -1297,8 +1324,8 @@ server <- function(input, output, clientData, session) {
       stages_current$meanxCost <- meanGainxCost(result, yti$data) # display GG for $1000
 
         
-      # Pass plots to output scenario tabs
-      output[[paste0("cyPlot", tail(Scenarios,1))]] <- renderPlot({
+      # Pass plots to output scenario tabs (interactive plotly)
+      output[[paste0("cyPlot", tail(Scenarios,1))]] <- renderPlotly({
         plotScenario(result)
       })
 
@@ -1331,16 +1358,16 @@ server <- function(input, output, clientData, session) {
       # Store all results of Gain per cost 
       rv$results_allxCost = storeScenarioResultxCost(result = result, results_all = rv$results_allxCost, scenarioID = tail(Scenarios,1), scenarioDT =  yti$data)
       
-      # Render grouped boxplots for all scenario results for Overview tab
-      output$overviewTab <- renderPlot({
+      # Render interactive grouped boxplots for all scenario results for Overview tab
+      output$overviewTab <- renderPlotly({
         plotScenarioGroup(rv$results_all)
-      })    
-      # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
-      output$overviewTabxTime <- renderPlot({
+      })
+      # Render interactive grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
+      output$overviewTabxTime <- renderPlotly({
         plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
-      })  
-      # Render grouped boxplots for all scenario results conditioned by Time (i.e. Total Years)
-      output$overviewTabxCost <- renderPlot({
+      })
+      # Render interactive grouped boxplots for all scenario results conditioned by Cost
+      output$overviewTabxCost <- renderPlotly({
         plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
       })   
       
@@ -1768,9 +1795,9 @@ server <- function(input, output, clientData, session) {
       # insertPlot(my_workbook, 1, xy = c(3 + ncol(sumxGain), 44), height = 3.5, fileType = "png", units = "in")
       #
       # 
-      p1 <- plotScenarioGroup(rv$results_all)
-      p2 <- plotScenarioGroup(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
-      p3 <- plotScenarioGroup(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
+      p1 <- plotScenarioGroupStatic(rv$results_all)
+      p2 <- plotScenarioGroupStatic(rv$results_allxTime, ylabel = "Gain per Year", gtitle = "Genetic Gain by Stage (Scaled by Time)")
+      p3 <- plotScenarioGroupStatic(rv$results_allxCost, ylabel = "Gain per Cost", gtitle = "Genetic Gain by Stage (Scaled by Cost)")
       #
       # method using ggsave
       ggsave("p1.png", plot = p1, scale = .8)  # Scale parameter resizes the object making text more legible
